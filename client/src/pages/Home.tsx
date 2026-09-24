@@ -439,7 +439,7 @@ function FarmerCard({ farmer }: { farmer: FarmerSummary }) {
         <Thumb
           src={farmer.cover_url}
           seed={farmer.id}
-          glyph="basket"
+          glyph="farm"
           label={farmer.stall_name}
           glyphSize={44}
           className="aspect-[4/3] w-full border-b border-line"
