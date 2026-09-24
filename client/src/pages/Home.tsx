@@ -34,6 +34,15 @@ const QUICK_LINKS = [
   { label: 'All markets', to: '/markets' },
 ];
 
+/** Each category's mark carries its own tone, so the row reads as produce and not as tags. */
+const CATEGORY_TONE: Record<string, string> = {
+  vegetables: 'text-accent',
+  fruits: 'text-warn',
+  dairy: 'text-primary',
+  bakery: 'text-warn',
+  herbs: 'text-accent',
+};
+
 function Hero() {
   const [term, setTerm] = useState('');
   const navigate = useNavigate();
@@ -137,6 +146,19 @@ function Hero() {
                 <Glyph name="basket" size={18} className="text-accent" />
                 Browse produce
                 <Glyph name="arrow" size={17} />
+              </Link>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {CATEGORIES.map((c) => (
+                <Link key={c.slug} to={`/products?category=${c.slug}`} className={chipClass()}>
+                  <Glyph name={c.glyph} size={15} className={CATEGORY_TONE[c.slug] ?? 'text-primary'} />
+                  {c.name}
+                </Link>
+              ))}
+              <Link to="/products" className={chipClass()}>
+                <Glyph name="grid" size={15} />
+                More
               </Link>
             </div>
           </Reveal>

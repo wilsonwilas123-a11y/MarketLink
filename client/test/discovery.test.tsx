@@ -148,6 +148,24 @@ describe('home', () => {
       within(panel).getByRole('link', { name: /Near Lekki Phase 1/ }),
     ).toHaveAttribute('href', '/markets?lat=6.4551&lng=3.3795&radius=10');
   });
+
+  it('offers the produce categories under the search bar', () => {
+    renderApp('/', {
+      stubs: [
+        { path: NEARBY_HOME, body: page([]) },
+        { path: '/farmers', body: page([]) },
+      ],
+    });
+
+    const title = screen.getByRole('heading', { name: /Fresh from the market/ });
+    const hero = within(title.closest('section') as HTMLElement);
+
+    expect(hero.getByRole('link', { name: /Vegetables/ })).toHaveAttribute(
+      'href',
+      '/products?category=vegetables',
+    );
+    expect(hero.getByRole('link', { name: 'More' })).toHaveAttribute('href', '/products');
+  });
 });
 
 describe('markets screen', () => {

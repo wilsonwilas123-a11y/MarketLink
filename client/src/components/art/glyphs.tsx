@@ -37,6 +37,7 @@ export type GlyphName =
   | 'fish'
   | 'grain'
   | 'basket'
+  | 'grid'
   | 'stall'
   | 'star'
   | 'search'
@@ -159,6 +160,14 @@ const paths: Record<GlyphName, ReactNode> = {
       <path {...stroke} d="M4 10.5h16l-1.6 8.5H5.6Z" />
       <path {...stroke} d="M8 10.5c0-4 8-4 8 0" />
       <path {...stroke} d="M6.6 14.5h10.8" />
+    </>
+  ),
+  grid: (
+    <>
+      <rect {...stroke} x="4.5" y="4.5" width="6" height="6" rx="1.6" />
+      <rect {...stroke} x="13.5" y="4.5" width="6" height="6" rx="1.6" />
+      <rect {...stroke} x="4.5" y="13.5" width="6" height="6" rx="1.6" />
+      <rect {...stroke} x="13.5" y="13.5" width="6" height="6" rx="1.6" />
     </>
   ),
   stall: (
