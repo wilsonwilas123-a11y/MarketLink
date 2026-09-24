@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Glyph } from '../components/art/glyphs';
+import { Glyph, type GlyphName } from '../components/art/glyphs';
 import { Thumb } from '../components/art/Thumb';
 import { MarketCard, MarketCardSkeleton } from '../components/discovery/MarketCard';
 import { SkeletonRow, StateNote } from '../components/discovery/StateNote';
@@ -9,7 +9,7 @@ import { buttonClass } from '../components/ui/Button';
 import { chipClass } from '../components/ui/Chip';
 import { LAGOS, dayList, lagosClock, lagosToday, useFarmerList, useNearbyMarkets } from '../lib/discovery';
 import { CATEGORIES, FRESH_THIS_WEEK, stockState } from '../lib/showcase';
-import type { ShowcaseProduct } from '../lib/showcase';
+import type { ShowcaseProduct, StockLine } from '../lib/showcase';
 import type { FarmerSummary } from '../lib/types';
 import { formatKobo } from '../utils/kobo';
 import { Reveal } from '../motion/reveal';
@@ -27,11 +27,11 @@ const MarketMap = lazy(() => import('../components/discovery/MarketMap'));
 /** A fix on Lekki Phase 1, so a first-time visitor can see the distance query work at all. */
 const LEKKI = { lat: 6.4551, lng: 3.3795 };
 
-const QUICK_LINKS = [
-  { label: 'Open right now', to: '/markets?open=1' },
-  { label: 'Saturday markets', to: '/markets?day=sat' },
-  { label: 'Near Lekki Phase 1', to: `/markets?lat=${LEKKI.lat}&lng=${LEKKI.lng}&radius=10` },
-  { label: 'All markets', to: '/markets' },
+const QUICK_LINKS: { label: string; to: string; glyph: GlyphName }[] = [
+  { label: 'Open right now', to: '/markets?open=1', glyph: 'clock' },
+  { label: 'Saturday markets', to: '/markets?day=sat', glyph: 'stall' },
+  { label: 'Near Lekki Phase 1', to: `/markets?lat=${LEKKI.lat}&lng=${LEKKI.lng}&radius=10`, glyph: 'pin' },
+  { label: 'All markets', to: '/markets', glyph: 'grid' },
 ];
 
 /** Each category's mark carries its own tone, so the row reads as produce and not as tags. */
@@ -203,136 +203,143 @@ function MarketsNearYou() {
   const navigate = useNavigate();
 
   return (
-    <section className="mx-auto mt-12 max-w-7xl px-4">
-      <div className="rounded-3xl border border-line bg-surface p-4 sm:p-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-xl font-bold">
-              <span className="text-accent" aria-hidden>
-                <Glyph name="pin" size={19} />
-              </span>
-              Markets near you
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              <LiveStrip total={nearby.data?.meta.total ?? 0} open={open} />
-            </p>
-          </div>
-          <Link to="/markets" className="text-sm text-accent hover:underline">
-            Open the full map
-          </Link>
+    <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+            On the map
+          </p>
+          <h2 className="mt-1.5 font-display text-2xl font-bold">Markets near you</h2>
+          <p className="mt-1 text-sm text-muted">
+            <LiveStrip total={nearby.data?.meta.total ?? 0} open={open} />
+          </p>
         </div>
+        <Link to="/markets" className="text-sm text-accent hover:underline">
+          Open the full map
+        </Link>
+      </header>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          <span className="text-xs uppercase tracking-wider text-muted">Produce</span>
-          {CATEGORIES.map((c) => (
-            <Link key={c.slug} to={`/products?category=${c.slug}`} className={chipClass()}>
-              <Glyph name={c.glyph} size={14} />
-              {c.name}
+      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,46%)]">
+        <div>
+          {nearby.isPending ? (
+            <div className="flex flex-col gap-3">
+              <MarketCardSkeleton />
+              <MarketCardSkeleton />
+              <MarketCardSkeleton />
+            </div>
+          ) : nearby.error ? (
+            <StateNote
+              label="The nearby list did not load"
+              body="Nothing is wrong with the markets — the request failed."
+              retry={() => void nearby.refetch()}
+            />
+          ) : (
+            <Reveal className="flex flex-col gap-3" y={10} stagger={0.04}>
+              {markets.slice(0, 3).map((market) => (
+                <MarketCard
+                  key={market.id}
+                  market={market}
+                  selected={selected === market.id}
+                  onFocus={() => setSelected(market.id)}
+                />
+              ))}
+            </Reveal>
+          )}
+
+          <p className="mt-3 text-sm text-muted">
+            Distances are straight-line from central Lagos.{' '}
+            <Link to="/markets" className="text-accent hover:underline">
+              Search your own area
             </Link>
-          ))}
+            .
+          </p>
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,45%)]">
-          <div>
-            {nearby.isPending ? (
-              <div className="flex flex-col gap-3">
-                <MarketCardSkeleton />
-                <MarketCardSkeleton />
-                <MarketCardSkeleton />
+        <div className="relative min-h-[320px] overflow-hidden rounded-2xl border border-line lg:min-h-full">
+          <Suspense
+            fallback={
+              <div className="grid h-full min-h-[320px] place-items-center px-6 text-center text-sm text-muted">
+                Loading the map…
               </div>
-            ) : nearby.error ? (
-              <StateNote
-                label="The nearby list did not load"
-                body="Nothing is wrong with the markets — the request failed."
-                retry={() => void nearby.refetch()}
-              />
-            ) : (
-              <Reveal className="flex flex-col gap-3" y={10} stagger={0.04}>
-                {markets.slice(0, 3).map((market) => (
-                  <MarketCard
-                    key={market.id}
-                    market={market}
-                    selected={selected === market.id}
-                    onFocus={() => setSelected(market.id)}
-                  />
-                ))}
-              </Reveal>
-            )}
+            }
+          >
+            <MarketMap
+              markets={markets}
+              origin={LAGOS}
+              selectedId={selected}
+              onSelect={setSelected}
+              onOpen={(id) => navigate(`/markets/${id}`)}
+            />
+          </Suspense>
 
-            <p className="mt-3 text-sm text-muted">
-              Distances are straight-line from central Lagos.{' '}
-              <Link to="/markets" className="text-accent hover:underline">
-                Search your own area
-              </Link>
-              .
-            </p>
-          </div>
-
-          <div className="min-h-[320px] overflow-hidden rounded-2xl border border-line lg:min-h-full">
-            <Suspense
-              fallback={
-                <div className="grid h-full min-h-[320px] place-items-center px-6 text-center text-sm text-muted">
-                  Loading the map…
-                </div>
-              }
-            >
-              <MarketMap
-                markets={markets}
-                origin={LAGOS}
-                selectedId={selected}
-                onSelect={setSelected}
-                onOpen={(id) => navigate(`/markets/${id}`)}
-              />
-            </Suspense>
-          </div>
+          {/* The two colours a pin can hold. The selected pin is amber, but it is the pin you
+              just clicked, so it needs no key. */}
+          <ul className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-3 rounded-lg border border-line bg-base/85 px-2.5 py-1.5 text-xs text-muted backdrop-blur">
+            <li className="flex items-center gap-1.5">
+              <span aria-hidden className="h-2 w-2 rounded-full bg-accent" />
+              Open now
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span aria-hidden className="h-2 w-2 rounded-full bg-muted" />
+              Shut now
+            </li>
+          </ul>
         </div>
       </div>
     </section>
   );
 }
 
+/** The remaining-stock pill, shared by the lead card and the rows under it. */
+function StockPill({ state }: { state: StockLine }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+        state.tone === 'ok'
+          ? 'bg-accent-soft text-accent'
+          : state.tone === 'low'
+            ? 'bg-warn/15 text-warn'
+            : 'bg-danger/15 text-danger'
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`h-1.5 w-1.5 rounded-full ${
+          state.tone === 'ok' ? 'bg-accent' : state.tone === 'low' ? 'bg-warn' : 'bg-danger'
+        }`}
+      />
+      {state.label}
+    </span>
+  );
+}
+
 /**
- * One week's stock, as a card.
+ * The produce band's lead listing.
  *
  * No quantity stepper and no cart button: a basket is assembled on the order screen in phase
  * 10, and a control that pretends to hold stock the shopper cannot yet reserve is worse than a
  * link that says where to go next.
  */
-function FreshCard({ product }: { product: ShowcaseProduct }) {
+function FreshLead({ product }: { product: ShowcaseProduct }) {
   const state = stockState(product.quantity);
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
+    <article className="relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
       <Thumb
         src={product.photo}
         seed={product.key}
         category={product.category}
         glyph={product.glyph}
         label={product.name}
-        glyphSize={52}
-        className="aspect-[4/3] w-full border-b border-line"
+        glyphSize={64}
+        className="aspect-[16/10] w-full border-b border-line"
       />
-
-      <span
-        className={`absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium backdrop-blur ${
-          state.tone === 'ok'
-            ? 'bg-accent-soft/90 text-accent'
-            : state.tone === 'low'
-              ? 'bg-warn/15 text-warn'
-              : 'bg-danger/15 text-danger'
-        }`}
-      >
-        <span
-          aria-hidden
-          className={`h-1.5 w-1.5 rounded-full ${
-            state.tone === 'ok' ? 'bg-accent' : state.tone === 'low' ? 'bg-warn' : 'bg-danger'
-          }`}
-        />
-        {state.label}
+      <span className="absolute left-3 top-3">
+        <StockPill state={state} />
       </span>
 
-      <div className="p-4">
-        <h3 className="truncate font-display text-base font-semibold">
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="font-display text-xl font-bold leading-snug">
           <Link
             to={`/products?q=${encodeURIComponent(product.name)}`}
             className="after:absolute after:inset-0"
@@ -340,31 +347,86 @@ function FreshCard({ product }: { product: ShowcaseProduct }) {
             {product.name}
           </Link>
         </h3>
-        <p className="mt-0.5 truncate text-sm text-accent">{product.stall}</p>
-
-        <p className="mt-3 flex items-baseline gap-1.5">
-          <span className="num font-display text-lg font-bold">{formatKobo(product.price_kobo)}</span>
-          <span className="text-xs text-muted">/{product.unit}</span>
-        </p>
-
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <Stars value={product.rating_avg} count={product.rating_count} />
-          <span aria-hidden className="text-line">
-            ·
-          </span>
-          <span className="text-xs text-muted">{product.market}</span>
-        </div>
-
-        <p className="num mt-3 border-t border-line pt-3 text-xs text-muted">
-          {product.quantity} {product.unit}s left
+        <p className="mt-1 text-sm text-accent">
+          {product.stall}
           <span aria-hidden className="text-line">
             {' '}
             ·{' '}
           </span>
-          {product.window}
+          <span className="text-muted">{product.market}</span>
+        </p>
+
+        <p className="mt-4 flex items-baseline gap-1.5">
+          <span className="num font-display text-2xl font-bold">
+            {formatKobo(product.price_kobo)}
+          </span>
+          <span className="text-sm text-muted">/{product.unit}</span>
+        </p>
+
+        <p className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
+          <Stars value={product.rating_avg} count={product.rating_count} />
+          <span aria-hidden className="text-line">
+            ·
+          </span>
+          <span className="num">
+            {product.quantity} {product.unit}s left
+          </span>
+          <span aria-hidden className="text-line">
+            ·
+          </span>
+          <span className="num">pickup {product.window}</span>
         </p>
       </div>
     </article>
+  );
+}
+
+/** The same listing at line weight, for the produce that does not need a whole card. */
+function FreshRow({ product }: { product: ShowcaseProduct }) {
+  const state = stockState(product.quantity);
+
+  return (
+    <li className="relative">
+      <article className="flex items-center gap-4 rounded-xl border border-line bg-surface p-3 transition-colors hover:border-accent/25">
+        <Thumb
+          src={product.photo}
+          seed={product.key}
+          category={product.category}
+          glyph={product.glyph}
+          label={product.name}
+          glyphSize={30}
+          className="h-16 w-16 shrink-0 rounded-lg border border-line"
+        />
+
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate font-display text-sm font-semibold">
+            <Link
+              to={`/products?q=${encodeURIComponent(product.name)}`}
+              className="after:absolute after:inset-0"
+            >
+              {product.name}
+            </Link>
+          </h3>
+          <p className="truncate text-xs text-muted">
+            {product.stall}
+            <span aria-hidden className="text-line">
+              {' '}
+              ·{' '}
+            </span>
+            {product.market}
+          </p>
+          <p className="mt-1.5 flex items-center gap-2">
+            <span className="num text-sm font-medium">{formatKobo(product.price_kobo)}</span>
+            <span className="text-[11px] text-muted">/{product.unit}</span>
+            <StockPill state={state} />
+          </p>
+        </div>
+
+        <span className="num shrink-0 text-xs text-muted">
+          {product.quantity} {product.unit}s
+        </span>
+      </article>
+    </li>
   );
 }
 
@@ -372,43 +434,47 @@ function FarmerCard({ farmer }: { farmer: FarmerSummary }) {
   const tradesToday = farmer.operating_days.includes(lagosToday());
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
-      <Thumb
-        src={farmer.cover_url}
-        seed={farmer.id}
-        glyph="basket"
-        label={farmer.stall_name}
-        glyphSize={44}
-        className="aspect-[16/9] w-full border-b border-line"
-      />
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="min-w-0 truncate font-display text-base font-semibold">
-            {farmer.stall_name}
-          </h3>
-          {tradesToday ? (
-            <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
-              Trades today
-            </span>
-          ) : null}
-        </div>
-
-        <Stars value={farmer.rating_avg} count={farmer.rating_count} className="mt-1.5" />
-
-        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">
-          {farmer.description ?? 'This stall has not written a description yet.'}
-        </p>
-
-        <p className="mt-3 flex items-center gap-1.5 border-t border-line pt-3 text-xs text-muted">
-          <span aria-hidden className="text-accent/70">
-            <Glyph name="clock" size={13} />
+    <li className="w-[272px] shrink-0 snap-start sm:w-[302px]">
+      <article className="relative flex h-full snap-start flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
+        <Thumb
+          src={farmer.cover_url}
+          seed={farmer.id}
+          glyph="basket"
+          label={farmer.stall_name}
+          glyphSize={44}
+          className="aspect-[4/3] w-full border-b border-line"
+        />
+        {tradesToday ? (
+          <span className="absolute left-3 top-3 rounded-full bg-base/85 px-2 py-0.5 text-[11px] font-medium text-accent backdrop-blur">
+            Trades today
           </span>
-          {farmer.operating_days.length
-            ? `Trades ${dayList(farmer.operating_days)}`
-            : 'No published trading days'}
-        </p>
-      </div>
-    </article>
+        ) : null}
+
+        <div className="flex flex-1 flex-col p-4">
+          <h3 className="font-display text-base font-semibold leading-snug">
+            <Link to={`/farmers/${farmer.id}`} className="after:absolute after:inset-0">
+              {farmer.stall_name}
+            </Link>
+          </h3>
+          <p className="mt-0.5 text-xs text-muted">Run by {farmer.contact_person}</p>
+
+          <Stars value={farmer.rating_avg} count={farmer.rating_count} className="mt-2" />
+
+          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
+            {farmer.description ?? 'This stall has not written a description yet.'}
+          </p>
+
+          <p className="mt-auto flex items-center gap-1.5 border-t border-line pt-3 text-xs text-muted">
+            <span aria-hidden className="text-accent/70">
+              <Glyph name="clock" size={13} />
+            </span>
+            {farmer.operating_days.length
+              ? `Trades ${dayList(farmer.operating_days)}`
+              : 'No published trading days'}
+          </p>
+        </div>
+      </article>
+    </li>
   );
 }
 
@@ -423,48 +489,52 @@ function AskPanel() {
   }
 
   return (
-    <aside className="flex flex-col rounded-2xl border border-line bg-elevated/50 p-5">
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-accent">Search</p>
-      <h3 className="mt-2 font-display text-lg font-bold leading-snug">What are you looking for?</h3>
-      <p className="mt-1 text-sm text-muted">
-        Type a crop, an area or a market. The results open on the map.
-      </p>
+    <aside className="grid gap-6 rounded-2xl border border-line bg-elevated/50 p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,300px)] md:items-center md:p-6">
+      <div>
+        <h3 className="font-display text-lg font-bold leading-snug">
+          What are you looking for this week?
+        </h3>
+        <p className="mt-1 max-w-md text-sm text-muted">
+          Type a crop, an area or a market. The results open on the map, with each stall&apos;s
+          own stock beside it.
+        </p>
 
-      <form onSubmit={submit} className="mt-4 flex gap-2">
-        <label htmlFor="ask-search" className="sr-only">
-          What are you looking for?
-        </label>
-        <input
-          id="ask-search"
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          placeholder="e.g. fresh tomatoes near Lekki"
-          className="h-10 min-w-0 flex-1 rounded-full border border-line bg-surface px-3.5 text-sm text-primary outline-none transition placeholder:text-muted/60 focus:border-accent"
-        />
-        <button
-          type="submit"
-          aria-label="Search"
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-110"
-        >
-          <Glyph name="send" size={17} />
-        </button>
-      </form>
+        <form onSubmit={submit} className="mt-4 flex max-w-md gap-2">
+          <label htmlFor="ask-search" className="sr-only">
+            What are you looking for?
+          </label>
+          <input
+            id="ask-search"
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="e.g. fresh tomatoes near Lekki"
+            className="h-10 min-w-0 flex-1 rounded-full border border-line bg-surface px-3.5 text-sm text-primary outline-none transition placeholder:text-muted/60 focus:border-accent"
+          />
+          <button
+            type="submit"
+            aria-label="Search"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-110"
+          >
+            <Glyph name="send" size={17} />
+          </button>
+        </form>
+      </div>
 
-      <ul className="mt-4 flex flex-col gap-1.5">
-        {QUICK_LINKS.map((link) => (
-          <li key={link.label}>
-            <Link
-              to={link.to}
-              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3 py-2 text-sm text-primary/90 transition-colors hover:border-accent/40 hover:text-accent"
-            >
-              {link.label}
-              <span aria-hidden className="text-muted">
-                <Glyph name="arrow" size={14} />
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div>
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+          Or start from
+        </p>
+        <ul className="mt-2.5 flex flex-wrap gap-2">
+          {QUICK_LINKS.map((link) => (
+            <li key={link.label}>
+              <Link to={link.to} className={chipClass()}>
+                <Glyph name={link.glyph} size={15} className="text-accent" />
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </aside>
   );
 }
@@ -472,67 +542,88 @@ function AskPanel() {
 export default function Home() {
   const farmers = useFarmerList({});
   const stalls = farmers.data?.data ?? [];
+  const [lead, ...rest] = FRESH_THIS_WEEK;
 
   return (
     <div className="pb-24">
       <Hero />
       <MarketsNearYou />
 
-      <section className="mx-auto mt-16 max-w-7xl px-4">
-        <header className="flex flex-wrap items-end justify-between gap-3">
+      <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">
+        <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
           <div>
-            <h2 className="font-display text-2xl font-bold">Fresh this week</h2>
+            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+              This week&apos;s stock
+            </p>
+            <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
             <p className="mt-1 text-sm text-muted">
               Seasonal produce, published by the stall that grew it.
             </p>
           </div>
           <Link to="/products" className="text-sm text-accent hover:underline">
-            View all
+            Browse everything
           </Link>
         </header>
 
-        <Reveal className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" y={16} stagger={0.05}>
-          {FRESH_THIS_WEEK.map((product) => (
-            <FreshCard key={product.key} product={product} />
-          ))}
-        </Reveal>
-      </section>
-
-      <section className="mx-auto mt-16 max-w-7xl px-4">
-        <header className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="font-display text-2xl font-bold">Meet the farmers</h2>
-            <p className="mt-1 text-sm text-muted">Real stalls. Their own words. Rated by buyers.</p>
-          </div>
-          <Link to="/farmers" className="text-sm text-accent hover:underline">
-            View all
-          </Link>
-        </header>
-
-        <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          {farmers.isPending ? (
-            <SkeletonRow count={3} className="grid gap-4 sm:grid-cols-3" />
-          ) : farmers.error ? (
-            <div className="lg:col-span-2">
-              <StateNote
-                label="The stall list did not load"
-                body="The markets below are unaffected — this request alone failed."
-                retry={() => void farmers.refetch()}
-              />
-            </div>
-          ) : (
-            <Reveal className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" y={16} stagger={0.05}>
-              {stalls.slice(0, 3).map((farmer) => (
-                <FarmerCard key={farmer.id} farmer={farmer} />
-              ))}
-            </Reveal>
-          )}
-
-          <AskPanel />
+        <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+          {lead ? <FreshLead product={lead} /> : null}
+          <Reveal as="ul" className="flex flex-col gap-3" y={12} stagger={0.05}>
+            {rest.map((product) => (
+              <FreshRow key={product.key} product={product} />
+            ))}
+          </Reveal>
         </div>
       </section>
 
-      <section className="mx-auto mt-16 max-w-7xl px-4">
+      <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">
+        <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+              The stalls
+            </p>
+            <h2 className="mt-1.5 font-display text-2xl font-bold">Meet the farmers</h2>
+            <p className="mt-1 text-sm text-muted">Real stalls. Their own words. Rated by buyers.</p>
+          </div>
+          <Link to="/farmers" className="text-sm text-accent hover:underline">
+            All {farmers.data?.meta.total ?? 'registered'} stalls
+          </Link>
+        </header>
+
+        {farmers.isPending ? (
+          <SkeletonRow count={3} className="mt-6 grid gap-4 sm:grid-cols-3" />
+        ) : farmers.error ? (
+          <div className="mt-6">
+            <StateNote
+              label="The stall list did not load"
+              body="The markets above are unaffected — this request alone failed."
+              retry={() => void farmers.refetch()}
+            />
+          </div>
+        ) : (
+          <>
+            <Reveal
+              as="ul"
+              className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-pl-6 pb-2 md:scroll-pl-10"
+              y={14}
+              stagger={0.05}
+            >
+              {stalls.slice(0, 4).map((farmer) => (
+                <FarmerCard key={farmer.id} farmer={farmer} />
+              ))}
+            </Reveal>
+
+            <p className="mt-2 text-xs text-muted">
+              Scroll sideways for the rest of this week&apos;s approved stalls.
+            </p>
+          </>
+        )}
+      </section>
+
+      <section className="mx-auto mt-14 w-full max-w-[1680px] px-6 md:px-10">
+        <AskPanel />
+      </section>
+
+      <section className="mx-auto mt-14 w-full max-w-[1680px] px-6 md:px-10">
         <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-line bg-surface p-6 md:p-8">
           <div className="max-w-xl">
             <h2 className="font-display text-xl font-bold">Run a stall at one of these markets?</h2>

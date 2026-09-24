@@ -92,6 +92,12 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
   },
 ];
 
+/** How much of a listing is left this week, and the words the badge shows for it. */
+export interface StockLine {
+  tone: 'ok' | 'low' | 'out';
+  label: string;
+}
+
 /**
  * Stock state, and the words that go with it.
  *
@@ -99,7 +105,7 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
  * a crate-sized listing is genuinely running short, and a badge that only fires at zero is a
  * badge nobody can act on.
  */
-export function stockState(quantity: number): { tone: 'ok' | 'low' | 'out'; label: string } {
+export function stockState(quantity: number): StockLine {
   if (quantity <= 0) return { tone: 'out', label: 'Sold out' };
   if (quantity < 10) return { tone: 'low', label: 'Low stock' };
   return { tone: 'ok', label: 'In stock' };

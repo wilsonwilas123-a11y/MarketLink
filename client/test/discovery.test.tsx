@@ -166,6 +166,52 @@ describe('home', () => {
     );
     expect(hero.getByRole('link', { name: 'More' })).toHaveAttribute('href', '/products');
   });
+
+  it('gives one product the lead and the rest a line', () => {
+    renderApp('/', {
+      stubs: [
+        { path: NEARBY_HOME, body: page([]) },
+        { path: '/farmers', body: page([]) },
+      ],
+    });
+
+    const title = screen.getByRole('heading', { level: 2, name: 'Fresh this week' });
+    const band = within(title.closest('section') as HTMLElement);
+
+    const lead = band
+      .getByRole('heading', { name: 'Ugu (Pumpkin Leaves)' })
+      .closest('article') as HTMLElement;
+    expect(lead).toHaveTextContent('Adeyemi Farms');
+    expect(lead).toHaveTextContent('In stock');
+
+    const rows = band.getAllByRole('listitem');
+    expect(rows).toHaveLength(3);
+    expect(within(rows[0] as HTMLElement).getByText('Tatashe (Bell Pepper)')).toBeInTheDocument();
+    expect(within(rows[2] as HTMLElement).getByText('Tomato (Fresh)')).toBeInTheDocument();
+    expect(band.getAllByText('Low stock')).toHaveLength(1);
+  });
+
+  it('rails four stalls, each linking to its own page', async () => {
+    const stalls = ['Adeyemi Farms', 'Eze Fresh Produce', 'Baba Oja Greens', 'Chukwuma Yams'].map(
+      (stall_name, i) =>
+        farmer({ stall_name, id: `44444444-4444-4444-8444-${String(i).padStart(12, '0')}` }),
+    );
+
+    renderApp('/', {
+      stubs: [
+        { path: NEARBY_HOME, body: page([]) },
+        { path: '/farmers', body: page(stalls, 9) },
+      ],
+    });
+
+    const title = await screen.findByRole('heading', { level: 2, name: 'Meet the farmers' });
+    const band = within(title.closest('section') as HTMLElement);
+    const cards = await band.findAllByRole('heading', { name: /Farms|Produce|Greens|Yams/ });
+
+    expect(cards).toHaveLength(4);
+    const lastCard = cards[3] as HTMLElement;
+    expect(lastCard.querySelector('a')).toHaveAttribute('href', `/farmers/${stalls[3]?.id}`);
+  });
 });
 
 describe('markets screen', () => {
