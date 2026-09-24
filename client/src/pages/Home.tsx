@@ -305,7 +305,7 @@ function MarketsNearYou() {
 }
 
 /**
- * The remaining-stock pill, shared by the lead plate and the rows under it.
+ * The remaining-stock pill, shared by the band's lead and the rows beside it.
  *
  * Three states drawn the same way in three colours meant a shopper had to read the word to notice
  * the one state they can act on. So the common answer goes quiet — `In stock` is what a listing
@@ -401,20 +401,22 @@ function FreshCarousel({ products }: { products: ShowcaseProduct[] }) {
 
         {/* Keyed to the listing so the words fade in with the photograph that replaced theirs. */}
         <div key={active.key} className="ml-fade-in flex flex-col p-5">
-          <div className="flex items-baseline justify-between gap-3">
-            <h3 className="font-display text-xl font-bold leading-snug">
-              <Link
-                to={`/products?q=${encodeURIComponent(active.name)}`}
-                className="after:absolute after:inset-0"
-              >
-                {active.name}
-              </Link>
-            </h3>
-            {/* Until the photographs land this is the only thing that shows the band is moving. */}
-            <span aria-hidden className="num shrink-0 text-xs text-muted">
-              {String(slide + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
-            </span>
-          </div>
+          {/* Where in the band this listing sits. It leads the card as a caption rather than
+              trailing at its edge, where it would read as a control. */}
+          <p
+            aria-hidden
+            className="num text-[11px] font-medium uppercase tracking-[0.14em] text-muted"
+          >
+            {String(slide + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
+          </p>
+          <h3 className="mt-1.5 font-display text-xl font-bold leading-snug">
+            <Link
+              to={`/products?q=${encodeURIComponent(active.name)}`}
+              className="after:absolute after:inset-0"
+            >
+              {active.name}
+            </Link>
+          </h3>
 
           <p className="mt-1 text-sm text-accent">
             {active.stall}

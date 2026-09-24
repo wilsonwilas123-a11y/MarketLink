@@ -99,6 +99,8 @@
   color: var(--color-primary);
 }
 
+/* The black sheet's own plate and wash. These cannot live in `@theme`: a token no utility
+   references is pruned from the built sheet, and only `.ml-plate` and `card-lift` read them. */
 :root {
   --plate-hi: #1c1c1c;
   --plate-mid: #121212;
@@ -168,9 +170,9 @@
   font-family: var(--font-display);
 }
 
-/* The rotating produce plate changes picture by crossfade, so the listing under it fades in to
-   meet the new photograph instead of swapping under the reader's eye. Opacity and nothing else:
-   a slide or a zoom here is the motion that reads as a template. */
+/* The produce band advances from one listing to the next, so the words that replaced a photograph
+   fade in to meet it instead of swapping under the reader's eye. Opacity and nothing else: a slide
+   or a zoom here is the motion that reads as a template. */
 @keyframes ml-fade-in {
   from {
     opacity: 0;
