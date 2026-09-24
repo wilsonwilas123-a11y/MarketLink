@@ -6,13 +6,13 @@ type Size = 'sm' | 'md';
 /**
  * Two buttons, not a family.
  *
- * `primary` is a block of ink — the letterpress move on a paper page, and the only thing on a
- * screen allowed to be solid. `ghost` is a hairline the same colour as the type. The sign blue is
- * kept off both: it belongs to the one fact that matters, not to the chrome.
+ * `primary` is a block of white with the page's black punched into it — the only thing on a screen
+ * allowed to be solid. `ghost` is a hairline the same colour as the type. The sign blue is kept
+ * off both: it belongs to the one fact that matters, not to the chrome.
  */
 const variant: Record<Variant, string> = {
-  primary: 'bg-ink text-paper font-semibold hover:bg-ink/85 active:translate-y-px',
-  ghost: 'border border-ink/25 bg-transparent text-primary hover:border-ink/60',
+  primary: 'bg-block text-on-block font-semibold hover:bg-block/85 active:translate-y-px',
+  ghost: 'border border-paper/25 bg-transparent text-primary hover:border-paper/60',
   danger: 'border border-danger/45 bg-transparent text-danger hover:bg-danger/10',
 };
 

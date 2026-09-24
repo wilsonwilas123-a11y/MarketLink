@@ -9,8 +9,8 @@ import type { ButtonHTMLAttributes } from 'react';
 export function chipClass(active = false, className = ''): string {
   return `inline-flex h-8 items-center gap-1.5 rounded-[3px] border px-3 text-sm transition-colors ${
     active
-      ? 'border-ink bg-ink text-paper font-semibold'
-      : 'border-line bg-transparent text-muted hover:border-ink/40 hover:text-primary'
+      ? 'border-block bg-block text-on-block font-semibold'
+      : 'border-line bg-transparent text-muted hover:border-paper/40 hover:text-primary'
   } ${className}`;
 }
 

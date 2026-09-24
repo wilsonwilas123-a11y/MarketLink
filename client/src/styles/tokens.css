@@ -4,46 +4,46 @@
 /*
   The page is a market notice board, not a dashboard.
 
-  One sheet of warm paper, one ink that carries almost everything, and one hand-painted sign blue
-  kept back for the single fact a shopper acts on — that a market is open right now. Depth comes
-  from type size and from whitespace rather than from surfaces stacked on surfaces, so there is no
-  elevated tier pretending to glow and no accent on a control that is only chrome.
+  One black sheet, white type for nearly everything, and one hand-painted sign blue kept back for
+  the single fact a shopper acts on — that a market is open right now. Depth comes from type size
+  and from whitespace rather than from surfaces stacked on surfaces, so there is no elevated tier
+  pretending to glow, no accent on a control that is only chrome, and no coloured tint behind the
+  black.
 
-  Contrast, checked against the paper base: ink 14:1, muted pencil 6.3:1, sign blue 7.4:1, ochre
-  4.8:1, and paper on a solid ink block 14:1. All clear WCAG AA at body size.
+  Contrast, checked against the base: white 19.4:1, warm grey 8.2:1, sign blue 9.6:1, ochre 9.9:1,
+  and black on a solid white block 19.4:1. All clear WCAG AA — and AAA at body size.
 */
 @theme {
   /* The sheet. */
-  --color-base: #f4efe3;
-  --color-surface: #fbf8f1;
-  --color-elevated: #eae1d0;
-  --color-line: #d8cdb8;
+  --color-base: #050505;
+  --color-surface: #0e0e0e;
+  --color-elevated: #171717;
+  --color-line: #2b2b2b;
 
   /* What is written on it. */
-  --color-primary: #1d1b16;
-  --color-muted: #5e574b;
+  --color-primary: #ffffff;
+  --color-muted: #a8a49c;
 
   /* The one loud colour, and the wash left behind by it. */
-  --color-accent: #1f4e79;
-  --color-accent-soft: #dfe8f0;
-  /* The same hue lifted until it survives a photograph behind it. */
-  --color-accent-lift: #a9cdea;
-  --color-warn: #8a6100;
-  --color-danger: #8e1b1b;
+  --color-accent: #8ab6e0;
+  --color-accent-soft: #16283a;
+  /* The same hue at full weight, for the rare block of it. */
+  --color-accent-lift: #b9d5f0;
+  --color-warn: #e0b341;
+  --color-danger: #f08a8a;
 
-  /* Type that sits on a solid block rather than on the sheet. */
-  --color-paper: #fbf8f1;
-  --color-ink: #1d1b16;
-
-  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-  --font-body: 'Karla', ui-sans-serif, system-ui, sans-serif;
-
-  --radius-card: 4px;
+  /* White type — on a solid block, or over a photograph. */
+  --color-paper: #ffffff;
+  /* The black of the sheet, used where a plate has to sit on an image instead of on the page. */
+  --color-ink: #050505;
+  /* A control that is a block of colour rather than an outline: white, with black punched in. */
+  --color-block: #ffffff;
+  --color-on-block: #050505;
 }
 
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   body {
@@ -73,7 +73,7 @@
 
   ::selection {
     background: var(--color-accent);
-    color: var(--color-paper);
+    color: var(--color-ink);
   }
 }
 
@@ -84,8 +84,8 @@
 /* ------------------------------------------------------------------ the map
 
    Leaflet brings its own white chrome and its own stacking context. Everything below is that
-   chrome re-stated against the paper tokens, plus the pin, which is drawn in CSS so it matches
-   on both tile layers. */
+   chrome re-stated against the tokens, plus the pin, which is drawn in CSS so it matches on both
+   tile layers. */
 
 .ml-map-frame {
   height: 100%;
@@ -101,12 +101,13 @@
 }
 
 /*
-  The OpenStreetMap tiles are a cartographer's pastel set, and dropped on this paper they read as
-  a screenshot from another app. A light sepia pull brings them into the sheet. Satellite is
-  imagery of the actual place, so it is left exactly as it arrives.
+  The OpenStreetMap tiles are a cartographer's pastel set and would sit on this page like a
+  screenshot from another app. Inverting the pane and pulling the hue back is the usual way to get
+  a dark map that is still the same map. Satellite is imagery of the actual place, so it is left
+  exactly as it arrives.
 */
 .ml-map-toned .leaflet-tile-pane {
-  filter: sepia(0.22) saturate(0.6) contrast(0.95) brightness(1.03);
+  filter: invert(0.92) hue-rotate(180deg) saturate(0.5) brightness(0.95);
 }
 
 .ml-pin {
@@ -115,20 +116,20 @@
   height: 100%;
   border-radius: 50% 50% 50% 0;
   background: var(--color-muted);
-  border: 1.5px solid var(--color-paper);
+  border: 1.5px solid var(--color-base);
   /* The rounded corner points down-left; rotate the teardrop into a pin. */
   transform: rotate(-45deg);
-  box-shadow: 0 1px 3px rgb(29 27 22 / 0.3);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
 }
 
 .ml-pin-open {
   background: var(--color-accent);
 }
 
-/* The pin you asked for is the one drawn in ink — the loud colour belongs to opening hours. */
+/* The pin you asked for is the one drawn in white — the loud colour belongs to opening hours. */
 .ml-pin-active {
-  background: var(--color-ink);
-  border-color: var(--color-paper);
+  background: var(--color-block);
+  border-color: var(--color-base);
 }
 
 .leaflet-bar,
@@ -158,7 +159,7 @@
   color: var(--color-primary) !important;
   border: 1px solid var(--color-line);
   border-radius: 4px !important;
-  box-shadow: 0 12px 28px rgb(29 27 22 / 0.16) !important;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.55) !important;
 }
 
 .leaflet-popup-content {
@@ -194,12 +195,12 @@
   height: 32px;
   padding: 0 14px;
   border-radius: 3px;
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: var(--color-block);
+  color: var(--color-on-block);
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .ml-popup-link:hover {
-  background: color-mix(in oklab, var(--color-ink) 84%, var(--color-accent));
+  background: color-mix(in oklab, var(--color-block) 88%, var(--color-accent));
 }

@@ -67,8 +67,9 @@ function Hero() {
   return (
     <section className="relative isolate overflow-hidden border-b border-line">
       {/* The photograph is the landing band, cropped at source so the farmer stands right of
-          centre and the copy has the left half to itself. The band is much wider than he is, so
-          the object position is chosen to keep his face and the top of the crate in the slice. */}
+          centre and the copy has the left half to itself. This is the one band the black sheet
+          does not reach — the hero is the photo, and the type on it is white. The band is much
+          wider than he is, so the object position keeps his face and the crate in the slice. */}
       <picture>
         <source srcSet="/img/hero-farmer.webp" type="image/webp" />
         <img
@@ -532,7 +533,7 @@ function AskPanel() {
           <button
             type="submit"
             aria-label="Search"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-paper transition hover:brightness-110"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-110"
           >
             <Glyph name="send" size={17} />
           </button>

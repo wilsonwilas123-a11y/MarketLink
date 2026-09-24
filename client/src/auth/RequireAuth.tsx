@@ -62,7 +62,7 @@ function WrongRole({ role }: { role: Role }) {
       </p>
       <Link
         to={landing.to}
-        className="mt-6 inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-paper"
+        className="mt-6 inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-ink"
       >
         Go to {landing.label}
       </Link>

@@ -64,8 +64,7 @@ export function MarketCard({
           </h3>
 
           <p className="mt-1 truncate text-sm text-muted">
-            {market.address}
-            <span className="text-muted/70"> · {market.city}</span>
+            {market.address} · {market.city}
           </p>
 
           <TradingDays
@@ -79,8 +78,8 @@ export function MarketCard({
         <div className="flex shrink-0 flex-col items-end gap-1">
           {distance !== null ? (
             <span
-              className={`num font-semibold leading-none ${
-                prominent ? 'text-2xl text-primary' : 'text-lg text-primary/85'
+              className={`num text-lg font-semibold leading-none text-primary ${
+                prominent ? 'text-2xl' : ''
               }`}
             >
               {formatDistance(distance)}

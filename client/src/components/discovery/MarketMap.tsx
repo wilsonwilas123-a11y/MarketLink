@@ -193,7 +193,7 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
     if (origin) {
       L.circle([origin.lat, origin.lng], {
         radius: 700,
-        color: '#1f4e79',
+        color: '#8ab6e0',
         weight: 1,
         fillOpacity: 0.08,
         interactive: false,
@@ -234,7 +234,7 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
             onClick={() => setBase(key)}
             aria-pressed={base === key}
             className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-              base === key ? 'bg-ink text-paper' : 'text-muted hover:bg-elevated hover:text-primary'
+              base === key ? 'bg-block text-on-block' : 'text-muted hover:bg-elevated hover:text-primary'
             }`}
           >
             {TILES[key].name}
