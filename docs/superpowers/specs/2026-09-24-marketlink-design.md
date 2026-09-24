@@ -124,7 +124,7 @@ judges ask how the pre-order flow works.
 
 ## 4. Data Model
 
-Eleven tables. Timestamps are `timestamptz`, primary keys `uuid`, money in kobo `bigint`.
+Twelve tables. Timestamps are `timestamptz`, primary keys `uuid`, money in kobo `bigint`.
 
 ### 4.1 `profiles`
 
