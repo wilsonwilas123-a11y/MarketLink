@@ -68,7 +68,7 @@ values
    array['tue','thu','sat','sun'], time '07:00', time '17:00',
    '/img/markets/mile-12.jpg', true),
   (md5('ml-market-oyingbo')::uuid, 'Oyingbo Market',
-   'Jiboku Cross, Ikorodu Road, Yaba', 'Lagos', 'Lagos', 6.501000, 3.376000,
+   'Oyingbo Road, off Iddo Road, Ebute-Metta', 'Lagos', 'Lagos', 6.476600, 3.383900,
    array['mon','wed','fri'], time '08:00', time '16:30',
    '/img/markets/oyingbo.jpg', true),
   (md5('ml-market-oshodi')::uuid, 'Oshodi Market',
@@ -96,13 +96,19 @@ update markets set name = 'Mile 12 International Market',
 /* Balogun is out of the demo and Oyingbo takes its place. The two growers rostered to it move
    across with their stall coordinates, and the old row goes after them: orders name a market and
    refuse the delete while any survive, so the re-point has to come first. */
-update farmers set lat = 6.501000, lng = 3.376000
+update farmers set lat = 6.476600, lng = 3.383900
  where id in (md5('marketlink-demo-sunday')::uuid, md5('marketlink-demo-seun')::uuid);
 
 update market_farmers set market_id = md5('ml-market-oyingbo')::uuid
  where market_id = md5('ml-market-balogun')::uuid;
 
 delete from markets where id = md5('ml-market-balogun')::uuid;
+
+/* The pin was first guessed at Jiboku Cross, which is four kilometres from the market. Restated
+   here because the insert above will not rewrite a row a database already holds. */
+update markets set address = 'Oyingbo Road, off Iddo Road, Ebute-Metta',
+                   lat = 6.476600, lng = 3.383900
+ where id = md5('ml-market-oyingbo')::uuid;
 
 /* Named for the market he used to trade at, and now wrong twice over. */
 update profiles set address = 'Mile 12, Ojo'
@@ -136,11 +142,11 @@ from (values
   ('chidinma', 'Eze Fresh Produce',    'Chidinma Eze',    'Peppers, tomatoes and onions sold by the crate.',                             6.567000, 3.342100, array['sat','sun'],      time '09:00', time '13:00', 120, 'approved', 4.30, 51),
   ('yahaya',   'Sanni Dairy & Eggs',   'Yahaya Sanni',    'Farm milk, yoghurt and eggs, cold-chained from the Epe herd.',                6.595500, 3.343300, array['sat','sun'],      time '10:00', time '14:00', 240, 'approved', 4.80, 27),
   ('grace',    'Effiong Veg Baskets',  'Grace Effiong',   'Mixed vegetable baskets sized for a household week.',                         6.595500, 3.343300, array['tue','thu'],      time '07:30', time '11:30', 120, 'approved', 4.10, 19),
-  ('sunday',   'Ochelula Herbs',       'Sunday Ochelula', 'Scent leaf, bitter leaf and curry leaf, cut and tied by hand.',                6.501000, 3.376000, array['mon','wed','fri'], time '08:00', time '12:00', 300, 'approved', 4.40, 44),
+  ('sunday',   'Ochelula Herbs',       'Sunday Ochelula', 'Scent leaf, bitter leaf and curry leaf, cut and tied by hand.',                6.476600, 3.383900, array['mon','wed','fri'], time '08:00', time '12:00', 300, 'approved', 4.40, 44),
   ('ifaturo',  'Ade Orchard',          'Ifaturo Ade',     'Seasonal fruit from Epe orchards, picked to order.',                          6.595500, 3.343300, array['sat','sun'],      time '09:30', time '13:30', 120, 'approved', 4.70, 33),
   ('kelechi',  'Anyanwu Bakery',       'Kelechi Anyanwu', 'Cassava bread, plantain chips and agege bread baked nightly.',                6.567000, 3.342100, array['sat','sun'],      time '07:00', time '11:00',  60, 'approved', 4.50, 62),
   ('mariam',   'Lawal Dairy',          'Mariam Lawal',    'Yoghurt, waraki and fresh milk kept cold from farm to stall.',                6.595500, 3.343300, array['tue','thu','sat'], time '07:00', time '10:00', 180, 'approved', 4.20, 15),
-  ('seun',     'Oluwale Herb Stand',   'Seun Oluwale',    'Scent leaf, curry leaf and bitter tomato, potted or cut.',                    6.501000, 3.376000, array['mon','wed','fri'], time '08:30', time '12:30', 120, 'pending',  0.00,  0)
+  ('seun',     'Oluwale Herb Stand',   'Seun Oluwale',    'Scent leaf, curry leaf and bitter tomato, potted or cut.',                    6.476600, 3.383900, array['mon','wed','fri'], time '08:30', time '12:30', 120, 'pending',  0.00,  0)
 ) as f (key, stall, name, blurb, lat, lng, days, win_start, win_end, cutoff, status, ravg, rcount)
 on conflict (profile_id) do nothing;
 
