@@ -14,15 +14,12 @@
   and black on a solid white block 19.4:1. All clear WCAG AA — and AAA at body size.
 */
 /*
-  `static`, not the default: Tailwind drops theme variables no generated utility references, and
-  these are reached through `var()` from the base layer rather than through a class. Without the
-  keyword `--font-display` and `--font-body` never reach the sheet and the page falls back to the
-  system font.
-
   No colour here may be named `base`, `sm`, `lg` or any other type-scale word: a `--color-base`
-  turns the class `text-base` into that colour and silently deletes the font size with it.
+  makes the class `text-base` that colour and silently deletes the font size with it, which is how
+  headings end up near-black on a near-black page. A token nothing references is pruned from the
+  output, so check the built sheet before trusting one.
 */
-@theme static {
+@theme {
   /* The sheet. */
   --color-sheet: #050505;
   --color-surface: #0e0e0e;
@@ -48,6 +45,9 @@
   /* A control that is a block of colour rather than an outline: white, with black punched in. */
   --color-block: #ffffff;
   --color-on-block: #050505;
+
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Karla', ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
