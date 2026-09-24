@@ -81,6 +81,11 @@ values
    '/img/markets/lekki.jpg', true)
 on conflict (id) do nothing;
 
+/* The insert above refuses to touch a row that already exists, so a database seeded under the
+   earlier title would keep it. Restated here, and only here, to make the rename self-applying. */
+update markets set name = 'Mile 12 International Market'
+ where id = md5('ml-market-lekki')::uuid;
+
 -- ---------------------------------------------------------------- categories
 
 insert into categories (id, name, slug, icon_key, sort_order)
