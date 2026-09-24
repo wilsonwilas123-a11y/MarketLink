@@ -12,6 +12,7 @@ describe('ApiError', () => {
     expect(ERROR_STATUS).toEqual({
       validation_failed: 400,
       unauthenticated: 401,
+      profile_missing: 401,
       forbidden: 403,
       account_disabled: 403,
       farmer_not_approved: 403,

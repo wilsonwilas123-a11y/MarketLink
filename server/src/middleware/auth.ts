@@ -92,7 +92,7 @@ async function loadProfile(req: Request, pool: Pool, next: NextFunction): Promis
     if (!row) {
       next(
         new ApiError(
-          'unauthenticated',
+          'profile_missing',
           'This account has no profile yet. Call POST /api/auth/bootstrap first.',
         ),
       );

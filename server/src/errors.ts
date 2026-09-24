@@ -8,6 +8,9 @@
 export const ERROR_STATUS = {
   validation_failed: 400,
   unauthenticated: 401,
+  // A valid token whose account has not finished bootstrap. Its own code because the
+  // client's response differs: `unauthenticated` signs out, this one shows the details form.
+  profile_missing: 401,
   forbidden: 403,
   account_disabled: 403,
   farmer_not_approved: 403,

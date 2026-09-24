@@ -547,6 +547,7 @@ check at build time; forms use real `<label>`s with inline error text, not place
 |---|---|---|
 | 400 | `validation_failed` | zod rejects the body/query |
 | 401 | `unauthenticated` | missing/expired JWT |
+| 401 | `profile_missing` | valid JWT, but `POST /api/auth/bootstrap` has not run |
 | 403 | `forbidden`, `account_disabled`, `farmer_not_approved` | role/ownership gate |
 | 404 | `not_found` | unknown id, or a row the caller may not see |
 | 409 | `stock_unavailable`, `cutoff_passed`, `invalid_transition`, `already_reviewed` | state conflict |
@@ -557,8 +558,10 @@ Request IDs on every response and log line, generated at the edge middleware.
 
 ### 9.2 Client
 
-TanStack Query `onError` → toast with the server `message`. `401` → clear session, redirect
-to login with a `returnTo` param. `409 stock_unavailable` → the affected cart line is marked
+TanStack Query `onError` → toast with the server `message`. `401 unauthenticated` → clear
+session, redirect to login with a `returnTo` param. `401 profile_missing` → keep the session
+and route to bootstrap, because signing out of a token that still verifies only traps the user
+in a second sign-in. `409 stock_unavailable` → the affected cart line is marked
 inline and the cart refetches availability, because the honest state of a market app is that
 stock changed while you were browsing. Optimistic updates only for favorites and quantity
 steppers, both rolled back on failure. Every list has an empty state and a retry; no screen

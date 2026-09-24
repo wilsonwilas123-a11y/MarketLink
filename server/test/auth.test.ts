@@ -46,6 +46,7 @@ describe('requireAuth profile lookup', () => {
       .set(bearer());
 
     expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('profile_missing');
     expect(res.body.error.message).toContain('POST /api/auth/bootstrap');
   });
 
