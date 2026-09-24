@@ -14,6 +14,16 @@ const size: Record<Size, string> = {
   md: 'h-10 px-5',
 };
 
+/**
+ * The recipe, on its own.
+ *
+ * A route that navigates is a link, not a button that navigates, so anything styled like a
+ * button and pointing at a URL needs these classes without the `<button>` element.
+ */
+export function buttonClass(v: Variant = 'primary', s: Size = 'md', className = ''): string {
+  return `inline-flex items-center justify-center gap-2 rounded-full transition disabled:pointer-events-none disabled:opacity-50 ${size[s]} ${variant[v]} ${className}`;
+}
+
 export function Button({
   variant: v = 'primary',
   size: s = 'md',
@@ -31,7 +41,7 @@ export function Button({
       {...rest}
       disabled={loading || rest.disabled}
       aria-busy={loading || undefined}
-      className={`inline-flex items-center justify-center gap-2 rounded-full transition disabled:pointer-events-none disabled:opacity-50 ${size[s]} ${variant[v]} ${className}`}
+      className={buttonClass(v, s, className)}
     >
       {loading ? <span aria-hidden>…</span> : null}
       {children}

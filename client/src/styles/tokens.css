@@ -55,3 +55,107 @@
 @utility num {
   font-variant-numeric: tabular-nums;
 }
+
+/* ------------------------------------------------------------------ the map
+
+   Leaflet brings its own white chrome and its own stacking context. Everything
+   below is that chrome re-stated against the tokens, plus the pin, which is drawn
+   in CSS so it matches on both tile layers and needs no image asset. */
+
+.ml-map-frame {
+  height: 100%;
+  width: 100%;
+  background: var(--color-elevated);
+  /* Below the sticky header (z-40); Leaflet's panes all sit under this. */
+  z-index: 0;
+}
+
+.ml-map-frame .leaflet-container {
+  background: var(--color-elevated);
+  font-family: var(--font-body);
+}
+
+.ml-pin {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50% 50% 50% 0;
+  background: var(--color-muted);
+  border: 1.5px solid var(--color-base);
+  /* The rounded corner points down-left; rotate the teardrop into a pin. */
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.45);
+}
+
+.ml-pin-open {
+  background: var(--color-accent);
+}
+
+.ml-pin-active {
+  background: var(--color-warn);
+  border-color: var(--color-ink);
+}
+
+.leaflet-bar,
+.leaflet-control-attribution {
+  border: 1px solid var(--color-line) !important;
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent) !important;
+  color: var(--color-muted) !important;
+}
+
+.leaflet-bar a {
+  background: var(--color-surface) !important;
+  color: var(--color-primary) !important;
+  border-bottom-color: var(--color-line) !important;
+}
+
+.leaflet-bar a:hover {
+  background: var(--color-elevated) !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-accent) !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--color-surface) !important;
+  color: var(--color-primary) !important;
+  border: 1px solid var(--color-line);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.5) !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+}
+
+.ml-popup-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.ml-popup-meta {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.ml-popup-num {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+}
+
+.ml-popup-link {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+

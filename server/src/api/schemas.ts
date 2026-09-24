@@ -202,6 +202,8 @@ export const FarmerSummarySchema = z.object({
   contact_person: z.string().nullable(),
   description: z.string().nullable(),
   logo_url: z.string().nullable(),
+  /** The stall's banner. Listed screens draw a card with it, so it cannot live only on the profile. */
+  cover_url: z.string().nullable(),
   lat: z.number().nullable(),
   lng: z.number().nullable(),
   rating_avg: z.number(),
@@ -246,7 +248,6 @@ export const ReviewSchema = z.object({
 export type Review = z.infer<typeof ReviewSchema>;
 
 export const FarmerDetailSchema = FarmerSummarySchema.extend({
-  cover_url: z.string().nullable(),
   pickup_window_start: TimeSchema.nullable(),
   pickup_window_end: TimeSchema.nullable(),
   order_cutoff_minutes: z.number().int(),

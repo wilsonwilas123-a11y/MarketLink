@@ -608,6 +608,10 @@
             "type": "string",
             "nullable": true
           },
+          "cover_url": {
+            "type": "string",
+            "nullable": true
+          },
           "lat": {
             "type": "number",
             "nullable": true
@@ -635,6 +639,7 @@
           "contact_person",
           "description",
           "logo_url",
+          "cover_url",
           "lat",
           "lng",
           "rating_avg",
@@ -664,6 +669,10 @@
             "type": "string",
             "nullable": true
           },
+          "cover_url": {
+            "type": "string",
+            "nullable": true
+          },
           "lat": {
             "type": "number",
             "nullable": true
@@ -683,10 +692,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "cover_url": {
-            "type": "string",
-            "nullable": true
           },
           "pickup_window_start": {
             "type": "string",
@@ -852,12 +857,12 @@
           "contact_person",
           "description",
           "logo_url",
+          "cover_url",
           "lat",
           "lng",
           "rating_avg",
           "rating_count",
           "operating_days",
-          "cover_url",
           "pickup_window_start",
           "pickup_window_end",
           "order_cutoff_minutes",
@@ -1260,6 +1265,10 @@
                   "type": "string",
                   "nullable": true
                 },
+                "cover_url": {
+                  "type": "string",
+                  "nullable": true
+                },
                 "lat": {
                   "type": "number",
                   "nullable": true
@@ -1287,6 +1296,7 @@
                 "contact_person",
                 "description",
                 "logo_url",
+                "cover_url",
                 "lat",
                 "lng",
                 "rating_avg",

@@ -65,16 +65,20 @@ insert into markets (id, name, address, city, state, lat, lng, operating_days, o
 values
   (md5('ml-market-mile12')::uuid, 'Mile 12 Market',
    'Ikorodu Road, Mile 12, Ojo', 'Lagos', 'Lagos', 6.595500, 3.343300,
-   array['tue','thu','sat'], time '07:00', time '17:00', null, true),
+   array['tue','thu','sat'], time '07:00', time '17:00',
+   '/img/markets/mile-12.jpg', true),
   (md5('ml-market-balogun')::uuid, 'Balogun Market',
    'Balogun Square, Isale Eko', 'Lagos', 'Lagos', 6.454100, 3.398500,
-   array['mon','wed','fri'], time '08:00', time '16:30', null, true),
+   array['mon','wed','fri'], time '08:00', time '16:30',
+   '/img/markets/balogun.jpg', true),
   (md5('ml-market-oshodi')::uuid, 'Oshodi Market',
    'Alhaji Masha Way, Oshodi', 'Lagos', 'Lagos', 6.567000, 3.342100,
-   array['sat','sun'], time '06:30', time '18:00', null, true),
+   array['sat','sun'], time '06:30', time '18:00',
+   '/img/markets/oshodi.jpg', true),
   (md5('ml-market-lekki')::uuid, 'Lekki Weekend Farmers Market',
    'Admiralty Way, Lekki Phase 1', 'Lagos', 'Lagos', 6.455100, 3.379500,
-   array['sat','sun'], time '09:00', time '15:00', null, true)
+   array['sat','sun'], time '09:00', time '15:00',
+   '/img/markets/lekki.jpg', true)
 on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------- categories
@@ -93,12 +97,13 @@ on conflict (id) do nothing;
 -- Eight approved and one pending, so the admin approval queue has something in it.
 insert into farmers (id, profile_id, stall_name, contact_person, description, lat, lng,
                      operating_days, pickup_window_start, pickup_window_end,
-                     order_cutoff_minutes, status, rating_avg, rating_count)
+                     order_cutoff_minutes, status, rating_avg, rating_count, cover_url)
 select
   md5('marketlink-demo-' || f.key)::uuid,
   md5('marketlink-demo-' || f.key)::uuid,
   f.stall, f.name, f.blurb, f.lat, f.lng,
-  f.days, f.win_start, f.win_end, f.cutoff, f.status, f.ravg, f.rcount
+  f.days, f.win_start, f.win_end, f.cutoff, f.status, f.ravg, f.rcount,
+  '/img/farmers/' || f.key || '.jpg'
 from (values
   ('bola',     'Adeyemi Farms',        'Bola Adeyemi',    'Leaf vegetables and tubers grown at Epe, harvested two days before pickup.', 6.595500, 3.343300, array['tue','thu','sat'], time '08:00', time '12:00', 180, 'approved', 4.60, 38),
   ('chidinma', 'Eze Fresh Produce',    'Chidinma Eze',    'Peppers, tomatoes and onions sold by the crate.',                             6.567000, 3.342100, array['sat','sun'],      time '09:00', time '13:00', 120, 'approved', 4.30, 51),

@@ -23,12 +23,12 @@ import type {
  * `lat`/`lng` are numeric, which the driver returns as text, so they are cast here for the
  * same reason the market columns are.
  */
-const FARMER_COLUMNS = `id, stall_name, contact_person, description, logo_url,
+const FARMER_COLUMNS = `id, stall_name, contact_person, description, logo_url, cover_url,
   lat::float8 as lat, lng::float8 as lng,
   rating_avg::float8 as rating_avg, rating_count, operating_days`;
 
 /** A stall's own view of itself, where `status` does appear. */
-const STALL_COLUMNS = `${FARMER_COLUMNS}, cover_url,
+const STALL_COLUMNS = `${FARMER_COLUMNS},
   pickup_window_start, pickup_window_end, order_cutoff_minutes, status`;
 
 /**

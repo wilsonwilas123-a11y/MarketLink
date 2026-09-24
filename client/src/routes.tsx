@@ -5,12 +5,16 @@ import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import Account from './pages/Account';
 import FarmerDashboard from './pages/FarmerDashboard';
-import { About, Contact, Farmers, Home, Markets, Orders, Products } from './pages/stubs';
+import Home from './pages/Home';
+import MarketDetail from './pages/MarketDetail';
+import Markets from './pages/Markets';
+import { About, Contact, Farmers, Orders, Products } from './pages/stubs';
 import NotFound from './pages/NotFound';
 
 export const routes: RouteObject[] = [
   { path: '/', element: <Home /> },
   { path: '/markets', element: <Markets /> },
+  { path: '/markets/:id', element: <MarketDetail /> },
   { path: '/products', element: <Products /> },
   { path: '/farmers', element: <Farmers /> },
   { path: '/orders', element: <Orders /> },

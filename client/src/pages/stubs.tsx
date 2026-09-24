@@ -2,21 +2,6 @@ import { Page } from './Page';
 
 // Placeholder screens so every route renders something real from phase 1.
 // Each one is replaced by its own module as its phase lands (see spec §8.3).
-export const Home = () => (
-  <Page
-    title="Fresh from the market."
-    accent="Before you get there."
-    blurb="See what local farmers are growing this week, check what is actually in stock, and reserve it for pickup."
-  />
-);
-
-export const Markets = () => (
-  <Page
-    title="Markets near you"
-    blurb="Find farmers markets by location and day, and see which stalls will be there."
-  />
-);
-
 export const Products = () => (
   <Page
     title="What is in stock"
