@@ -44,9 +44,9 @@ export function MarketCard({
           seed={market.id}
           glyph="farm"
           label={market.name}
-          glyphSize={prominent ? 32 : 26}
+          glyphSize={prominent ? 48 : 36}
           className={`shrink-0 rounded-[2px] ${
-            prominent ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-16 w-16 sm:h-[72px] sm:w-[72px]'
+            prominent ? 'h-32 w-32 sm:h-36 sm:w-36' : 'h-24 w-24 sm:h-28 sm:w-28'
           }`}
         />
 
@@ -107,7 +107,7 @@ export function MarketCard({
 export function MarketCardSkeleton() {
   return (
     <div className="flex items-start gap-4 border-t border-line py-4" aria-hidden>
-      <div className="h-16 w-16 shrink-0 rounded-[2px] bg-elevated sm:h-[72px] sm:w-[72px]" />
+      <div className="h-24 w-24 shrink-0 rounded-[2px] bg-elevated sm:h-28 sm:w-28" />
       <div className="min-w-0 flex-1">
         <div className="h-4 w-2/5 rounded-[2px] bg-elevated" />
         <div className="mt-2 h-3 w-3/5 rounded-[2px] bg-elevated/70" />
