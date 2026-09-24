@@ -46,6 +46,9 @@ function Hero() {
 
   return (
     <section className="relative isolate overflow-hidden border-b border-line">
+      {/* Wide screens: the photograph is anchored to the right edge at its own aspect ratio, so
+          the farmer stands on the right of the frame instead of behind the copy and nothing about
+          it is cropped or dimmed. Narrow screens have no room beside the copy, so it bleeds. */}
       <picture>
         <source srcSet="/img/hero-farmer.webp" type="image/webp" />
         <img
@@ -53,24 +56,14 @@ function Hero() {
           alt="A farmer at the head of his row, holding a crate of just-picked vegetables"
           width={1364}
           height={768}
-          className="absolute inset-0 -z-10 h-full w-full object-cover object-[62%_center]"
+          className="absolute inset-0 -z-10 h-full w-full object-cover object-center lg:left-auto lg:right-0 lg:h-full lg:w-auto lg:max-w-none lg:object-contain lg:[mask-image:linear-gradient(to_right,transparent,rgba(0,0,0,0.4)_12%,#000_30%)]"
         />
       </picture>
-      {/* Two scrims: a vertical one so the copy is readable on a narrow screen where the man
-          and the text share a line, and a horizontal one on wide screens where they do not. */}
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-t from-base via-base/55 to-base/25"
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-base via-base/80 to-transparent lg:block"
-      />
 
       <div className="mx-auto flex max-w-7xl flex-col px-4 pb-14 pt-16 md:pb-20 md:pt-24">
         <div className="max-w-2xl lg:max-w-xl">
           <Reveal className="flex flex-col" y={12} stagger={0.07}>
-            <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+            <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted [text-shadow:0_1px_14px_rgba(4,21,14,0.95)]">
               Local farmers
               <span aria-hidden className="text-accent">
                 ·
@@ -82,12 +75,12 @@ function Hero() {
               Stronger communities
             </p>
 
-            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.05] md:text-6xl">
+            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.05] md:text-6xl [text-shadow:0_2px_22px_rgba(4,21,14,0.95)]">
               Fresh from the market.
               <span className="block text-accent">Before you get there.</span>
             </h1>
 
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-primary/85 md:text-lg">
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-primary/85 md:text-lg [text-shadow:0_1px_16px_rgba(4,21,14,0.95)]">
               See what each stall actually has left this week, reserve it against a pickup
               window, and pay the farmer at the market. Nothing is charged online.
             </p>
@@ -117,11 +110,11 @@ function Hero() {
             </form>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link to="/markets" className={buttonClass('ghost', 'md', 'bg-base/40 backdrop-blur')}>
+              <Link to="/markets" className={buttonClass('ghost', 'md', 'bg-surface/85 backdrop-blur')}>
                 Explore markets
                 <Glyph name="arrow" size={16} />
               </Link>
-              <Link to="/products" className={buttonClass('ghost', 'md', 'bg-base/40 backdrop-blur')}>
+              <Link to="/products" className={buttonClass('ghost', 'md', 'bg-surface/85 backdrop-blur')}>
                 Browse produce
               </Link>
             </div>
