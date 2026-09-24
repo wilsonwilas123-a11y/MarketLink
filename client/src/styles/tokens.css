@@ -139,6 +139,22 @@
   color: var(--color-muted) !important;
 }
 
+/* Leaflet draws the zoom control as a rounded rectangle; the rest of the page's controls are
+   pills, so this one follows them. Leaflet sets the end anchors' corners itself, hence the pair. */
+.leaflet-bar {
+  border-radius: 999px !important;
+}
+
+.leaflet-bar a:first-child {
+  border-top-left-radius: 999px !important;
+  border-top-right-radius: 999px !important;
+}
+
+.leaflet-bar a:last-child {
+  border-bottom-left-radius: 999px !important;
+  border-bottom-right-radius: 999px !important;
+}
+
 .leaflet-bar a {
   background: var(--color-surface) !important;
   color: var(--color-primary) !important;
@@ -193,8 +209,8 @@
   display: inline-flex;
   align-items: center;
   height: 32px;
-  padding: 0 14px;
-  border-radius: 3px;
+  padding: 0 16px;
+  border-radius: 999px;
   background: var(--color-block);
   color: var(--color-on-block);
   font-size: 0.8125rem;

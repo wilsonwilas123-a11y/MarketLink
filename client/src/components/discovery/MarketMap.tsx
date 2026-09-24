@@ -226,14 +226,14 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
         tabIndex={-1}
       />
 
-      <div className="absolute right-3 top-3 z-[500] flex overflow-hidden rounded-[3px] border border-line bg-surface">
+      <div className="absolute right-3 top-3 z-[500] flex gap-1 rounded-full border border-line bg-surface p-1">
         {(Object.keys(TILES) as BaseLayer[]).map((key) => (
           <button
             key={key}
             type="button"
             onClick={() => setBase(key)}
             aria-pressed={base === key}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               base === key ? 'bg-block text-on-block' : 'text-muted hover:bg-elevated hover:text-primary'
             }`}
           >

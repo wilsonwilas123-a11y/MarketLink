@@ -7,10 +7,10 @@ import type { ButtonHTMLAttributes } from 'react';
  * thing you have filtered by is the only one that goes solid.
  */
 export function chipClass(active = false, className = ''): string {
-  return `inline-flex h-8 items-center gap-1.5 rounded-[3px] border px-3 text-sm transition-colors ${
+  return `inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
     active
       ? 'border-block bg-block text-on-block font-semibold'
-      : 'border-line bg-transparent text-muted hover:border-paper/40 hover:text-primary'
+      : 'border-line bg-elevated/70 text-muted hover:border-paper/35 hover:text-primary'
   } ${className}`;
 }
 

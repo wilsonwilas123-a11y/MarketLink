@@ -49,10 +49,15 @@ const CATEGORY_TONE: Record<string, string> = {
  * The chip recipe, given a sheet to stand on.
  *
  * These chips sit on the photograph, where the recipe's pencil-grey type on nothing is
- * unreadable. Both overrides need the important modifier: the recipe declares the same two
- * properties, and a later class in the list does not beat an earlier rule in the stylesheet.
+ * unreadable. They take the same dark glass the search bar uses, so the band reads as one
+ * control surface with the photo behind it rather than six stickers on top.
+ *
+ * Every colour below carries the important marker because the recipe declares the same four
+ * properties, and a class sitting later in the list does not beat a rule sitting later in the
+ * stylesheet — Tailwind orders the sheet, not your JSX.
  */
-const CHIP_ON_PHOTO = 'bg-surface! text-primary!';
+const CHIP_ON_PHOTO =
+  'border-paper/25! bg-ink/55! text-paper! backdrop-blur hover:border-paper/50! hover:text-paper!';
 
 function Hero() {
   const [term, setTerm] = useState('');
@@ -84,7 +89,7 @@ function Hero() {
       <div className="mx-auto flex w-full max-w-[1680px] flex-col px-6 pb-14 pt-16 md:px-10 md:pb-20 md:pt-24">
         <div className="max-w-2xl lg:max-w-xl">
           <Reveal className="flex flex-col" y={12} stagger={0.07}>
-            <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-paper [text-shadow:0_1px_2px_rgba(4,21,14,0.9),0_2px_18px_rgba(4,21,14,0.85)]">
+            <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-paper [text-shadow:0_1px_1px_rgba(0,0,0,0.9),0_0_14px_rgba(0,0,0,0.6)]">
               Connecting local farms
               <span aria-hidden className="text-accent-lift">
                 →
@@ -92,19 +97,19 @@ function Hero() {
               your market
             </p>
 
-            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.12] text-paper md:text-5xl [text-shadow:0_2px_4px_rgba(4,21,14,0.85),0_4px_26px_rgba(4,21,14,0.8)]">
+            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.12] text-paper md:text-5xl [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_0_12px_rgba(0,0,0,0.7),0_2px_24px_rgba(0,0,0,0.7)]">
               <span className="block">From the farm</span>
               <span className="mt-1.5 flex items-center gap-3">
                 <Glyph name="arrow" size={22} className="shrink-0 text-paper/60" />
                 <span>to the market</span>
               </span>
               <span className="mt-1.5 flex items-center gap-3 text-accent-lift">
-                <Glyph name="arrow" size={22} className="shrink-0 opacity-60" />
+                <Glyph name="arrow" size={22} className="shrink-0 opacity-70" />
                 <span>to you</span>
               </span>
             </h1>
 
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-paper md:text-lg [text-shadow:0_1px_3px_rgba(4,21,14,0.95),0_2px_20px_rgba(4,21,14,0.8)]">
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-paper md:text-lg [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_0_10px_rgba(0,0,0,0.8),0_2px_18px_rgba(0,0,0,0.75)]">
               Every listing here is written by the farm that grew it. See what is actually left
               this week, reserve it against a pickup window, and pay the grower at the market.
               Nothing is charged online.
@@ -114,7 +119,7 @@ function Hero() {
                 right end of the search bar, not a separate control standing beside it. */}
             <form
               onSubmit={submit}
-              className="mt-8 flex w-full max-w-2xl items-center gap-2 rounded-full border border-line bg-surface/80 p-2 backdrop-blur [text-shadow:none] focus-within:border-accent"
+              className="mt-8 flex w-full max-w-2xl items-center gap-2 rounded-full border border-paper/20 bg-ink/55 p-2 backdrop-blur-md [text-shadow:none] focus-within:border-accent"
             >
               <label htmlFor="hero-search" className="sr-only">
                 Search markets, farmers or produce
@@ -124,27 +129,23 @@ function Hero() {
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="Search markets, farmers or produce…"
-                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-base text-primary outline-none placeholder:text-muted"
+                className="h-11 min-w-0 flex-1 bg-transparent px-3.5 text-base text-paper outline-none placeholder:text-paper/55"
               />
               <button
                 type="submit"
                 aria-label="Search"
-                className={buttonClass('primary', 'md', 'h-11 w-11 shrink-0 p-0')}
+                className={buttonClass('primary', 'md', 'h-11 w-16 shrink-0 p-0!')}
               >
-                <Glyph name="search" size={19} />
+                <Glyph name="search" size={21} />
               </button>
             </form>
 
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 to="/markets"
-                className={buttonClass(
-                  'ghost',
-                  'md',
-                  'h-11 gap-2.5 border-accent/45 bg-accent-soft! px-6 text-base',
-                )}
+                className={buttonClass('primary', 'md', 'h-11 gap-2.5 px-6 text-base')}
               >
-                <Glyph name="leaf" size={18} className="text-accent" />
+                <Glyph name="leaf" size={18} />
                 Explore markets
                 <Glyph name="arrow" size={17} />
               </Link>
@@ -153,10 +154,10 @@ function Hero() {
                 className={buttonClass(
                   'ghost',
                   'md',
-                  'h-11 gap-2.5 bg-surface! px-6 text-base',
+                  'h-11 gap-2.5 border-paper/35! bg-ink/45! px-6 text-base backdrop-blur hover:border-paper/70!',
                 )}
               >
-                <Glyph name="basket" size={18} className="text-accent" />
+                <Glyph name="basket" size={18} className="text-accent-lift" />
                 Browse produce
                 <Glyph name="arrow" size={17} />
               </Link>
@@ -164,12 +165,8 @@ function Hero() {
 
             <div className="mt-3 flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
-                <Link
-                  key={c.slug}
-                  to={`/products?category=${c.slug}`}
-                  className={chipClass(false, CHIP_ON_PHOTO)}
-                >
-                  <Glyph name={c.glyph} size={15} className={CATEGORY_TONE[c.slug] ?? 'text-primary'} />
+                <Link key={c.slug} to={`/products?category=${c.slug}`} className={chipClass(false, CHIP_ON_PHOTO)}>
+                  <Glyph name={c.glyph} size={15} className={CATEGORY_TONE[c.slug] ?? 'text-paper'} />
                   {c.name}
                 </Link>
               ))}
