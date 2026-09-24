@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Glyph, type GlyphName } from '../components/art/glyphs';
 import { Thumb } from '../components/art/Thumb';
@@ -12,7 +12,7 @@ import { CATEGORIES, FRESH_THIS_WEEK, stockState } from '../lib/showcase';
 import type { ShowcaseProduct, StockLine } from '../lib/showcase';
 import type { FarmerSummary } from '../lib/types';
 import { formatKobo } from '../utils/kobo';
-import { Reveal } from '../motion/reveal';
+import { prefersReducedMotion, Reveal } from '../motion/reveal';
 
 /**
  * The landing screen.
@@ -304,91 +304,138 @@ function MarketsNearYou() {
   );
 }
 
-/** The remaining-stock pill, shared by the lead card and the rows under it. */
+/**
+ * The remaining-stock pill, shared by the lead plate and the rows under it.
+ *
+ * Three states drawn the same way in three colours meant a shopper had to read the word to notice
+ * the one state they can act on. So the common answer goes quiet — `In stock` is what a listing
+ * normally is — and only running short and sold out are allowed to be a solid block.
+ */
 function StockPill({ state }: { state: StockLine }) {
+  if (state.tone === 'ok') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-2 py-0.5 text-[11px] font-medium text-muted">
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-accent" />
+        {state.label}
+      </span>
+    );
+  }
+
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-        state.tone === 'ok'
-          ? 'bg-accent-soft text-accent'
-          : state.tone === 'low'
-            ? 'bg-warn/15 text-warn'
-            : 'bg-danger/15 text-danger'
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold text-paper ${
+        state.tone === 'low' ? 'bg-warn' : 'bg-danger'
       }`}
     >
-      <span
-        aria-hidden
-        className={`h-1.5 w-1.5 rounded-full ${
-          state.tone === 'ok' ? 'bg-accent' : state.tone === 'low' ? 'bg-warn' : 'bg-danger'
-        }`}
-      />
       {state.label}
     </span>
   );
 }
 
+/** How long one produce photograph holds the plate before the next fades in over it. */
+const PLATE_HOLD_MS = 4_500;
+
 /**
- * The produce band's lead listing.
+ * The produce band's lead listing, which is also its other three.
  *
- * No quantity stepper and no cart button: a basket is assembled on the order screen in phase
- * 10, and a control that pretends to hold stock the shopper cannot yet reserve is worse than a
- * link that says where to go next.
+ * The photograph is the band rather than a tile inside it — full-bleed to the card's own edges,
+ * with the listing sitting on paper underneath, which is the one thing here that is not a bordered
+ * box. The plate crossfades through the week's listings so the band shows four of them without
+ * becoming four cards; opacity carries the change and nothing else, because a slide or a zoom is
+ * the motion that reads as a template.
+ *
+ * No quantity stepper and no cart button: a basket is assembled on the order screen in phase 10,
+ * and a control that pretends to hold stock the shopper cannot yet reserve is worse than a link
+ * that says where to go next.
  */
-function FreshLead({ product }: { product: ShowcaseProduct }) {
-  const state = stockState(product.quantity);
+function FreshPlate({ products }: { products: ShowcaseProduct[] }) {
+  const [index, setIndex] = useState(0);
+  const [held, setHeld] = useState(false);
+
+  // A pointer or a caret inside the card means someone is reading it, so the plate stops; a
+  // visitor who asked for stillness gets the first listing and no rotation at all.
+  useEffect(() => {
+    if (held || products.length < 2 || prefersReducedMotion()) return;
+    const timer = window.setInterval(
+      () => setIndex((i) => (i + 1) % products.length),
+      PLATE_HOLD_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, [held, products.length]);
+
+  const active = products[index % products.length];
+  if (!active) return null;
+  const state = stockState(active.quantity);
 
   return (
-    <article className="relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
-      <Thumb
-        src={product.photo}
-        seed={product.key}
-        category={product.category}
-        glyph={product.glyph}
-        label={product.name}
-        glyphSize={64}
-        className="aspect-[16/10] w-full border-b border-line"
-      />
-      <span className="absolute left-3 top-3">
-        <StockPill state={state} />
-      </span>
+    <article
+      className="card-lift relative overflow-hidden rounded-2xl"
+      onMouseEnter={() => setHeld(true)}
+      onMouseLeave={() => setHeld(false)}
+      onFocus={() => setHeld(true)}
+      onBlur={() => setHeld(false)}
+    >
+      <div className="relative aspect-[16/10] w-full">
+        {products.map((product, i) => (
+          <div
+            key={product.key}
+            className={`absolute inset-0 transition-opacity duration-700 ease-out ${
+              i === index % products.length ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <Thumb
+              src={product.photo}
+              seed={product.key}
+              category={product.category}
+              glyph={product.glyph}
+              glyphSize={64}
+              className="h-full w-full"
+            />
+          </div>
+        ))}
+      </div>
 
-      <div className="flex flex-1 flex-col p-5">
+      {/* Keyed to the listing so the words fade in with the photograph that replaced theirs. */}
+      <div key={active.key} className="ml-fade-in flex flex-col p-5">
         <h3 className="font-display text-xl font-bold leading-snug">
           <Link
-            to={`/products?q=${encodeURIComponent(product.name)}`}
+            to={`/products?q=${encodeURIComponent(active.name)}`}
             className="after:absolute after:inset-0"
           >
-            {product.name}
+            {active.name}
           </Link>
         </h3>
         <p className="mt-1 text-sm text-accent">
-          {product.stall}
+          {active.stall}
           <span aria-hidden className="text-line">
             {' '}
             ·{' '}
           </span>
-          <span className="text-muted">{product.market}</span>
+          <span className="text-muted">{active.market}</span>
         </p>
 
-        <p className="mt-4 flex items-baseline gap-1.5">
-          <span className="num font-display text-2xl font-bold">
-            {formatKobo(product.price_kobo)}
+        <p className="mt-4 flex items-baseline justify-between gap-3">
+          <span className="flex items-baseline gap-1.5">
+            <span className="num font-display text-2xl font-bold">
+              {formatKobo(active.price_kobo)}
+            </span>
+            <span className="text-sm text-muted">/{active.unit}</span>
           </span>
-          <span className="text-sm text-muted">/{product.unit}</span>
+          <StockPill state={state} />
         </p>
 
-        <p className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
-          <Stars value={product.rating_avg} count={product.rating_count} />
+        <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
+          <Stars value={active.rating_avg} count={active.rating_count} />
           <span aria-hidden className="text-line">
             ·
           </span>
           <span className="num">
-            {product.quantity} {product.unit}s left
+            {active.quantity} {active.unit}s left
           </span>
           <span aria-hidden className="text-line">
             ·
           </span>
-          <span className="num">pickup {product.window}</span>
+          <span className="num">pickup {active.window}</span>
         </p>
       </div>
     </article>
@@ -401,15 +448,15 @@ function FreshRow({ product }: { product: ShowcaseProduct }) {
 
   return (
     <li className="relative">
-      <article className="flex items-center gap-4 rounded-xl border border-line bg-surface p-3 transition-colors hover:border-accent/25">
+      <article className="card-lift flex items-center gap-4 rounded-xl p-3">
         <Thumb
           src={product.photo}
           seed={product.key}
           category={product.category}
           glyph={product.glyph}
           label={product.name}
-          glyphSize={30}
-          className="h-16 w-16 shrink-0 rounded-lg border border-line"
+          glyphSize={26}
+          className="h-14 w-14 shrink-0 rounded-lg"
         />
 
         <div className="min-w-0 flex-1">
@@ -527,7 +574,7 @@ function AskPanel() {
           <button
             type="submit"
             aria-label="Search"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-110"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-paper transition hover:brightness-110"
           >
             <Glyph name="send" size={17} />
           </button>
@@ -556,7 +603,6 @@ function AskPanel() {
 export default function Home() {
   const farmers = useFarmerList({});
   const stalls = farmers.data?.data ?? [];
-  const [lead, ...rest] = FRESH_THIS_WEEK;
 
   return (
     <div className="pb-24">
@@ -580,9 +626,9 @@ export default function Home() {
         </header>
 
         <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-          {lead ? <FreshLead product={lead} /> : null}
+          <FreshPlate products={FRESH_THIS_WEEK} />
           <Reveal as="ul" className="flex flex-col gap-3" y={12} stagger={0.05}>
-            {rest.map((product) => (
+            {FRESH_THIS_WEEK.slice(1).map((product) => (
               <FreshRow key={product.key} product={product} />
             ))}
           </Reveal>
