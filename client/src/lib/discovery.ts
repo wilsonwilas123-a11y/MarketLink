@@ -76,6 +76,16 @@ export const discoveryKeys = {
   farmer: (id: string) => ['farmers', 'detail', id] as const,
 };
 
+/**
+ * Live, without a reload.
+ *
+ * A market that an admin approves, or a stall that moves, would otherwise sit invisible on a
+ * page a shopper left open. Thirty seconds is short enough to look real-time in a demo and long
+ * enough that nobody is charged for staring at a list. TanStack still pauses it when the tab is
+ * hidden, and `staleTime` stays at the default zero, so a remount refetches immediately.
+ */
+export const LIST_POLL_MS = 30_000;
+
 export function useMarketList(filters: MarketFilters) {
   const { api } = useAuth();
   const path = `/markets${searchParams({
@@ -88,6 +98,7 @@ export function useMarketList(filters: MarketFilters) {
   return useQuery({
     queryKey: discoveryKeys.markets(filters),
     queryFn: () => api.get<ApiPage<Market>>(path),
+    refetchInterval: LIST_POLL_MS,
   });
 }
 
@@ -106,6 +117,7 @@ export function useNearbyMarkets(filters: NearbyFilters & { enabled?: boolean })
     queryKey: discoveryKeys.nearby(query),
     queryFn: () => api.get<ApiPage<NearbyMarket>>(path),
     enabled,
+    refetchInterval: LIST_POLL_MS,
   });
 }
 
