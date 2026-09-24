@@ -60,7 +60,7 @@ function Hero() {
         />
       </picture>
 
-      <div className="mx-auto flex max-w-7xl flex-col px-4 pb-14 pt-16 md:pb-20 md:pt-24">
+      <div className="mx-auto flex w-full max-w-[1680px] flex-col px-6 pb-14 pt-16 md:px-10 md:pb-20 md:pt-24">
         <div className="max-w-2xl lg:max-w-xl">
           <Reveal className="flex flex-col" y={12} stagger={0.07}>
             <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary [text-shadow:0_1px_2px_rgba(4,21,14,0.9),0_2px_18px_rgba(4,21,14,0.85)]">
