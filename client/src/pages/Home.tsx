@@ -335,22 +335,28 @@ function StockPill({ state }: { state: StockLine }) {
 /** How long one listing holds the band before the next fades in over it. */
 const SLIDE_HOLD_MS = 4_500;
 
-/** The band's prev and next. A hairline pill until it is touched, so it never outshouts the price. */
+/**
+ * The photograph's own frame. Both the slide and the band of arrows laid over it are sized by this
+ * one recipe, so the controls cannot drift off the picture at a breakpoint.
+ */
+const PLATE = 'aspect-[4/3] w-full sm:aspect-[16/9] md:aspect-[5/2]';
+
+/** A disc of the sheet's black with a paper arrow punched through it, so any photo stays readable. */
 const STEP_BUTTON =
-  'grid h-11 w-11 place-items-center rounded-full border border-line text-muted transition ' +
-  'hover:border-accent hover:text-accent';
+  'pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-paper/30 ' +
+  'bg-ink/55 text-paper backdrop-blur transition hover:border-paper/70';
 
 /**
- * The produce band, which is one carousel rather than a card standing beside a list.
+ * The produce band, which is one photograph at a time.
  *
- * A slide is a whole listing — the photograph full-bleed down one side, the listing printed on
- * paper down the other — and the section shows one of them at a time. Every few seconds the next
- * arrives; the one before it leaves. Opacity carries the change and nothing else, because a slide
- * or a zoom is the motion that reads as a template.
+ * A slide is a listing's picture, full-bleed across the section and tall enough to be worth
+ * photographing, with that listing's words printed on the paper underneath it. Every few seconds
+ * the next picture arrives over the last one and the words change with it. Opacity carries the
+ * change and nothing else, because a slide or a zoom is the motion that reads as a template.
  *
- * The band also answers to a click, because a visitor who moves their pointer over it to read a
- * listing stops the rotation and would otherwise see no motion at all. Those controls sit in the
- * header rather than on the photograph, where they would need a plate of their own to stay legible.
+ * The pair of arrows sits on the photograph rather than at the end of the header, because that is
+ * where a reader looks for the thing that moves a picture — and because a visitor whose pointer
+ * stops the rotation still needs a way to ask for the next one.
  *
  * No quantity stepper and no cart button: a basket is assembled on the order screen in phase 10,
  * and a control that pretends to hold stock the shopper cannot yet reserve is worse than a link
@@ -388,24 +394,9 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => go(-1)}
-              aria-label="Previous listing"
-              className={STEP_BUTTON}
-            >
-              <Glyph name="arrow" size={16} className="rotate-180" />
-            </button>
-            <button type="button" onClick={() => go(1)} aria-label="Next listing" className={STEP_BUTTON}>
-              <Glyph name="arrow" size={16} />
-            </button>
-          </div>
-          <Link to="/products" className="text-sm text-accent hover:underline">
-            Browse everything
-          </Link>
-        </div>
+        <Link to="/products" className="text-sm text-accent hover:underline">
+          Browse everything
+        </Link>
       </header>
 
       {/* Every listing stays mounted and the section moves them by opacity, so a change is a
@@ -427,7 +418,7 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
             <article
               key={product.key}
               aria-hidden={!here}
-              className={`card-lift overflow-hidden rounded-2xl transition-opacity duration-700 ease-out motion-reduce:transition-none lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] ${
+              className={`card-lift overflow-hidden rounded-2xl transition-opacity duration-700 ease-out motion-reduce:transition-none ${
                 here ? 'relative' : 'pointer-events-none absolute inset-0 opacity-0'
               }`}
             >
@@ -437,37 +428,38 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
                 category={product.category}
                 glyph={product.glyph}
                 label={product.name}
-                glyphSize={72}
-                className="aspect-[16/10] w-full"
+                glyphSize={96}
+                className={PLATE}
               />
 
-              <div className="flex flex-col justify-center p-6 md:p-8">
-                <p
-                  aria-hidden
-                  className="num text-[11px] font-medium uppercase tracking-[0.14em] text-muted"
-                >
-                  {String(i + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
-                </p>
-                <h3 className="mt-1.5 font-display text-2xl font-bold leading-snug md:text-3xl">
-                  <Link
-                    to={`/products?q=${encodeURIComponent(product.name)}`}
-                    tabIndex={here ? undefined : -1}
-                    className="after:absolute after:inset-0"
+              <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 px-6 py-6 md:px-8">
+                <div className="min-w-0">
+                  <p
+                    aria-hidden
+                    className="num text-[11px] font-medium uppercase tracking-[0.14em] text-muted"
                   >
-                    {product.name}
-                  </Link>
-                </h3>
+                    {String(i + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
+                  </p>
+                  <h3 className="mt-1.5 font-display text-2xl font-bold leading-snug md:text-3xl">
+                    <Link
+                      to={`/products?q=${encodeURIComponent(product.name)}`}
+                      tabIndex={here ? undefined : -1}
+                      className="after:absolute after:inset-0"
+                    >
+                      {product.name}
+                    </Link>
+                  </h3>
+                  <p className="mt-1.5 text-sm text-accent">
+                    {product.stall}
+                    <span aria-hidden className="text-line">
+                      {' '}
+                      ·{' '}
+                    </span>
+                    <span className="text-muted">{product.market}</span>
+                  </p>
+                </div>
 
-                <p className="mt-1.5 text-sm text-accent">
-                  {product.stall}
-                  <span aria-hidden className="text-line">
-                    {' '}
-                    ·{' '}
-                  </span>
-                  <span className="text-muted">{product.market}</span>
-                </p>
-
-                <p className="mt-5 flex items-baseline justify-between gap-3">
+                <p className="flex items-baseline gap-2.5">
                   <span className="flex items-baseline gap-1.5">
                     <span className="num font-display text-3xl font-bold">
                       {formatKobo(product.price_kobo)}
@@ -476,24 +468,38 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
                   </span>
                   <StockPill state={state} />
                 </p>
-
-                <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
-                  <Stars value={product.rating_avg} count={product.rating_count} />
-                  <span aria-hidden className="text-line">
-                    ·
-                  </span>
-                  <span className="num">
-                    {product.quantity} {product.unit}s left
-                  </span>
-                  <span aria-hidden className="text-line">
-                    ·
-                  </span>
-                  <span className="num">pickup {product.window}</span>
-                </p>
               </div>
+
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line px-6 py-4 text-xs text-muted md:px-8">
+                <Stars value={product.rating_avg} count={product.rating_count} />
+                <span aria-hidden className="text-line">
+                  ·
+                </span>
+                <span className="num">
+                  {product.quantity} {product.unit}s left
+                </span>
+                <span aria-hidden className="text-line">
+                  ·
+                </span>
+                <span className="num">pickup {product.window}</span>
+              </p>
             </article>
           );
         })}
+
+        {/* The pair lives out here rather than inside a slide, so it does not crossfade with the
+            picture it belongs to. The band is the picture's own box: same width, same ratio, so the
+            discs stay centred on the photograph at every breakpoint. */}
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-3 md:p-5 ${PLATE}`}
+        >
+          <button type="button" onClick={() => go(-1)} aria-label="Previous listing" className={STEP_BUTTON}>
+            <Glyph name="arrow" size={17} className="rotate-180" />
+          </button>
+          <button type="button" onClick={() => go(1)} aria-label="Next listing" className={STEP_BUTTON}>
+            <Glyph name="arrow" size={17} />
+          </button>
+        </div>
       </div>
     </div>
   );
