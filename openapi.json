@@ -1,0 +1,518 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MarketLink API",
+    "version": "0.1.0",
+    "description": "The contract behind the MarketLink farmers-market app. Every route sits under `/api` and every failure carries the same envelope: `{ error: { code, message, details? } }`. Clients branch on `code`, never on `message`. Money is integer kobo end to end and formatted to ₦ only at the edge. There is no payment endpoint — orders settle in person at pickup."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Same origin as the app"
+    },
+    {
+      "url": "http://localhost:4000/api",
+      "description": "Local development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Liveness and the API contract itself."
+    },
+    {
+      "name": "Auth",
+      "description": "Turning a Supabase account into a MarketLink profile."
+    },
+    {
+      "name": "Profile",
+      "description": "The caller's own record."
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "A Supabase access token, sent as `Authorization: Bearer <jwt>`."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "A stable machine-readable code. Clients branch on this, not on the message.",
+                "example": "stock_unavailable"
+              },
+              "message": {
+                "type": "string",
+                "example": "Only 3 baskets left for Organic Tomatoes"
+              },
+              "details": {
+                "nullable": true
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ]
+          },
+          "db": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down"
+            ],
+            "description": "Whether `select 1` succeeded. Everything else depends on this."
+          }
+        },
+        "required": [
+          "status",
+          "db"
+        ]
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "farmer",
+              "admin"
+            ]
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatar_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "full_name",
+          "phone",
+          "address",
+          "avatar_url",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "FarmerLink": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stall_name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "suspended"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "stall_name",
+          "status"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "customer",
+                  "farmer",
+                  "admin"
+                ]
+              },
+              "full_name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string",
+                "nullable": true
+              },
+              "avatar_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "is_active": {
+                "type": "boolean"
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "role",
+              "full_name",
+              "phone",
+              "address",
+              "avatar_url",
+              "is_active",
+              "created_at",
+              "updated_at"
+            ]
+          },
+          "farmer": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "stall_name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "approved",
+                  "suspended"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "stall_name",
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "profile",
+          "farmer"
+        ]
+      },
+      "Bootstrap": {
+        "type": "object",
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 20
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "farmer"
+            ]
+          }
+        },
+        "required": [
+          "full_name",
+          "phone",
+          "role"
+        ]
+      },
+      "UpdateMe": {
+        "type": "object",
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 20
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 240
+          },
+          "avatar_url": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2048,
+            "format": "uri"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/auth/bootstrap": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Create or refresh the profile behind a signed-up account",
+        "description": "Supabase Auth knows the credentials; this database knows the person. Called once after sign-up, and safe to repeat. A farmer also gets a stall in `pending`, which is what puts them in the admin queue rather than straight onto the public catalogue. `role` accepts only customer and farmer — an admin is promoted in the database, never requested here.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bootstrap"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The caller profile as now stored.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A field is missing, too long, or the role is not self-requestable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The bearer token is missing, expired, or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "The caller profile, plus the stall they own if any",
+        "description": "The single source of truth for who the client is rendering a dashboard for: the role and `farmer.status` here decide which screens appear, and a farmer in `pending` sees an awaiting-approval notice instead of a stock editor.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile and farmer link.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid token, or a token whose account has not been bootstrapped yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account has been deactivated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Change the caller name, phone, address or avatar",
+        "description": "Partial: a field that is absent is left alone, and `address`/`avatar_url` set to `null` are cleared. Role and active state are not editable here — they belong to an admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No field was supplied, an unknown field was sent, or a value is malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account has been deactivated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Liveness and database reachability",
+        "description": "Answers 200 only when `select 1` succeeds. Both statuses carry the same body, because a probe is read as a document rather than handled as an error.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The API and its database are both answering.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The API is up but cannot reach the database.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

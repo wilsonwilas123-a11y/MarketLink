@@ -1,25 +1,43 @@
 import { Pool } from 'pg';
 import { createApp } from './app.js';
+import { makeSupabaseAdmin, makeSupabaseAuth } from './lib/auth.js';
+import { logger } from './lib/logger.js';
+import { loadEnv, loadEnvFile } from './lib/env.js';
 
-const port = Number(process.env.PORT ?? 4000);
-const connectionString = process.env.DATABASE_URL;
+// Boot order matters: the file is read first so a validated environment can come from it,
+// and a real environment variable still overrides it.
+loadEnvFile();
+const env = loadEnv();
 
-if (!connectionString) {
-  console.error('DATABASE_URL is not set. Copy .env.example to server/.env and fill it in.');
-  process.exit(1);
+const pool = new Pool({ connectionString: env.DATABASE_URL, max: 10 });
+pool.on('error', (err) => {
+  // An idle client can die between requests. Logging it here keeps the cause out of the
+  // next unrelated 500.
+  logger.error('idle database client errored', { message: err.message });
+});
+
+const app = createApp(
+  {
+    pool,
+    // The service-role key is read here and nowhere else, which is what makes `grep -rn
+    // SERVICE_ROLE server/src` a meaningful audit.
+    auth: makeSupabaseAuth(makeSupabaseAdmin(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)),
+  },
+  { clientOrigin: env.CLIENT_ORIGIN },
+);
+
+const server = app.listen(env.PORT, () => {
+  logger.info('marketlink api listening', { port: env.PORT, env: env.NODE_ENV });
+});
+
+/** Stop taking connections, finish the ones in flight, then let the process exit. */
+function shutdown(signal: string): void {
+  logger.info('shutting down', { signal });
+  server.close(() => {
+    void pool.end().finally(() => process.exit(0));
+  });
 }
 
-const pool = new Pool({ connectionString, max: 10 });
-
-const app = createApp({
-  pool,
-  // JWT verification is built in phase 3. Until then every authenticated route is
-  // refused rather than silently trusted.
-  verifyToken: async () => {
-    throw new Error('auth is not implemented yet (phase 3)');
-  },
-});
-
-app.listen(port, () => {
-  console.log(`marketlink api listening on :${port}`);
-});
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => shutdown(signal));
+}

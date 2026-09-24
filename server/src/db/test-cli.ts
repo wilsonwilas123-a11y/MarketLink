@@ -1,6 +1,10 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { Pool } from 'pg';
+import { loadEnvFile } from '../lib/env.js';
+
+// The same file the API boots from, so these commands need no shell setup.
+loadEnvFile();
 
 const url = process.env.DATABASE_URL;
 if (!url) {
