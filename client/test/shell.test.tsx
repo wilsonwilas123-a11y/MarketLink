@@ -1,13 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import App from '../src/App';
-
-const renderAt = (path: string) => render(
-  <MemoryRouter initialEntries={[path]}>
-    <App />
-  </MemoryRouter>,
-);
+import { screen, within } from '@testing-library/react';
+import { renderApp as renderAt } from './helpers/render';
 
 describe('app shell', () => {
   it('renders the landing headline on the home route', () => {

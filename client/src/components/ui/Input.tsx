@@ -22,7 +22,7 @@ export function Input({
         } ${className}`}
       />
       {error ? (
-        <p id={`${id}-error`} className="text-xs text-danger">
+        <p id={`${id}-error`} role="alert" className="text-xs text-danger">
           {error}
         </p>
       ) : null}

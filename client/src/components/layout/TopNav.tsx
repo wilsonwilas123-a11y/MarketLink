@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Avatar } from '../ui/Avatar';
+import { AccountSlot } from './AccountSlot';
 
 const links = [
   { to: '/', label: 'Home', end: true },
@@ -38,7 +38,7 @@ export function TopNav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
-          <Avatar size={32} />
+          <AccountSlot />
         </div>
       </div>
     </header>

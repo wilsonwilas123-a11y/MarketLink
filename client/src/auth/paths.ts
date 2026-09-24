@@ -1,0 +1,27 @@
+import type { Role } from '../lib/types';
+
+/**
+ * Where a signed-in account lands.
+ *
+ * Farmers go to their stall because a pending stall needs an explanation the moment it
+ * exists; everyone else goes to their own dashboard.
+ */
+export function homeFor(role: Role): string {
+  return role === 'farmer' ? '/farmers/dashboard' : '/account';
+}
+
+export const COMPLETE_PROFILE_PATH = '/complete-profile';
+
+/** Keeps the query string, so a filtered page is the place you return to. */
+export function signInPath(current: string): string {
+  return `/signin?returnTo=${encodeURIComponent(current)}`;
+}
+
+/**
+ * Null unless the value is a same-origin path: `?returnTo=https://evil.test` must not turn
+ * sign-in into an off-site redirect. A caller with no usable value sends the visitor to their
+ * own home instead, which is right for their role.
+ */
+export function safeReturnTo(value: string | null | undefined): string | null {
+  return value && value.startsWith('/') && !value.startsWith('//') ? value : null;
+}
