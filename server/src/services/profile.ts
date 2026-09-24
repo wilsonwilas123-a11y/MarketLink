@@ -10,12 +10,18 @@ const PROFILE_COLUMNS = `id, role, full_name, phone, address, avatar_url, is_act
  * Creates the profile that Supabase Auth does not know about.
  *
  * Role comes from the caller but is constrained by the schema's two-value enum, so
- * `admin` cannot be self-granted here; promotion happens in the database.
+ * `admin` cannot be self-granted here; promotion happens in the database. It is also
+ * absent from the `on conflict` set: re-running bootstrap refreshes the contact details of
+ * an existing account but cannot convert a customer into a farmer, or the other way round.
  *
  * A farmer also gets a stall in `pending`, which is what puts them in front of the admin
  * approval queue instead of straight onto the public catalogue. The stall is named after
  * the applicant so the row is intelligible in that queue; they rename it from their
  * dashboard.
+ *
+ * The two writes are not one transaction. If the stall insert is lost to a dropped
+ * connection the profile survives without one, and the client's retry lands the stall —
+ * `on conflict do nothing` makes that safe — which is why no rollback is needed here.
  */
 export async function bootstrapProfile(
   pool: Pool,
@@ -78,6 +84,10 @@ export async function updateMe(
   const values: unknown[] = [];
 
   for (const [key, value] of Object.entries(input)) {
+    // `key` reaches the SQL as text, which the no-interpolation rule would normally
+    // forbid. It is safe because these are the parsed schema's own keys — UpdateMeSchema is
+    // `.strict()`, so anything else was rejected before this ran and the set of possible
+    // names is exactly the four columns it declares. Values stay parameterised.
     columns.push(`${key} = $${values.length + 1}`);
     values.push(value);
   }
