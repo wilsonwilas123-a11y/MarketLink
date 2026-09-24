@@ -31,6 +31,8 @@ export function buildOpenApiDocument() {
       { name: 'Health', description: 'Liveness and the API contract itself.' },
       { name: 'Auth', description: 'Turning a Supabase account into a MarketLink profile.' },
       { name: 'Profile', description: "The caller's own record." },
+      { name: 'Markets', description: 'Public market discovery, including the distance query.' },
+      { name: 'Farmers', description: "Public stall profiles, and the owner's own view." },
     ],
   });
 }

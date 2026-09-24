@@ -18,7 +18,21 @@ describe('openapi.json', () => {
 
   it('is the contract for the routes that exist, under /api', async () => {
     await expect(SwaggerParser.validate(structuredClone(committed))).resolves.toBeTruthy();
-    expect(Object.keys(committed.paths ?? {})).toEqual(['/auth/bootstrap', '/me', '/healthz']);
+    // Order follows `routes/index.ts`, which is the order the routers register their paths
+    // as they are imported — not the order `createApp` mounts them.
+    expect(Object.keys(committed.paths ?? {})).toEqual([
+      '/auth/bootstrap',
+      '/me',
+      '/farmers',
+      '/farmers/{id}',
+      '/farmers/me',
+      '/farmers/me/geo',
+      '/farmers/me/markets',
+      '/healthz',
+      '/markets',
+      '/markets/nearby',
+      '/markets/{id}',
+    ]);
     expect(Object.keys(committed.paths?.['/me'] ?? {})).toEqual(['get', 'patch']);
   });
 

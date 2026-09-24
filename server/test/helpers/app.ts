@@ -7,19 +7,25 @@ export interface FakePool extends Pool {
   reset(): void;
 }
 
-/** One row to hand back, or `null` for "the query matched nothing". */
-export type Canned = Record<string, unknown> | null;
+/**
+ * Rows to hand back for one query: a single row, several of them, or `null` for "matched
+ * nothing". A bare object is wrapped, which is what the single-row routes have always meant.
+ */
+export type Canned = Record<string, unknown> | Record<string, unknown>[] | null;
 
-/** Pool stub returning canned single-row results in call order, recording every query. */
+/** Pool stub returning canned results in call order, recording every query. */
 export function fakePool(results: Canned[] = []): FakePool {
   const calls: Array<{ text: string; values: unknown[] }> = [];
   let cursor = 0;
 
   const query = async (text: string, values: unknown[] = []) => {
     calls.push({ text: text.replace(/\s+/g, ' ').trim(), values });
-    const canned: Canned = cursor < results.length ? (results[cursor] as Canned) : {};
+    const next: Canned | undefined = results[cursor];
     cursor += 1;
-    const rows = canned === null ? [] : [canned];
+    // Past the end of the script a query is answered with one blank row, so a route's own
+    // not-found guard does not silently swallow the assertions that come after it.
+    const canned: Canned = next === undefined ? {} : next;
+    const rows = canned === null ? [] : Array.isArray(canned) ? canned : [canned];
     return { rows, rowCount: rows.length, command: '', oid: 0, fields: null };
   };
 

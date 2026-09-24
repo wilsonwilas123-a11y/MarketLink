@@ -7,5 +7,7 @@
  * from disagreeing.
  */
 export { authRouter } from './auth.js';
+export { farmersRouter } from './farmers.js';
 export { healthRouter } from './health.js';
+export { marketsRouter } from './markets.js';
 export { openApiRouter } from './openapi.js';

@@ -27,6 +27,14 @@
     {
       "name": "Profile",
       "description": "The caller's own record."
+    },
+    {
+      "name": "Markets",
+      "description": "Public market discovery, including the distance query."
+    },
+    {
+      "name": "Farmers",
+      "description": "Public stall profiles, and the owner's own view."
     }
   ],
   "components": {
@@ -311,6 +319,1048 @@
           }
         },
         "additionalProperties": false
+      },
+      "PageMeta": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "total",
+          "page",
+          "limit"
+        ]
+      },
+      "Market": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "operating_days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opens_at": {
+            "type": "string"
+          },
+          "closes_at": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_open_now": {
+            "type": "boolean",
+            "description": "Whether the market is trading at this moment, read in Africa/Lagos. The timezone is fixed in SQL rather than taken from the server clock, so a deployment in another zone does not move every market open by an hour or eight."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "address",
+          "city",
+          "state",
+          "lat",
+          "lng",
+          "operating_days",
+          "opens_at",
+          "closes_at",
+          "image_url",
+          "is_open_now"
+        ]
+      },
+      "NearbyMarket": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "operating_days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opens_at": {
+            "type": "string"
+          },
+          "closes_at": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_open_now": {
+            "type": "boolean",
+            "description": "Whether the market is trading at this moment, read in Africa/Lagos. The timezone is fixed in SQL rather than taken from the server clock, so a deployment in another zone does not move every market open by an hour or eight."
+          },
+          "distance_km": {
+            "type": "number",
+            "description": "Straight-line kilometres from the point that was asked about, not a route.",
+            "example": 4.82
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "address",
+          "city",
+          "state",
+          "lat",
+          "lng",
+          "operating_days",
+          "opens_at",
+          "closes_at",
+          "image_url",
+          "is_open_now",
+          "distance_km"
+        ]
+      },
+      "MarketDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "operating_days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opens_at": {
+            "type": "string"
+          },
+          "closes_at": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_open_now": {
+            "type": "boolean",
+            "description": "Whether the market is trading at this moment, read in Africa/Lagos. The timezone is fixed in SQL rather than taken from the server clock, so a deployment in another zone does not move every market open by an hour or eight."
+          },
+          "farmers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "stall_name": {
+                  "type": "string"
+                },
+                "contact_person": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "logo_url": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "rating_avg": {
+                  "type": "number"
+                },
+                "rating_count": {
+                  "type": "integer"
+                },
+                "stall_ref": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "days": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "stall_name",
+                "contact_person",
+                "logo_url",
+                "rating_avg",
+                "rating_count",
+                "stall_ref",
+                "days"
+              ]
+            }
+          },
+          "product_count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "address",
+          "city",
+          "state",
+          "lat",
+          "lng",
+          "operating_days",
+          "opens_at",
+          "closes_at",
+          "image_url",
+          "is_open_now",
+          "farmers",
+          "product_count"
+        ]
+      },
+      "FarmerSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stall_name": {
+            "type": "string"
+          },
+          "contact_person": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "lat": {
+            "type": "number",
+            "nullable": true
+          },
+          "lng": {
+            "type": "number",
+            "nullable": true
+          },
+          "rating_avg": {
+            "type": "number"
+          },
+          "rating_count": {
+            "type": "integer"
+          },
+          "operating_days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "stall_name",
+          "contact_person",
+          "description",
+          "logo_url",
+          "lat",
+          "lng",
+          "rating_avg",
+          "rating_count",
+          "operating_days"
+        ]
+      },
+      "FarmerDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stall_name": {
+            "type": "string"
+          },
+          "contact_person": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "lat": {
+            "type": "number",
+            "nullable": true
+          },
+          "lng": {
+            "type": "number",
+            "nullable": true
+          },
+          "rating_avg": {
+            "type": "number"
+          },
+          "rating_count": {
+            "type": "integer"
+          },
+          "operating_days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cover_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "pickup_window_start": {
+            "type": "string",
+            "nullable": true
+          },
+          "pickup_window_end": {
+            "type": "string",
+            "nullable": true
+          },
+          "order_cutoff_minutes": {
+            "type": "integer"
+          },
+          "markets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "stall_ref": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "days": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "address",
+                "city",
+                "stall_ref",
+                "days"
+              ]
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "price_kobo": {
+                  "type": "integer"
+                },
+                "image_urls": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "is_organic": {
+                  "type": "boolean"
+                },
+                "category": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "slug"
+                  ]
+                },
+                "quantity_available": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "is_sold_out": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "unit",
+                "price_kobo",
+                "image_urls",
+                "is_organic",
+                "category",
+                "quantity_available",
+                "is_sold_out"
+              ]
+            }
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "rating": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "title": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "body": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "customer_name": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "rating",
+                "title",
+                "body",
+                "customer_name",
+                "created_at"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "stall_name",
+          "contact_person",
+          "description",
+          "logo_url",
+          "lat",
+          "lng",
+          "rating_avg",
+          "rating_count",
+          "operating_days",
+          "cover_url",
+          "pickup_window_start",
+          "pickup_window_end",
+          "order_cutoff_minutes",
+          "markets",
+          "products",
+          "reviews"
+        ]
+      },
+      "MyStall": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stall_name": {
+            "type": "string"
+          },
+          "contact_person": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "cover_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "lat": {
+            "type": "number",
+            "nullable": true
+          },
+          "lng": {
+            "type": "number",
+            "nullable": true
+          },
+          "operating_days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pickup_window_start": {
+            "type": "string",
+            "nullable": true
+          },
+          "pickup_window_end": {
+            "type": "string",
+            "nullable": true
+          },
+          "order_cutoff_minutes": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "suspended"
+            ]
+          },
+          "rating_avg": {
+            "type": "number"
+          },
+          "rating_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "stall_name",
+          "contact_person",
+          "description",
+          "logo_url",
+          "cover_url",
+          "lat",
+          "lng",
+          "operating_days",
+          "pickup_window_start",
+          "pickup_window_end",
+          "order_cutoff_minutes",
+          "status",
+          "rating_avg",
+          "rating_count"
+        ]
+      },
+      "UpdateStall": {
+        "type": "object",
+        "properties": {
+          "stall_name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "contact_person": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 1000
+          },
+          "logo_url": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2048,
+            "format": "uri"
+          },
+          "cover_url": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2048,
+            "format": "uri"
+          },
+          "operating_days": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "mon",
+                "tue",
+                "wed",
+                "thu",
+                "fri",
+                "sat",
+                "sun"
+              ]
+            },
+            "maxItems": 7
+          },
+          "pickup_window_start": {
+            "type": "string",
+            "nullable": true
+          },
+          "pickup_window_end": {
+            "type": "string",
+            "nullable": true
+          },
+          "order_cutoff_minutes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4320
+          }
+        },
+        "additionalProperties": false
+      },
+      "GeoPin": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -90,
+            "exclusiveMinimum": true,
+            "maximum": 90,
+            "exclusiveMaximum": true,
+            "description": "Decimal degrees. Strictly inside ±90 because the bounding-box maths for \"nearby\" divides by cos(lat), which is zero at the poles."
+          },
+          "lng": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -180,
+            "maximum": 180
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "additionalProperties": false
+      },
+      "MarketList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "lat": {
+                  "type": "number"
+                },
+                "lng": {
+                  "type": "number"
+                },
+                "operating_days": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opens_at": {
+                  "type": "string"
+                },
+                "closes_at": {
+                  "type": "string"
+                },
+                "image_url": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "is_open_now": {
+                  "type": "boolean",
+                  "description": "Whether the market is trading at this moment, read in Africa/Lagos. The timezone is fixed in SQL rather than taken from the server clock, so a deployment in another zone does not move every market open by an hour or eight."
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "address",
+                "city",
+                "state",
+                "lat",
+                "lng",
+                "operating_days",
+                "opens_at",
+                "closes_at",
+                "image_url",
+                "is_open_now"
+              ]
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "total",
+              "page",
+              "limit"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "NearbyMarketList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "lat": {
+                  "type": "number"
+                },
+                "lng": {
+                  "type": "number"
+                },
+                "operating_days": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opens_at": {
+                  "type": "string"
+                },
+                "closes_at": {
+                  "type": "string"
+                },
+                "image_url": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "is_open_now": {
+                  "type": "boolean",
+                  "description": "Whether the market is trading at this moment, read in Africa/Lagos. The timezone is fixed in SQL rather than taken from the server clock, so a deployment in another zone does not move every market open by an hour or eight."
+                },
+                "distance_km": {
+                  "type": "number",
+                  "description": "Straight-line kilometres from the point that was asked about, not a route.",
+                  "example": 4.82
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "address",
+                "city",
+                "state",
+                "lat",
+                "lng",
+                "operating_days",
+                "opens_at",
+                "closes_at",
+                "image_url",
+                "is_open_now",
+                "distance_km"
+              ]
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "total",
+              "page",
+              "limit"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "FarmerList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "stall_name": {
+                  "type": "string"
+                },
+                "contact_person": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "description": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "logo_url": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "lat": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "lng": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "rating_avg": {
+                  "type": "number"
+                },
+                "rating_count": {
+                  "type": "integer"
+                },
+                "operating_days": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "stall_name",
+                "contact_person",
+                "description",
+                "logo_url",
+                "lat",
+                "lng",
+                "rating_avg",
+                "rating_count",
+                "operating_days"
+              ]
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "total",
+              "page",
+              "limit"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "FarmerMarketList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "stall_ref": {
+              "type": "string",
+              "nullable": true
+            },
+            "days": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "address",
+            "city",
+            "stall_ref",
+            "days"
+          ]
+        }
       }
     },
     "parameters": {}
@@ -482,6 +1532,403 @@
         }
       }
     },
+    "/farmers": {
+      "get": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "List approved stalls",
+        "description": "Approved stalls only. `market_id` and `category` are \"sells there / sells in\" rather than joins, so a stall at four markets appears once. Ordered by rating, which is the only signal a shopper who has never seen the stall has.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 24
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "market_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "required": false,
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of stalls.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`market_id` is not a uuid, or a page number is not positive.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/farmers/{id}": {
+      "get": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "A stall profile: markets, this week, and recent reviews",
+        "description": "Products carry this ISO week's quantity, and a listing with no stock row for the current week reads sold out rather than unlimited — a quantity nobody checked is not one you can order. Reviews are the ten most recent visible ones; the full history is not this screen's job.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stall profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`id` is not a uuid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such stall, or one that is not approved — which is answered the same way.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/farmers/me": {
+      "get": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "The caller's own stall, including its approval status",
+        "description": "The awaiting-approval screen and the stock editor are the same payload read two ways: `status` here decides which one opens. Unlike the public profile, this shows a stall in any state, because it belongs to the person standing behind it.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The caller's stall.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyStall"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is active but is not a farmer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The account is a farmer but has no stall row.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "Edit the stall: name, story, days, pickup window, cutoff",
+        "description": "Partial — an absent field is left alone and an explicit `null` clears it. `status` is not an editable field: approval is the admin queue's decision, and a farmer who could patch it would walk their own stall onto the public catalogue.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStall"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The stall as now stored.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyStall"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No field was supplied, a day name is not one of the seven, or the pickup window closes before it opens.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not a farmer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The account is a farmer but has no stall row.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/farmers/me/geo": {
+      "post": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "Move the stall pin from the map picker",
+        "description": "Its own route rather than a field on the stall patch because it is a different gesture: a drag on a map, not a form submit. It should not have to resend a description the farmer never touched in order to shift a marker a hundred metres.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeoPin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The stall, pinned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyStall"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A coordinate is missing or off the map.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not a farmer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The account is a farmer but has no stall row.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/farmers/me/markets": {
+      "get": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "Which markets the caller’s stall attends",
+        "description": "Each entry carries the pitch reference and the days this stall is there, which is what tells a farmer packing a van whether it is A12 on Tuesday or F01 on Saturday.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The stall's markets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerMarketList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not a farmer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The account is a farmer but has no stall row.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/healthz": {
       "get": {
         "tags": [
@@ -507,6 +1954,263 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/markets": {
+      "get": {
+        "tags": [
+          "Markets"
+        ],
+        "summary": "List markets, for the discovery screen",
+        "description": "Filters combine: `city` narrows by city, `day` to markets operating that weekday, `q` searches name, address and city, and `open_now` keeps only markets trading at this moment in Lagos. Ordered by name, so paging is stable.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 24
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "required": false,
+            "name": "city",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "day",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "open_now",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of markets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A day is not one of the seven, or a page number is not positive.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/markets/nearby": {
+      "get": {
+        "tags": [
+          "Markets"
+        ],
+        "summary": "Markets within a radius of a point, nearest first",
+        "description": "The map and the \"nearby\" rail. Distances are straight-line kilometres from the point given, not driving times: Lagos traffic is not something this can know, and a number that reads like an ETA invites a user to trust it as one. The query bounds a rectangle and measures inside it, so adding markets does not slow every nearby call down by a full scan.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 24
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -90,
+              "exclusiveMinimum": true,
+              "maximum": 90,
+              "exclusiveMaximum": true,
+              "description": "Decimal degrees. Strictly inside ±90 because the bounding-box maths for \"nearby\" divides by cos(lat), which is zero at the poles."
+            },
+            "required": false,
+            "name": "lat",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "nullable": true,
+              "minimum": -180,
+              "maximum": 180
+            },
+            "required": false,
+            "name": "lng",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 200,
+              "default": 10
+            },
+            "required": false,
+            "name": "radius_km",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "day",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "open_now",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of markets, nearest first, each with its distance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NearbyMarketList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`lat` or `lng` is missing or unmap-able, or the radius is not usable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/markets/{id}": {
+      "get": {
+        "tags": [
+          "Markets"
+        ],
+        "summary": "One market, its stall roster, and how much is on the tables",
+        "description": "Roster entries carry the stall's own pitch reference and the days it attends, which can be narrower than the market's own week — a trader who only comes on Saturdays is listed under Saturdays. Pending and suspended stalls are absent rather than marked.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Market detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`id` is not a uuid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such market, or one the admin has taken off the list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

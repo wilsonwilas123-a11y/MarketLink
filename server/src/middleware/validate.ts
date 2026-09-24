@@ -41,10 +41,13 @@ export function validate(parts: {
             'validation_failed',
             'The request was not valid.',
             // Field-oriented rather than a dump, so a form can highlight the right input.
-            err.issues.map((i) => ({
-              field: i.path.join('.') || '(root)',
-              message: i.message,
-            })),
+            // A strict-mode rejection names every extra key in one issue at the object root;
+            // split so each offending field gets its own line.
+            err.issues.flatMap((i) =>
+              i.code === 'unrecognized_keys'
+                ? i.keys.map((key) => ({ field: key, message: `Unknown field "${key}".` }))
+                : [{ field: i.path.join('.') || '(root)', message: i.message }],
+            ),
           ),
         );
         return;

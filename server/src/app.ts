@@ -5,7 +5,13 @@ import helmet from 'helmet';
 import type { AuthVerifier } from './lib/auth.js';
 import { requestId } from './middleware/request-id.js';
 import { errorHandler, notFound } from './middleware/error.js';
-import { authRouter, healthRouter, openApiRouter } from './routes/index.js';
+import {
+  authRouter,
+  farmersRouter,
+  healthRouter,
+  marketsRouter,
+  openApiRouter,
+} from './routes/index.js';
 
 export interface AppDeps {
   pool: Pool;
@@ -38,6 +44,8 @@ export function createApp(deps: AppDeps, options: AppOptions = {}): Express {
 
   app.use('/api', healthRouter(deps.pool));
   app.use('/api', authRouter(deps));
+  app.use('/api', marketsRouter(deps));
+  app.use('/api', farmersRouter(deps));
   app.use('/api', openApiRouter());
 
   app.use(notFound);
