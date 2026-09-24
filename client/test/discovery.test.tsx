@@ -157,7 +157,7 @@ describe('home', () => {
       ],
     });
 
-    const title = screen.getByRole('heading', { name: /Fresh from the market/ });
+    const title = screen.getByRole('heading', { name: /From the farm/ });
     const hero = within(title.closest('section') as HTMLElement);
 
     expect(hero.getByRole('link', { name: /Vegetables/ })).toHaveAttribute(

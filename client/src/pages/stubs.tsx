@@ -5,14 +5,14 @@ import { Page } from './Page';
 export const Products = () => (
   <Page
     title="What is in stock"
-    blurb="Browse produce by category, price and market — filtered to what is available right now."
+    blurb="Browse produce by category, price and the farm that grew it — filtered to what is available right now."
   />
 );
 
 export const Farmers = () => (
   <Page
     title="Farmers"
-    blurb="Every stall at the market, with their weekly harvest and pickup windows."
+    blurb="Every farm selling at the market, with its weekly harvest and pickup windows."
   />
 );
 
@@ -23,10 +23,10 @@ export const Orders = () => (
 export const About = () => (
   <Page
     title="About MarketLink"
-    blurb="We connect farmers-market stalls with the people who shop them, so a trip to the market is not a gamble."
+    blurb="We connect local farms to the people who shop their market, so a trip to the market is not a gamble."
   />
 );
 
 export const Contact = () => (
-  <Page title="Contact" blurb="Questions about a stall, a market or an order? Reach the team here." />
+  <Page title="Contact" blurb="Questions about a farm, a market or an order? Reach the team here." />
 );

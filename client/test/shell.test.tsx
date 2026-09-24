@@ -5,7 +5,8 @@ import { renderApp as renderAt } from './helpers/render';
 describe('app shell', () => {
   it('renders the landing headline on the home route', () => {
     renderAt('/');
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/fresh from the market/i);
+    const h1 = screen.getByRole('heading', { level: 1 });
+    expect(h1.textContent).toMatch(/from the farm\s*to the market\s*to you/i);
   });
 
   it('renders a distinct page for each primary route', () => {
@@ -21,7 +22,7 @@ describe('app shell', () => {
 
   it('shows the tagline in the footer', () => {
     renderAt('/');
-    expect(screen.getByText('Local food. Stronger communities.')).toBeInTheDocument();
+    expect(screen.getByText('Connecting local farms to your market.')).toBeInTheDocument();
   });
 
   it('states that payment happens at pickup, matching the no-payment constraint', () => {

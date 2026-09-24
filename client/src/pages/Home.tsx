@@ -17,10 +17,12 @@ import { Reveal } from '../motion/reveal';
 /**
  * The landing screen.
  *
- * The photograph carries the claim, so the copy sits on top of it rather than beside a second
- * column of marketing text: one idea, one image, and the two calls to action that a first-time
- * visitor can actually take. Everything below the fold is live data — the market list, the map,
- * the stalls — because the app's whole argument is that this week's stock is knowable.
+ * The brand line is farm-first and market-second: the farm is where the food comes from, the
+ * market is only where it changes hands. The photograph carries that claim, so the copy sits on
+ * top of it rather than beside a second column of marketing text: one idea, one image, and the
+ * two calls to action a first-time visitor can actually take. Everything below the fold is live
+ * data — the markets, the map, the farms — because the app's whole argument is that this week's
+ * stock is knowable.
  */
 const MarketMap = lazy(() => import('../components/discovery/MarketMap'));
 
@@ -73,25 +75,29 @@ function Hero() {
         <div className="max-w-2xl lg:max-w-xl">
           <Reveal className="flex flex-col" y={12} stagger={0.07}>
             <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary [text-shadow:0_1px_2px_rgba(4,21,14,0.9),0_2px_18px_rgba(4,21,14,0.85)]">
-              Local farmers
+              Connecting local farms
               <span aria-hidden className="text-accent">
-                ·
+                →
               </span>
-              Fresh produce
-              <span aria-hidden className="text-accent">
-                ·
-              </span>
-              Stronger communities
+              your market
             </p>
 
-            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.05] md:text-6xl [text-shadow:0_2px_4px_rgba(4,21,14,0.85),0_4px_26px_rgba(4,21,14,0.8)]">
-              Fresh from the market.
-              <span className="block text-accent">Before you get there.</span>
+            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.12] md:text-5xl [text-shadow:0_2px_4px_rgba(4,21,14,0.85),0_4px_26px_rgba(4,21,14,0.8)]">
+              <span className="block">From the farm</span>
+              <span className="mt-1.5 flex items-center gap-3">
+                <Glyph name="arrow" size={22} className="shrink-0 text-muted" />
+                <span>to the market</span>
+              </span>
+              <span className="mt-1.5 flex items-center gap-3 text-accent">
+                <Glyph name="arrow" size={22} className="shrink-0 opacity-60" />
+                <span>to you</span>
+              </span>
             </h1>
 
             <p className="mt-5 max-w-lg text-base leading-relaxed text-primary md:text-lg [text-shadow:0_1px_3px_rgba(4,21,14,0.95),0_2px_20px_rgba(4,21,14,0.8)]">
-              See what each stall actually has left this week, reserve it against a pickup
-              window, and pay the farmer at the market. Nothing is charged online.
+              Every listing here is written by the farm that grew it. See what is actually left
+              this week, reserve it against a pickup window, and pay the grower at the market.
+              Nothing is charged online.
             </p>
 
             {/* One pill holding the field and its action: in the reference the button is the
@@ -166,7 +172,7 @@ function Hero() {
       </div>
 
       <span className="absolute right-5 top-6 hidden -rotate-3 rounded-lg border border-accent/40 bg-base/70 px-3 py-1.5 font-display text-xs font-semibold text-accent backdrop-blur md:block">
-        Local. Fresh. Trusted.
+        Local farms. Market pickup.
       </span>
     </section>
   );
@@ -207,7 +213,7 @@ function MarketsNearYou() {
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-            On the map
+            Where the farms sell
           </p>
           <h2 className="mt-1.5 font-display text-2xl font-bold">Markets near you</h2>
           <p className="mt-1 text-sm text-muted">
@@ -461,7 +467,7 @@ function FarmerCard({ farmer }: { farmer: FarmerSummary }) {
           <Stars value={farmer.rating_avg} count={farmer.rating_count} className="mt-2" />
 
           <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
-            {farmer.description ?? 'This stall has not written a description yet.'}
+            {farmer.description ?? 'This farm has not written a description yet.'}
           </p>
 
           <p className="mt-auto flex items-center gap-1.5 border-t border-line pt-3 text-xs text-muted">
@@ -495,7 +501,7 @@ function AskPanel() {
           What are you looking for this week?
         </h3>
         <p className="mt-1 max-w-md text-sm text-muted">
-          Type a crop, an area or a market. The results open on the map, with each stall&apos;s
+          Type a crop, an area or a market. The results open on the map, with each farm&apos;s
           own stock beside it.
         </p>
 
@@ -553,11 +559,11 @@ export default function Home() {
         <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-              This week&apos;s stock
+              Straight from the farm
             </p>
             <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
             <p className="mt-1 text-sm text-muted">
-              Seasonal produce, published by the stall that grew it.
+              Seasonal produce, published by the farm that grew it.
             </p>
           </div>
           <Link to="/products" className="text-sm text-accent hover:underline">
@@ -579,13 +585,15 @@ export default function Home() {
         <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-              The stalls
+              The farms
             </p>
             <h2 className="mt-1.5 font-display text-2xl font-bold">Meet the farmers</h2>
-            <p className="mt-1 text-sm text-muted">Real stalls. Their own words. Rated by buyers.</p>
+            <p className="mt-1 text-sm text-muted">
+              Real farms. Their own words. Rated by the people who buy.
+            </p>
           </div>
           <Link to="/farmers" className="text-sm text-accent hover:underline">
-            All {farmers.data?.meta.total ?? 'registered'} stalls
+            All {farmers.data?.meta.total ?? 'registered'} farms
           </Link>
         </header>
 
@@ -594,7 +602,7 @@ export default function Home() {
         ) : farmers.error ? (
           <div className="mt-6">
             <StateNote
-              label="The stall list did not load"
+              label="The farm list did not load"
               body="The markets above are unaffected — this request alone failed."
               retry={() => void farmers.refetch()}
             />
@@ -613,7 +621,7 @@ export default function Home() {
             </Reveal>
 
             <p className="mt-2 text-xs text-muted">
-              Scroll sideways for the rest of this week&apos;s approved stalls.
+              Scroll sideways for the rest of this week&apos;s approved farms.
             </p>
           </>
         )}
@@ -626,15 +634,17 @@ export default function Home() {
       <section className="mx-auto mt-14 w-full max-w-[1680px] px-6 md:px-10">
         <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-line bg-surface p-6 md:p-8">
           <div className="max-w-xl">
-            <h2 className="font-display text-xl font-bold">Run a stall at one of these markets?</h2>
+            <h2 className="font-display text-xl font-bold">
+              Farming within reach of these markets?
+            </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               Publish what you harvested, set the quantities you are willing to hold, and stop
               selling the same basket to whoever got there first. Listing is free; an admin checks
-              the stall before it appears to shoppers.
+              the farm before it appears to shoppers.
             </p>
           </div>
           <Link to="/signup" className={buttonClass('primary', 'md', 'shrink-0')}>
-            List your stall
+            List your farm
           </Link>
         </div>
       </section>

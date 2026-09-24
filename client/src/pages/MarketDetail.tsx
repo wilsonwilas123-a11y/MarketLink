@@ -108,7 +108,7 @@ export default function MarketDetail() {
           <WeekStrip days={market.operating_days} />
           <p className="num text-sm text-muted">
             <span className="text-primary">{market.farmers.length}</span>{' '}
-            {market.farmers.length === 1 ? 'stall' : 'stalls'} ·{' '}
+            {market.farmers.length === 1 ? 'farm' : 'farms'} ·{' '}
             <span className="text-primary">{market.product_count}</span> products listed this week
           </p>
         </div>
@@ -117,7 +117,7 @@ export default function MarketDetail() {
       <section className="mx-auto max-w-5xl px-4 pt-10">
         <h2 className="font-display text-lg font-bold">Who trades here</h2>
         <p className="mt-1 text-sm text-muted">
-          Approved stalls only, in the order of their stall name. A stall’s own days can be
+          Approved farms only, in the order of the name they list under. A farm’s own days can be
           narrower than the market’s.
         </p>
 

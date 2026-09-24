@@ -141,7 +141,7 @@ export default function Markets() {
       <header className="mx-auto max-w-7xl px-4 pt-12">
         <h1 className="font-display text-3xl font-bold md:text-4xl">Markets</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-          Every market MarketLink tracks, the days it runs, and the stalls trading there.
+          Every market MarketLink tracks, the days it runs, and the farms trading there.
           Opening state is computed against Lagos time, not your device’s.
         </p>
       </header>
