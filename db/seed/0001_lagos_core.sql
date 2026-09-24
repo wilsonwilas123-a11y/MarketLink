@@ -78,12 +78,13 @@ values
   (md5('ml-market-lekki')::uuid, 'Mile 12 International Market',
    'Ikorodu Road, Mile 12, Ojo', 'Lagos', 'Lagos', 6.455100, 3.379500,
    array['sat','sun'], time '09:00', time '15:00',
-   '/img/markets/lekki.jpg', true)
+   '/img/markets/mile-12-international.jpg', true)
 on conflict (id) do nothing;
 
 /* The insert above refuses to touch a row that already exists, so a database seeded under the
    earlier wording would keep it. Restated here, and only here, to make the change self-applying. */
-update markets set name = 'Mile 12 International Market', address = 'Ikorodu Road, Mile 12, Ojo'
+update markets set name = 'Mile 12 International Market', address = 'Ikorodu Road, Mile 12, Ojo',
+                   image_url = '/img/markets/mile-12-international.jpg'
  where id = md5('ml-market-lekki')::uuid;
 
 -- ---------------------------------------------------------------- categories
