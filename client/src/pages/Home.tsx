@@ -119,22 +119,19 @@ function Hero() {
               <label htmlFor="hero-search" className="sr-only">
                 Search markets, farmers or produce
               </label>
-              <span aria-hidden className="pl-3 text-muted">
-                <Glyph name="search" size={21} />
-              </span>
               <input
                 id="hero-search"
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="Search markets, farmers or produce…"
-                className="h-11 min-w-0 flex-1 bg-transparent text-base text-primary outline-none placeholder:text-muted"
+                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-base text-primary outline-none placeholder:text-muted"
               />
               <button
                 type="submit"
-                className={buttonClass('primary', 'md', 'h-11 shrink-0 gap-1.5 px-6 text-base')}
+                aria-label="Search"
+                className={buttonClass('primary', 'md', 'h-11 w-11 shrink-0 p-0')}
               >
-                Search
-                <Glyph name="arrow" size={17} />
+                <Glyph name="search" size={19} />
               </button>
             </form>
 
