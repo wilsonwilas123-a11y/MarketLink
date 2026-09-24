@@ -9,6 +9,14 @@ import { glyphFor, Glyph, type GlyphName } from './glyphs';
  * line art derived from the row's own id if it does not. The `<img>` is dropped rather than
  * hidden, because a broken image icon inside a card is worse than a card without one.
  */
+/**
+ * Sources this page has already failed to load.
+ *
+ * A slot that remounts — the produce carousel re-keys its rows on every slide — would otherwise
+ * retry a dead URL and flash a broken image each time it arrives.
+ */
+const broken = new Set<string>();
+
 export function Thumb({
   src,
   seed,
@@ -30,7 +38,7 @@ export function Thumb({
   className?: string;
   glyphSize?: number;
 }) {
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(() => (src ? broken.has(src) : false));
   const show = Boolean(src) && !failed;
 
   return (
@@ -44,20 +52,17 @@ export function Thumb({
           alt=""
           loading="lazy"
           decoding="async"
-          onError={() => setFailed(true)}
+          onError={() => {
+            if (src) broken.add(src);
+            setFailed(true);
+          }}
           className="h-full w-full object-cover"
         />
       ) : (
         <>
-          <span
-            className="absolute inset-0"
-            style={{
-              background:
-                'radial-gradient(120% 100% at 18% 6%, #fffdf6 0%, #f0e7d6 55%, #e3d8c1 100%)',
-            }}
-          />
+          <span className="ml-plate absolute inset-0" />
           <span className="absolute inset-0 grid place-items-center">
-            <span className="-rotate-2 text-ink/20">
+            <span className="ml-plate-mark -rotate-2">
               <Glyph name={glyph ?? glyphFor(seed, category)} size={glyphSize} />
             </span>
           </span>

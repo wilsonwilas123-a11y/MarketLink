@@ -332,113 +332,132 @@ function StockPill({ state }: { state: StockLine }) {
   );
 }
 
-/** How long one produce photograph holds the plate before the next fades in over it. */
-const PLATE_HOLD_MS = 4_500;
+/** How long one listing holds the band before the next fades in over it. */
+const SLIDE_HOLD_MS = 4_500;
 
 /**
- * The produce band's lead listing, which is also its other three.
+ * The produce band, which is a carousel rather than a card standing beside a list.
  *
- * The photograph is the band rather than a tile inside it — full-bleed to the card's own edges,
- * with the listing sitting on paper underneath, which is the one thing here that is not a bordered
- * box. The plate crossfades through the week's listings so the band shows four of them without
- * becoming four cards; opacity carries the change and nothing else, because a slide or a zoom is
- * the motion that reads as a template.
+ * One listing at a time is the lead — the photograph full-bleed to the plate's own edges, the
+ * listing printed on paper underneath — and the other three are the rows beside it. Every few
+ * seconds the band advances: a new lead takes the plate and the rows take whichever three it
+ * leaves behind, so the same listing never appears in both places at once. Opacity carries the
+ * change and nothing else, because a slide or a zoom is the motion that reads as a template.
  *
  * No quantity stepper and no cart button: a basket is assembled on the order screen in phase 10,
  * and a control that pretends to hold stock the shopper cannot yet reserve is worse than a link
  * that says where to go next.
  */
-function FreshPlate({ products }: { products: ShowcaseProduct[] }) {
-  const [index, setIndex] = useState(0);
+function FreshCarousel({ products }: { products: ShowcaseProduct[] }) {
+  const [step, setStep] = useState(0);
   const [held, setHeld] = useState(false);
+  const count = products.length;
+  const slide = count === 0 ? 0 : step % count;
 
-  // A pointer or a caret inside the card means someone is reading it, so the plate stops; a
-  // visitor who asked for stillness gets the first listing and no rotation at all.
+  // A pointer or a caret anywhere in the band means someone is reading it, so it stops; a visitor
+  // who asked for stillness gets the first arrangement and no rotation at all.
   useEffect(() => {
-    if (held || products.length < 2 || prefersReducedMotion()) return;
-    const timer = window.setInterval(
-      () => setIndex((i) => (i + 1) % products.length),
-      PLATE_HOLD_MS,
-    );
+    if (held || count < 2 || prefersReducedMotion()) return;
+    const timer = window.setInterval(() => setStep((s) => (s + 1) % count), SLIDE_HOLD_MS);
     return () => window.clearInterval(timer);
-  }, [held, products.length]);
+  }, [held, count]);
 
-  const active = products[index % products.length];
+  const active = products[slide];
   if (!active) return null;
+
   const state = stockState(active.quantity);
+  const rest = products.filter((_, i) => i !== slide);
 
   return (
-    <article
-      className="card-lift relative overflow-hidden rounded-2xl"
+    <div
+      className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
       onMouseEnter={() => setHeld(true)}
       onMouseLeave={() => setHeld(false)}
       onFocus={() => setHeld(true)}
       onBlur={() => setHeld(false)}
     >
-      <div className="relative aspect-[16/10] w-full">
-        {products.map((product, i) => (
-          <div
-            key={product.key}
-            className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-              i === index % products.length ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <Thumb
-              src={product.photo}
-              seed={product.key}
-              category={product.category}
-              glyph={product.glyph}
-              glyphSize={64}
-              className="h-full w-full"
-            />
-          </div>
-        ))}
-      </div>
+      <article className="card-lift relative overflow-hidden rounded-2xl">
+        {/* Every photograph stays mounted and the band moves them by opacity, so a change is a
+            crossfade between two pictures rather than one picture being replaced. */}
+        <div className="relative aspect-[16/10] w-full">
+          {products.map((product, i) => (
+            <div
+              key={product.key}
+              className={`absolute inset-0 transition-opacity duration-700 ease-out ${
+                i === slide ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <Thumb
+                src={product.photo}
+                seed={product.key}
+                category={product.category}
+                glyph={product.glyph}
+                glyphSize={64}
+                className="h-full w-full"
+              />
+            </div>
+          ))}
+        </div>
 
-      {/* Keyed to the listing so the words fade in with the photograph that replaced theirs. */}
-      <div key={active.key} className="ml-fade-in flex flex-col p-5">
-        <h3 className="font-display text-xl font-bold leading-snug">
-          <Link
-            to={`/products?q=${encodeURIComponent(active.name)}`}
-            className="after:absolute after:inset-0"
-          >
-            {active.name}
-          </Link>
-        </h3>
-        <p className="mt-1 text-sm text-accent">
-          {active.stall}
-          <span aria-hidden className="text-line">
-            {' '}
-            ·{' '}
-          </span>
-          <span className="text-muted">{active.market}</span>
-        </p>
-
-        <p className="mt-4 flex items-baseline justify-between gap-3">
-          <span className="flex items-baseline gap-1.5">
-            <span className="num font-display text-2xl font-bold">
-              {formatKobo(active.price_kobo)}
+        {/* Keyed to the listing so the words fade in with the photograph that replaced theirs. */}
+        <div key={active.key} className="ml-fade-in flex flex-col p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="font-display text-xl font-bold leading-snug">
+              <Link
+                to={`/products?q=${encodeURIComponent(active.name)}`}
+                className="after:absolute after:inset-0"
+              >
+                {active.name}
+              </Link>
+            </h3>
+            {/* Until the photographs land this is the only thing that shows the band is moving. */}
+            <span aria-hidden className="num shrink-0 text-xs text-muted">
+              {String(slide + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
             </span>
-            <span className="text-sm text-muted">/{active.unit}</span>
-          </span>
-          <StockPill state={state} />
-        </p>
+          </div>
 
-        <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
-          <Stars value={active.rating_avg} count={active.rating_count} />
-          <span aria-hidden className="text-line">
-            ·
-          </span>
-          <span className="num">
-            {active.quantity} {active.unit}s left
-          </span>
-          <span aria-hidden className="text-line">
-            ·
-          </span>
-          <span className="num">pickup {active.window}</span>
-        </p>
-      </div>
-    </article>
+          <p className="mt-1 text-sm text-accent">
+            {active.stall}
+            <span aria-hidden className="text-line">
+              {' '}
+              ·{' '}
+            </span>
+            <span className="text-muted">{active.market}</span>
+          </p>
+
+          <p className="mt-4 flex items-baseline justify-between gap-3">
+            <span className="flex items-baseline gap-1.5">
+              <span className="num font-display text-2xl font-bold">
+                {formatKobo(active.price_kobo)}
+              </span>
+              <span className="text-sm text-muted">/{active.unit}</span>
+            </span>
+            <StockPill state={state} />
+          </p>
+
+          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
+            <Stars value={active.rating_avg} count={active.rating_count} />
+            <span aria-hidden className="text-line">
+              ·
+            </span>
+            <span className="num">
+              {active.quantity} {active.unit}s left
+            </span>
+            <span aria-hidden className="text-line">
+              ·
+            </span>
+            <span className="num">pickup {active.window}</span>
+          </p>
+        </div>
+      </article>
+
+      {/* The three listings the plate does not have, arriving with each slide. */}
+      <ul key={slide} className="ml-fade-in flex flex-col gap-3">
+        {rest.map((product) => (
+          <FreshRow key={product.key} product={product} />
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -574,7 +593,7 @@ function AskPanel() {
           <button
             type="submit"
             aria-label="Search"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-paper transition hover:brightness-110"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-110"
           >
             <Glyph name="send" size={17} />
           </button>
@@ -610,28 +629,25 @@ export default function Home() {
       <MarketsNearYou />
 
       <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">
-        <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-              Straight from the farm
-            </p>
-            <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
-            <p className="mt-1 text-sm text-muted">
-              Seasonal produce, published by the farm that grew it.
-            </p>
-          </div>
-          <Link to="/products" className="text-sm text-accent hover:underline">
-            Browse everything
-          </Link>
-        </header>
+        {/* The one light panel on the board. Everything inside it reads its colours off the cream
+            sheet the island redefines, so no component here knows it moved. */}
+        <div className="ml-paper rounded-3xl px-6 py-8 md:px-10 md:py-10">
+          <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                Straight from the farm
+              </p>
+              <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
+              <p className="mt-1 text-sm text-muted">
+                Seasonal produce, published by the farm that grew it.
+              </p>
+            </div>
+            <Link to="/products" className="text-sm text-accent hover:underline">
+              Browse everything
+            </Link>
+          </header>
 
-        <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-          <FreshPlate products={FRESH_THIS_WEEK} />
-          <Reveal as="ul" className="flex flex-col gap-3" y={12} stagger={0.05}>
-            {FRESH_THIS_WEEK.slice(1).map((product) => (
-              <FreshRow key={product.key} product={product} />
-            ))}
-          </Reveal>
+          <FreshCarousel products={FRESH_THIS_WEEK} />
         </div>
       </section>
 
