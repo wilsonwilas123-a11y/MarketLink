@@ -1,0 +1,28 @@
+-- pgTAP checks over the seeded Lagos dataset. These are the numbers the phase 2 exit
+-- test reads off, so they are asserted here rather than checked by hand.
+
+begin;
+select plan(9);
+
+select is((select count(*) from markets), 4::bigint, 'seed loads 4 markets');
+select is((select count(*) from categories), 5::bigint, 'seed loads 5 categories');
+select is((select count(*) from farmers), 9::bigint, 'seed loads 9 farmer stalls');
+select is((select count(*) from farmers where status = 'approved'), 8::bigint,
+  '8 farmers are approved');
+select is((select count(*) from farmers where status = 'pending'), 1::bigint,
+  '1 farmer is pending, so the admin queue is not empty');
+select is((select count(*) from market_farmers), 9::bigint, 'every stall is rostered to a market');
+
+select isnt((select count(*) from products), 0::bigint, 'products are seeded');
+select ok((select count(*) from products) between 40 and 60,
+  'the catalogue is the ~40 listings the spec asks for');
+
+-- Stock must exist for the week the seed ran in, or the badge reads zero on a fresh deploy.
+select is(
+  (select count(*) from weekly_stock where week = iso_week(current_date)),
+  (select count(*) from products),
+  'every product has a weekly_stock row for the current ISO week'
+);
+
+select * from finish();
+rollback;

@@ -9,6 +9,9 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/index.js",
+    "migrate": "tsx src/db/cli.ts migrate",
+    "seed": "tsx src/db/cli.ts seed",
+    "db:test": "tsx src/db/test-cli.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

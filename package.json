@@ -14,7 +14,10 @@
     "dev": "concurrently -n server,client -c green,cyan \"npm:dev -w server\" \"npm:dev -w client\"",
     "build": "npm run build -w server && npm run build -w client",
     "test": "npm run test -w server && npm run test -w client",
-    "typecheck": "npm run typecheck -w server && npm run typecheck -w client"
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w client",
+    "db:migrate": "npm run migrate -w server",
+    "db:seed": "npm run seed -w server",
+    "db:test": "npm run db:test -w server"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
