@@ -31,7 +31,7 @@ export function AccountSlot() {
     return (
       <Link
         to={COMPLETE_PROFILE_PATH}
-        className="inline-flex h-8 items-center rounded-full bg-warn px-3 text-sm font-medium text-paper"
+        className="inline-flex h-8 items-center rounded-full bg-warn px-3 text-sm font-medium text-ink"
       >
         Finish your profile
       </Link>
@@ -62,7 +62,7 @@ export function AccountSlot() {
       </Link>
       <Link
         to="/signup"
-        className="inline-flex h-8 items-center rounded-full bg-accent px-3 text-sm font-semibold text-paper"
+        className="inline-flex h-8 items-center rounded-full bg-accent px-3 text-sm font-semibold text-ink"
       >
         Join
       </Link>

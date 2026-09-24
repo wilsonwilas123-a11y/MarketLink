@@ -4,17 +4,14 @@
 /*
   The page is a market notice board, not a dashboard.
 
-  One sheet of warm paper, one ink that carries almost everything, and one hand-painted sign blue
-  kept back for the single fact a shopper acts on — that a market is open right now. Depth comes
-  from type size and from whitespace rather than from surfaces stacked on surfaces, so there is no
-  elevated tier pretending to glow and no accent on a control that is only chrome.
+  One black sheet, white type for nearly everything, and one hand-painted sign blue kept back for
+  the single fact a shopper acts on — that a market is open right now. Depth comes from type size
+  and from whitespace rather than from surfaces stacked on surfaces, so there is no elevated tier
+  pretending to glow, no accent on a control that is only chrome, and no coloured tint behind the
+  black.
 
-  Where a card still needs an edge, it is the ink itself at low alpha — a hairline drawn in pencil,
-  not a second colour. A border with its own hue is how a layout starts reading as boxes.
-
-  Contrast, measured against the base: ink 15.1:1, muted pencil 6.3:1, sign blue 7.6:1, ochre
-  4.9:1, brick 7.9:1, and paper on a solid block of ink 16.2:1. All clear WCAG AA at body size,
-  most clear AAA.
+  Contrast, checked against the base: white 19.4:1, warm grey 8.2:1, sign blue 9.6:1, ochre 9.9:1,
+  and black on a solid white block 19.4:1. All clear WCAG AA — and AAA at body size.
 */
 /*
   No colour here may be named `base`, `sm`, `lg` or any other type-scale word: a `--color-base`
@@ -24,39 +21,96 @@
 */
 @theme {
   /* The sheet. */
-  --color-sheet: #f6efe3;
-  --color-surface: #fbf8f1;
-  --color-elevated: #eae1d0;
-  /* The ink, thinned to a pencil line, so an edge never introduces a new colour. */
-  --color-line: color-mix(in oklab, #1d1b16 15%, transparent);
+  --color-sheet: #050505;
+  --color-surface: #0e0e0e;
+  --color-elevated: #171717;
+  --color-line: #2b2b2b;
 
   /* What is written on it. */
-  --color-primary: #1d1b16;
-  --color-muted: #5e574b;
+  --color-primary: #ffffff;
+  --color-muted: #a8a49c;
 
   /* The one loud colour, and the wash left behind by it. */
-  --color-accent: #1f4e79;
-  --color-accent-soft: #dfe8f0;
-  /* The same hue lifted until it survives a photograph behind it. */
-  --color-accent-lift: #a9cdea;
-  --color-warn: #8a6100;
-  --color-danger: #8e1b1b;
+  --color-accent: #8ab6e0;
+  --color-accent-soft: #16283a;
+  /* The same hue at full weight, for the rare block of it. */
+  --color-accent-lift: #b9d5f0;
+  --color-warn: #e0b341;
+  --color-danger: #f08a8a;
 
-  /* Type that sits on a solid block rather than on the sheet. */
-  --color-paper: #fbf8f1;
-  /* The ink again, named for its other job: a plate laid over a photograph. */
-  --color-ink: #1d1b16;
-  /* A control that is a block of colour rather than an outline: ink, with paper punched in. */
-  --color-block: #1d1b16;
-  --color-on-block: #fbf8f1;
+  /* White type — on a solid block, or over a photograph. */
+  --color-paper: #ffffff;
+  /* The black of the sheet, used where a plate has to sit on an image instead of on the page. */
+  --color-ink: #050505;
+  /* A control that is a block of colour rather than an outline: white, with black punched in. */
+  --color-block: #ffffff;
+  --color-on-block: #050505;
 
   --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   --font-body: 'Karla', ui-sans-serif, system-ui, sans-serif;
 }
 
+/*
+  ------------------------------------------------------------------ the paper island
+
+  The produce band is printed on cream and pinned to the black board. It is the one place on the
+  site allowed a light background, and it gets there by redefining the same colour names rather
+  than by any component knowing it moved: every Tailwind colour utility compiles to
+  `var(--color-…)`, so overriding the names on this container repaints everything inside it,
+  including the opacity modifiers, which are mixed from the same variables.
+
+  Contrast against the cream base: ink 15.1:1, pencil 6.3:1, sign blue 7.6:1, ochre 4.9:1,
+  brick 7.9:1, cream on a block of ink 16.2:1.
+*/
+.ml-paper {
+  --color-sheet: #f6efe3;
+  --color-surface: #fbf8f1;
+  --color-elevated: #eae1d0;
+  /* On paper an edge is the ink itself thinned to a pencil line, so a border never brings in a
+     colour of its own — that is how a layout starts reading as boxes. */
+  --color-line: color-mix(in oklab, #1d1b16 15%, transparent);
+
+  --color-primary: #1d1b16;
+  --color-muted: #5e574b;
+
+  --color-accent: #1f4e79;
+  --color-accent-soft: #dfe8f0;
+  --color-accent-lift: #a9cdea;
+  --color-warn: #8a6100;
+  --color-danger: #8e1b1b;
+
+  --color-paper: #fbf8f1;
+  --color-ink: #1d1b16;
+  --color-block: #1d1b16;
+  --color-on-block: #fbf8f1;
+
+  /* An empty photo slot. On the black sheet it is a hole; on paper it is a printed plate. */
+  --plate-hi: #fffdf6;
+  --plate-mid: #f0e7d6;
+  --plate-lo: #e3d8c1;
+  --plate-mark: color-mix(in oklab, #1d1b16 20%, transparent);
+
+  /* Paper gives a card no free contrast, so it has to arrive with its own wash of ink under it. */
+  --card-shadow:
+    0 1px 2px color-mix(in oklab, #1d1b16 5%, transparent),
+    0 14px 26px -20px color-mix(in oklab, #1d1b16 26%, transparent);
+
+  background: var(--color-sheet);
+  color: var(--color-primary);
+}
+
+:root {
+  --plate-hi: #1c1c1c;
+  --plate-mid: #121212;
+  --plate-lo: #0b0b0b;
+  --plate-mark: color-mix(in oklab, #ffffff 45%, transparent);
+  /* On black a lighter rectangle is already lifted; a shadow would only muddy it. */
+  --card-shadow: none;
+}
+
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   body {
@@ -86,7 +140,7 @@
 
   ::selection {
     background: var(--color-accent);
-    color: var(--color-paper);
+    color: var(--color-ink);
   }
 }
 
@@ -95,19 +149,16 @@
 }
 
 /*
-  A card lifted off the sheet.
+  A card lifted off its sheet.
 
-  On the black page a card read as a card because it was lighter than what it stood on. Paper gives
-  no such free contrast, so the same rectangle has to arrive with its own edge: the pencil hairline
-  and a short wash of ink directly under it, which is what keeps a section from looking like it is
-  floating.
+  On black a card reads as a card because it is lighter than what it stands on, so the wash is
+  `none` there. Paper gives no such free contrast, so inside `.ml-paper` the same rectangle arrives
+  with a short ink shadow — which is what keeps a section from looking like it is floating.
 */
 @utility card-lift {
   border: 1px solid var(--color-line);
   background: var(--color-surface);
-  box-shadow:
-    0 1px 2px color-mix(in oklab, var(--color-ink) 5%, transparent),
-    0 14px 26px -20px color-mix(in oklab, var(--color-ink) 26%, transparent);
+  box-shadow: var(--card-shadow);
 }
 
 /* Tailwind generates no `font-display` class from the token of that name, so the display face
@@ -139,6 +190,23 @@
   }
 }
 
+/*
+  An empty photo slot: a printed plate. The wash and its watermark are read from the sheet the slot
+  is standing on, so the same component is a hole on the black page and a plate on the paper island.
+*/
+.ml-plate {
+  background: radial-gradient(
+    120% 100% at 18% 6%,
+    var(--plate-hi) 0%,
+    var(--plate-mid) 55%,
+    var(--plate-lo) 100%
+  );
+}
+
+.ml-plate-mark {
+  color: var(--plate-mark);
+}
+
 /* ------------------------------------------------------------------ the map
 
    Leaflet brings its own white chrome and its own stacking context. Everything below is that
@@ -159,12 +227,13 @@
 }
 
 /*
-  The OpenStreetMap tiles are a cartographer's pastel set, and dropped on this paper they read as
-  a screenshot from another app. A light sepia pull brings them into the sheet. Satellite is
-  imagery of the actual place, so it is left exactly as it arrives.
+  The OpenStreetMap tiles are a cartographer's pastel set and would sit on this page like a
+  screenshot from another app. Inverting the pane and pulling the hue back is the usual way to get
+  a dark map that is still the same map. Satellite is imagery of the actual place, so it is left
+  exactly as it arrives.
 */
 .ml-map-toned .leaflet-tile-pane {
-  filter: sepia(0.22) saturate(0.6) contrast(0.95) brightness(1.03);
+  filter: invert(0.92) hue-rotate(180deg) saturate(0.5) brightness(0.95);
 }
 
 .ml-pin {
@@ -176,7 +245,7 @@
   border: 1.5px solid var(--color-sheet);
   /* The rounded corner points down-left; rotate the teardrop into a pin. */
   transform: rotate(-45deg);
-  box-shadow: 0 1px 3px color-mix(in oklab, var(--color-ink) 30%, transparent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
 }
 
 .ml-pin-open {
@@ -190,7 +259,7 @@
   fill: var(--color-accent);
 }
 
-/* The pin you asked for is the one drawn in ink — the loud colour belongs to opening hours. */
+/* The pin you asked for is the one drawn in white — the loud colour belongs to opening hours. */
 .ml-pin-active {
   background: var(--color-block);
   border-color: var(--color-sheet);
@@ -239,7 +308,7 @@
   color: var(--color-primary) !important;
   border: 1px solid var(--color-line);
   border-radius: 4px !important;
-  box-shadow: 0 12px 28px color-mix(in oklab, var(--color-ink) 16%, transparent) !important;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.55) !important;
 }
 
 .leaflet-popup-content {

@@ -50,14 +50,14 @@ export default function Account() {
         {profile.role === 'farmer' ? (
           <Link
             to="/farmers/dashboard"
-            className="inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-paper"
+            className="inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-ink"
           >
             Open my stall
           </Link>
         ) : (
           <Link
             to="/markets"
-            className="inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-paper"
+            className="inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-ink"
           >
             Browse the markets
           </Link>
