@@ -167,7 +167,7 @@ describe('home', () => {
     expect(hero.getByRole('link', { name: 'More' })).toHaveAttribute('href', '/products');
   });
 
-  it('gives one product the lead and the rest a line', () => {
+  it('shows one listing at a time and answers to the arrows', async () => {
     renderApp('/', {
       stubs: [
         { path: NEARBY_HOME, body: page([]) },
@@ -178,17 +178,17 @@ describe('home', () => {
     const title = screen.getByRole('heading', { level: 2, name: 'Fresh this week' });
     const band = within(title.closest('section') as HTMLElement);
 
-    const lead = band
-      .getByRole('heading', { name: 'Ugu (Pumpkin Leaves)' })
-      .closest('article') as HTMLElement;
-    expect(lead).toHaveTextContent('Adeyemi Farms');
-    expect(lead).toHaveTextContent('In stock');
+    // The other three slides are mounted behind this one and hidden from a reader, so a query that
+    // respects the accessibility tree can only ever find the listing actually on show.
+    const slides = band.getAllByRole('article');
+    expect(slides).toHaveLength(1);
+    expect(slides[0]).toHaveTextContent('Ugu (Pumpkin Leaves)');
+    expect(slides[0]).toHaveTextContent('Adeyemi Farms');
+    expect(slides[0]).toHaveTextContent('In stock');
 
-    const rows = band.getAllByRole('listitem');
-    expect(rows).toHaveLength(3);
-    expect(within(rows[0] as HTMLElement).getByText('Tatashe (Bell Pepper)')).toBeInTheDocument();
-    expect(within(rows[2] as HTMLElement).getByText('Tomato (Fresh)')).toBeInTheDocument();
-    expect(band.getAllByText('Low stock')).toHaveLength(1);
+    await userEvent.click(band.getByRole('button', { name: 'Next listing' }));
+    expect(band.getAllByRole('article')).toHaveLength(1);
+    expect(band.getByRole('article')).toHaveTextContent('Tatashe (Bell Pepper)');
   });
 
   it('rails four stalls, each linking to its own page', async () => {

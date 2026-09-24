@@ -335,24 +335,33 @@ function StockPill({ state }: { state: StockLine }) {
 /** How long one listing holds the band before the next fades in over it. */
 const SLIDE_HOLD_MS = 4_500;
 
+/** The band's prev and next. A hairline pill until it is touched, so it never outshouts the price. */
+const STEP_BUTTON =
+  'grid h-11 w-11 place-items-center rounded-full border border-line text-muted transition ' +
+  'hover:border-accent hover:text-accent';
+
 /**
- * The produce band, which is a carousel rather than a card standing beside a list.
+ * The produce band, which is one carousel rather than a card standing beside a list.
  *
- * One listing at a time is the lead — the photograph full-bleed to the plate's own edges, the
- * listing printed on paper underneath — and the other three are the rows beside it. Every few
- * seconds the band advances: a new lead takes the plate and the rows take whichever three it
- * leaves behind, so the same listing never appears in both places at once. Opacity carries the
- * change and nothing else, because a slide or a zoom is the motion that reads as a template.
+ * A slide is a whole listing — the photograph full-bleed down one side, the listing printed on
+ * paper down the other — and the section shows one of them at a time. Every few seconds the next
+ * arrives; the one before it leaves. Opacity carries the change and nothing else, because a slide
+ * or a zoom is the motion that reads as a template.
+ *
+ * The band also answers to a click, because a visitor who moves their pointer over it to read a
+ * listing stops the rotation and would otherwise see no motion at all. Those controls sit in the
+ * header rather than on the photograph, where they would need a plate of their own to stay legible.
  *
  * No quantity stepper and no cart button: a basket is assembled on the order screen in phase 10,
  * and a control that pretends to hold stock the shopper cannot yet reserve is worse than a link
  * that says where to go next.
  */
-function FreshCarousel({ products }: { products: ShowcaseProduct[] }) {
+function FreshBand({ products }: { products: ShowcaseProduct[] }) {
   const [step, setStep] = useState(0);
   const [held, setHeld] = useState(false);
   const count = products.length;
   const slide = count === 0 ? 0 : step % count;
+  const go = (delta: number) => setStep((s) => (s + delta + count) % count);
 
   // A pointer or a caret anywhere in the band means someone is reading it, so it stops; a visitor
   // who asked for stillness gets the first arrangement and no rotation at all.
@@ -362,29 +371,64 @@ function FreshCarousel({ products }: { products: ShowcaseProduct[] }) {
     return () => window.clearInterval(timer);
   }, [held, count]);
 
-  const active = products[slide];
-  if (!active) return null;
-
-  const state = stockState(active.quantity);
-  const rest = products.filter((_, i) => i !== slide);
+  if (count === 0) return null;
 
   return (
-    <div
-      className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
-      onMouseEnter={() => setHeld(true)}
-      onMouseLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
-      onBlur={() => setHeld(false)}
-    >
-      <article className="card-lift relative overflow-hidden rounded-2xl">
-        {/* Every photograph stays mounted and the band moves them by opacity, so a change is a
-            crossfade between two pictures rather than one picture being replaced. */}
-        <div className="relative aspect-[16/10] w-full">
-          {products.map((product, i) => (
-            <div
+    // The one light panel on the board. Everything inside it reads its colours off the cream sheet
+    // the island redefines, so no component here knows it moved.
+    <div className="ml-paper rounded-3xl px-6 py-8 md:px-10 md:py-10">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+            Straight from the farm
+          </p>
+          <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
+          <p className="mt-1 text-sm text-muted">
+            Seasonal produce, published by the farm that grew it.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              aria-label="Previous listing"
+              className={STEP_BUTTON}
+            >
+              <Glyph name="arrow" size={16} className="rotate-180" />
+            </button>
+            <button type="button" onClick={() => go(1)} aria-label="Next listing" className={STEP_BUTTON}>
+              <Glyph name="arrow" size={16} />
+            </button>
+          </div>
+          <Link to="/products" className="text-sm text-accent hover:underline">
+            Browse everything
+          </Link>
+        </div>
+      </header>
+
+      {/* Every listing stays mounted and the section moves them by opacity, so a change is a
+          crossfade between two whole slides rather than one picture swapped under the eye. The
+          slide in front keeps the height; the others sit flat underneath it, out of reach of the
+          pointer and of a reader, until it is their turn. */}
+      <div
+        className="relative mt-6"
+        onMouseEnter={() => setHeld(true)}
+        onMouseLeave={() => setHeld(false)}
+        onFocus={() => setHeld(true)}
+        onBlur={() => setHeld(false)}
+      >
+        {products.map((product, i) => {
+          const here = i === slide;
+          const state = stockState(product.quantity);
+
+          return (
+            <article
               key={product.key}
-              className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-                i === slide ? 'opacity-100' : 'opacity-0'
+              aria-hidden={!here}
+              className={`card-lift overflow-hidden rounded-2xl transition-opacity duration-700 ease-out motion-reduce:transition-none lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] ${
+                here ? 'relative' : 'pointer-events-none absolute inset-0 opacity-0'
               }`}
             >
               <Thumb
@@ -392,123 +436,66 @@ function FreshCarousel({ products }: { products: ShowcaseProduct[] }) {
                 seed={product.key}
                 category={product.category}
                 glyph={product.glyph}
-                glyphSize={64}
-                className="h-full w-full"
+                label={product.name}
+                glyphSize={72}
+                className="aspect-[16/10] w-full"
               />
-            </div>
-          ))}
-        </div>
 
-        {/* Keyed to the listing so the words fade in with the photograph that replaced theirs. */}
-        <div key={active.key} className="ml-fade-in flex flex-col p-5">
-          {/* Where in the band this listing sits. It leads the card as a caption rather than
-              trailing at its edge, where it would read as a control. */}
-          <p
-            aria-hidden
-            className="num text-[11px] font-medium uppercase tracking-[0.14em] text-muted"
-          >
-            {String(slide + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
-          </p>
-          <h3 className="mt-1.5 font-display text-xl font-bold leading-snug">
-            <Link
-              to={`/products?q=${encodeURIComponent(active.name)}`}
-              className="after:absolute after:inset-0"
-            >
-              {active.name}
-            </Link>
-          </h3>
+              <div className="flex flex-col justify-center p-6 md:p-8">
+                <p
+                  aria-hidden
+                  className="num text-[11px] font-medium uppercase tracking-[0.14em] text-muted"
+                >
+                  {String(i + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
+                </p>
+                <h3 className="mt-1.5 font-display text-2xl font-bold leading-snug md:text-3xl">
+                  <Link
+                    to={`/products?q=${encodeURIComponent(product.name)}`}
+                    tabIndex={here ? undefined : -1}
+                    className="after:absolute after:inset-0"
+                  >
+                    {product.name}
+                  </Link>
+                </h3>
 
-          <p className="mt-1 text-sm text-accent">
-            {active.stall}
-            <span aria-hidden className="text-line">
-              {' '}
-              ·{' '}
-            </span>
-            <span className="text-muted">{active.market}</span>
-          </p>
+                <p className="mt-1.5 text-sm text-accent">
+                  {product.stall}
+                  <span aria-hidden className="text-line">
+                    {' '}
+                    ·{' '}
+                  </span>
+                  <span className="text-muted">{product.market}</span>
+                </p>
 
-          <p className="mt-4 flex items-baseline justify-between gap-3">
-            <span className="flex items-baseline gap-1.5">
-              <span className="num font-display text-2xl font-bold">
-                {formatKobo(active.price_kobo)}
-              </span>
-              <span className="text-sm text-muted">/{active.unit}</span>
-            </span>
-            <StockPill state={state} />
-          </p>
+                <p className="mt-5 flex items-baseline justify-between gap-3">
+                  <span className="flex items-baseline gap-1.5">
+                    <span className="num font-display text-3xl font-bold">
+                      {formatKobo(product.price_kobo)}
+                    </span>
+                    <span className="text-sm text-muted">/{product.unit}</span>
+                  </span>
+                  <StockPill state={state} />
+                </p>
 
-          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
-            <Stars value={active.rating_avg} count={active.rating_count} />
-            <span aria-hidden className="text-line">
-              ·
-            </span>
-            <span className="num">
-              {active.quantity} {active.unit}s left
-            </span>
-            <span aria-hidden className="text-line">
-              ·
-            </span>
-            <span className="num">pickup {active.window}</span>
-          </p>
-        </div>
-      </article>
-
-      {/* The three listings the plate does not have, arriving with each slide. */}
-      <ul key={slide} className="ml-fade-in flex flex-col gap-3">
-        {rest.map((product) => (
-          <FreshRow key={product.key} product={product} />
-        ))}
-      </ul>
+                <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-4 text-xs text-muted">
+                  <Stars value={product.rating_avg} count={product.rating_count} />
+                  <span aria-hidden className="text-line">
+                    ·
+                  </span>
+                  <span className="num">
+                    {product.quantity} {product.unit}s left
+                  </span>
+                  <span aria-hidden className="text-line">
+                    ·
+                  </span>
+                  <span className="num">pickup {product.window}</span>
+                </p>
+              </div>
+            </article>
+          );
+        })}
+      </div>
     </div>
-  );
-}
-
-/** The same listing at line weight, for the produce that does not need a whole card. */
-function FreshRow({ product }: { product: ShowcaseProduct }) {
-  const state = stockState(product.quantity);
-
-  return (
-    <li className="relative">
-      <article className="card-lift flex items-center gap-4 rounded-xl p-3">
-        <Thumb
-          src={product.photo}
-          seed={product.key}
-          category={product.category}
-          glyph={product.glyph}
-          label={product.name}
-          glyphSize={26}
-          className="h-14 w-14 shrink-0 rounded-lg"
-        />
-
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-display text-sm font-semibold">
-            <Link
-              to={`/products?q=${encodeURIComponent(product.name)}`}
-              className="after:absolute after:inset-0"
-            >
-              {product.name}
-            </Link>
-          </h3>
-          <p className="truncate text-xs text-muted">
-            {product.stall}
-            <span aria-hidden className="text-line">
-              {' '}
-              ·{' '}
-            </span>
-            {product.market}
-          </p>
-          <p className="mt-1.5 flex items-center gap-2">
-            <span className="num text-sm font-medium">{formatKobo(product.price_kobo)}</span>
-            <span className="text-[11px] text-muted">/{product.unit}</span>
-            <StockPill state={state} />
-          </p>
-        </div>
-
-        <span className="num shrink-0 text-xs text-muted">
-          {product.quantity} {product.unit}s
-        </span>
-      </article>
-    </li>
   );
 }
 
@@ -631,26 +618,7 @@ export default function Home() {
       <MarketsNearYou />
 
       <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">
-        {/* The one light panel on the board. Everything inside it reads its colours off the cream
-            sheet the island redefines, so no component here knows it moved. */}
-        <div className="ml-paper rounded-3xl px-6 py-8 md:px-10 md:py-10">
-          <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-                Straight from the farm
-              </p>
-              <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
-              <p className="mt-1 text-sm text-muted">
-                Seasonal produce, published by the farm that grew it.
-              </p>
-            </div>
-            <Link to="/products" className="text-sm text-accent hover:underline">
-              Browse everything
-            </Link>
-          </header>
-
-          <FreshCarousel products={FRESH_THIS_WEEK} />
-        </div>
+        <FreshBand products={FRESH_THIS_WEEK} />
       </section>
 
       <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">

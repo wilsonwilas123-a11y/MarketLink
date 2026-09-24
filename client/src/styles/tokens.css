@@ -170,28 +170,6 @@
   font-family: var(--font-display);
 }
 
-/* The produce band advances from one listing to the next, so the words that replaced a photograph
-   fade in to meet it instead of swapping under the reader's eye. Opacity and nothing else: a slide
-   or a zoom here is the motion that reads as a template. */
-@keyframes ml-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.ml-fade-in {
-  animation: ml-fade-in 0.7s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ml-fade-in {
-    animation: none;
-  }
-}
-
 /*
   An empty photo slot: a printed plate. The wash and its watermark are read from the sheet the slot
   is standing on, so the same component is a hole on the black page and a plate on the paper island.
