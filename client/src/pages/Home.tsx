@@ -85,37 +85,58 @@ function Hero() {
               window, and pay the farmer at the market. Nothing is charged online.
             </p>
 
-            <form onSubmit={submit} className="mt-7 flex max-w-md gap-2">
+            {/* One pill holding the field and its action: in the reference the button is the
+                right end of the search bar, not a separate control standing beside it. */}
+            <form
+              onSubmit={submit}
+              className="mt-8 flex w-full max-w-2xl items-center gap-2 rounded-full border border-line bg-surface/80 p-2 backdrop-blur [text-shadow:none] focus-within:border-accent"
+            >
               <label htmlFor="hero-search" className="sr-only">
                 Search markets, farmers or produce
               </label>
-              <div className="relative flex-1">
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-                >
-                  <Glyph name="search" size={17} />
-                </span>
-                <input
-                  id="hero-search"
-                  value={term}
-                  onChange={(e) => setTerm(e.target.value)}
-                  placeholder="Search markets, farmers or produce"
-                  className="h-11 w-full rounded-full border border-line bg-surface/90 pl-10 pr-3 text-sm text-primary outline-none backdrop-blur transition placeholder:text-muted/70 focus:border-accent"
-                />
-              </div>
-              <button type="submit" className={buttonClass('primary', 'md', 'h-11 shrink-0')}>
+              <span aria-hidden className="pl-3 text-muted">
+                <Glyph name="search" size={21} />
+              </span>
+              <input
+                id="hero-search"
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
+                placeholder="Search markets, farmers or produce…"
+                className="h-11 min-w-0 flex-1 bg-transparent text-base text-primary outline-none placeholder:text-muted"
+              />
+              <button
+                type="submit"
+                className={buttonClass('primary', 'md', 'h-11 shrink-0 gap-1.5 px-6 text-base')}
+              >
                 Search
+                <Glyph name="arrow" size={17} />
               </button>
             </form>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link to="/markets" className={buttonClass('ghost', 'md', 'bg-surface/85 backdrop-blur')}>
+              <Link
+                to="/markets"
+                className={buttonClass(
+                  'ghost',
+                  'md',
+                  'h-11 gap-2.5 border-accent/45 bg-accent-soft/45 px-6 text-base backdrop-blur hover:bg-accent-soft',
+                )}
+              >
+                <Glyph name="leaf" size={18} className="text-accent" />
                 Explore markets
-                <Glyph name="arrow" size={16} />
+                <Glyph name="arrow" size={17} />
               </Link>
-              <Link to="/products" className={buttonClass('ghost', 'md', 'bg-surface/85 backdrop-blur')}>
+              <Link
+                to="/products"
+                className={buttonClass(
+                  'ghost',
+                  'md',
+                  'h-11 gap-2.5 bg-surface/80 px-6 text-base backdrop-blur',
+                )}
+              >
+                <Glyph name="basket" size={18} className="text-accent" />
                 Browse produce
+                <Glyph name="arrow" size={17} />
               </Link>
             </div>
           </Reveal>
