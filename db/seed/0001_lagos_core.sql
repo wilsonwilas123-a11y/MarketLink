@@ -75,15 +75,15 @@ values
    'Alhaji Masha Way, Oshodi', 'Lagos', 'Lagos', 6.567000, 3.342100,
    array['sat','sun'], time '06:30', time '18:00',
    '/img/markets/oshodi.jpg', true),
-  (md5('ml-market-lekki')::uuid, 'Lekki Weekend Farmers Market',
-   'Admiralty Way, Lekki Phase 1', 'Lagos', 'Lagos', 6.455100, 3.379500,
+  (md5('ml-market-lekki')::uuid, 'Mile 12 International Market',
+   'Ikorodu Road, Mile 12, Ojo', 'Lagos', 'Lagos', 6.455100, 3.379500,
    array['sat','sun'], time '09:00', time '15:00',
    '/img/markets/lekki.jpg', true)
 on conflict (id) do nothing;
 
 /* The insert above refuses to touch a row that already exists, so a database seeded under the
-   earlier title would keep it. Restated here, and only here, to make the rename self-applying. */
-update markets set name = 'Mile 12 International Market'
+   earlier wording would keep it. Restated here, and only here, to make the change self-applying. */
+update markets set name = 'Mile 12 International Market', address = 'Ikorodu Road, Mile 12, Ojo'
  where id = md5('ml-market-lekki')::uuid;
 
 -- ---------------------------------------------------------------- categories

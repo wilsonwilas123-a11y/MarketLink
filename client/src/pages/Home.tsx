@@ -288,7 +288,7 @@ function MarketsNearYou() {
 
           {/* The two colours a pin can hold. The selected pin is amber, but it is the pin you
               just clicked, so it needs no key. */}
-          <ul className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-3 rounded-lg border border-line bg-base/85 px-2.5 py-1.5 text-xs text-muted backdrop-blur">
+          <ul className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-3 rounded-lg border border-line bg-sheet/85 px-2.5 py-1.5 text-xs text-muted backdrop-blur">
             <li className="flex items-center gap-1.5">
               <span aria-hidden className="h-2 w-2 rounded-full bg-accent" />
               Open now
@@ -459,7 +459,7 @@ function FarmerCard({ farmer }: { farmer: FarmerSummary }) {
           className="aspect-[4/3] w-full border-b border-line"
         />
         {tradesToday ? (
-          <span className="absolute left-3 top-3 rounded-full bg-base/85 px-2 py-0.5 text-[11px] font-medium text-accent backdrop-blur">
+          <span className="absolute left-3 top-3 rounded-full bg-sheet/85 px-2 py-0.5 text-[11px] font-medium text-accent backdrop-blur">
             Trades today
           </span>
         ) : null}

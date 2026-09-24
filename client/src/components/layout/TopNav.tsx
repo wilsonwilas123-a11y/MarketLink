@@ -18,7 +18,7 @@ function linkClass({ isActive }: { isActive: boolean }) {
 
 export function TopNav() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-base/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line bg-sheet/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
         <NavLink to="/" className="flex items-center gap-2 font-display text-lg font-bold">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent-soft text-accent" aria-hidden>

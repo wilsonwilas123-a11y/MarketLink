@@ -13,9 +13,18 @@
   Contrast, checked against the base: white 19.4:1, warm grey 8.2:1, sign blue 9.6:1, ochre 9.9:1,
   and black on a solid white block 19.4:1. All clear WCAG AA — and AAA at body size.
 */
-@theme {
+/*
+  `static`, not the default: Tailwind drops theme variables no generated utility references, and
+  these are reached through `var()` from the base layer rather than through a class. Without the
+  keyword `--font-display` and `--font-body` never reach the sheet and the page falls back to the
+  system font.
+
+  No colour here may be named `base`, `sm`, `lg` or any other type-scale word: a `--color-base`
+  turns the class `text-base` into that colour and silently deletes the font size with it.
+*/
+@theme static {
   /* The sheet. */
-  --color-base: #050505;
+  --color-sheet: #050505;
   --color-surface: #0e0e0e;
   --color-elevated: #171717;
   --color-line: #2b2b2b;
@@ -47,7 +56,7 @@
   }
 
   body {
-    background-color: var(--color-base);
+    background-color: var(--color-sheet);
     color: var(--color-primary);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
@@ -79,6 +88,13 @@
 
 @utility num {
   font-variant-numeric: tabular-nums;
+}
+
+/* Tailwind generates no `font-display` class from the token of that name, so the display face
+   only reaches type through the base layer's h1–h4 rule. Anything else wearing the class — the
+   hero's corner badge, a few labels — would otherwise render in the body font. */
+.font-display {
+  font-family: var(--font-display);
 }
 
 /* ------------------------------------------------------------------ the map
@@ -116,7 +132,7 @@
   height: 100%;
   border-radius: 50% 50% 50% 0;
   background: var(--color-muted);
-  border: 1.5px solid var(--color-base);
+  border: 1.5px solid var(--color-sheet);
   /* The rounded corner points down-left; rotate the teardrop into a pin. */
   transform: rotate(-45deg);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
@@ -129,7 +145,7 @@
 /* The pin you asked for is the one drawn in white — the loud colour belongs to opening hours. */
 .ml-pin-active {
   background: var(--color-block);
-  border-color: var(--color-base);
+  border-color: var(--color-sheet);
 }
 
 .leaflet-bar,
