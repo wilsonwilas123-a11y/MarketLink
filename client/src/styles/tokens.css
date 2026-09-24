@@ -1,28 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=Karla:wght@400..700&display=swap');
 @import 'tailwindcss';
 
+/*
+  The page is a market notice board, not a dashboard.
+
+  One sheet of warm paper, one ink that carries almost everything, and one hand-painted sign blue
+  kept back for the single fact a shopper acts on — that a market is open right now. Depth comes
+  from type size and from whitespace rather than from surfaces stacked on surfaces, so there is no
+  elevated tier pretending to glow and no accent on a control that is only chrome.
+
+  Contrast, checked against the paper base: ink 14:1, muted pencil 6.3:1, sign blue 7.4:1, ochre
+  4.8:1, and paper on a solid ink block 14:1. All clear WCAG AA at body size.
+*/
 @theme {
-  --color-base: #07130f;
-  --color-surface: #0d1f1a;
-  --color-elevated: #122a23;
-  --color-line: #1c3a31;
-  --color-primary: #e8f3ee;
-  --color-muted: #8fa9a0;
-  --color-accent: #5fe38a;
-  --color-accent-soft: #143328;
-  --color-warn: #f2c14e;
-  --color-danger: #f26d6d;
-  --color-ink: #04150e;
+  /* The sheet. */
+  --color-base: #f4efe3;
+  --color-surface: #fbf8f1;
+  --color-elevated: #eae1d0;
+  --color-line: #d8cdb8;
 
-  --font-display: 'Space Grotesk', ui-sans-serif, sans-serif;
-  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* What is written on it. */
+  --color-primary: #1d1b16;
+  --color-muted: #5e574b;
 
-  --radius-card: 16px;
+  /* The one loud colour, and the wash left behind by it. */
+  --color-accent: #1f4e79;
+  --color-accent-soft: #dfe8f0;
+  /* The same hue lifted until it survives a photograph behind it. */
+  --color-accent-lift: #a9cdea;
+  --color-warn: #8a6100;
+  --color-danger: #8e1b1b;
+
+  /* Type that sits on a solid block rather than on the sheet. */
+  --color-paper: #fbf8f1;
+  --color-ink: #1d1b16;
+
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Karla', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 4px;
 }
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
@@ -38,7 +59,11 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    font-weight: 600;
+    /* Fraunces is a variable optical face: let the size choose the setting rather than
+       flattening every heading to the same one. */
+    font-optical-sizing: auto;
+    letter-spacing: -0.018em;
   }
 
   :focus-visible {
@@ -47,8 +72,8 @@
   }
 
   ::selection {
-    background: var(--color-accent-soft);
-    color: var(--color-primary);
+    background: var(--color-accent);
+    color: var(--color-paper);
   }
 }
 
@@ -58,9 +83,9 @@
 
 /* ------------------------------------------------------------------ the map
 
-   Leaflet brings its own white chrome and its own stacking context. Everything
-   below is that chrome re-stated against the tokens, plus the pin, which is drawn
-   in CSS so it matches on both tile layers and needs no image asset. */
+   Leaflet brings its own white chrome and its own stacking context. Everything below is that
+   chrome re-stated against the paper tokens, plus the pin, which is drawn in CSS so it matches
+   on both tile layers. */
 
 .ml-map-frame {
   height: 100%;
@@ -75,31 +100,41 @@
   font-family: var(--font-body);
 }
 
+/*
+  The OpenStreetMap tiles are a cartographer's pastel set, and dropped on this paper they read as
+  a screenshot from another app. A light sepia pull brings them into the sheet. Satellite is
+  imagery of the actual place, so it is left exactly as it arrives.
+*/
+.ml-map-toned .leaflet-tile-pane {
+  filter: sepia(0.22) saturate(0.6) contrast(0.95) brightness(1.03);
+}
+
 .ml-pin {
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 50% 50% 50% 0;
   background: var(--color-muted);
-  border: 1.5px solid var(--color-base);
+  border: 1.5px solid var(--color-paper);
   /* The rounded corner points down-left; rotate the teardrop into a pin. */
   transform: rotate(-45deg);
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.45);
+  box-shadow: 0 1px 3px rgb(29 27 22 / 0.3);
 }
 
 .ml-pin-open {
   background: var(--color-accent);
 }
 
+/* The pin you asked for is the one drawn in ink — the loud colour belongs to opening hours. */
 .ml-pin-active {
-  background: var(--color-warn);
-  border-color: var(--color-ink);
+  background: var(--color-ink);
+  border-color: var(--color-paper);
 }
 
 .leaflet-bar,
 .leaflet-control-attribution {
   border: 1px solid var(--color-line) !important;
-  background: color-mix(in oklab, var(--color-surface) 92%, transparent) !important;
+  background: var(--color-surface) !important;
   color: var(--color-muted) !important;
 }
 
@@ -122,40 +157,49 @@
   background: var(--color-surface) !important;
   color: var(--color-primary) !important;
   border: 1px solid var(--color-line);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 0.5) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 12px 28px rgb(29 27 22 / 0.16) !important;
 }
 
 .leaflet-popup-content {
   margin: 12px 14px !important;
 }
 
+.leaflet-popup-close-button {
+  color: var(--color-muted) !important;
+}
+
 .ml-popup-title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 0.9375rem;
+  font-size: 1.0625rem;
 }
 
 .ml-popup-meta {
   margin-top: 2px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--color-muted);
 }
 
 .ml-popup-num {
   font-variant-numeric: tabular-nums;
-  color: var(--color-accent);
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 .ml-popup-link {
-  margin-top: 8px;
+  margin-top: 10px;
   display: inline-flex;
   align-items: center;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: var(--color-accent);
-  color: var(--color-ink);
-  font-size: 0.75rem;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 3px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
+.ml-popup-link:hover {
+  background: color-mix(in oklab, var(--color-ink) 84%, var(--color-accent));
+}

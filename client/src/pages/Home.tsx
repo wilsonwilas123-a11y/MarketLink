@@ -45,6 +45,15 @@ const CATEGORY_TONE: Record<string, string> = {
   herbs: 'text-accent',
 };
 
+/**
+ * The chip recipe, given a sheet to stand on.
+ *
+ * These chips sit on the photograph, where the recipe's pencil-grey type on nothing is
+ * unreadable. Both overrides need the important modifier: the recipe declares the same two
+ * properties, and a later class in the list does not beat an earlier rule in the stylesheet.
+ */
+const CHIP_ON_PHOTO = 'bg-surface! text-primary!';
+
 function Hero() {
   const [term, setTerm] = useState('');
   const navigate = useNavigate();
@@ -74,27 +83,27 @@ function Hero() {
       <div className="mx-auto flex w-full max-w-[1680px] flex-col px-6 pb-14 pt-16 md:px-10 md:pb-20 md:pt-24">
         <div className="max-w-2xl lg:max-w-xl">
           <Reveal className="flex flex-col" y={12} stagger={0.07}>
-            <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary [text-shadow:0_1px_2px_rgba(4,21,14,0.9),0_2px_18px_rgba(4,21,14,0.85)]">
+            <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-paper [text-shadow:0_1px_2px_rgba(4,21,14,0.9),0_2px_18px_rgba(4,21,14,0.85)]">
               Connecting local farms
-              <span aria-hidden className="text-accent">
+              <span aria-hidden className="text-accent-lift">
                 →
               </span>
               your market
             </p>
 
-            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.12] md:text-5xl [text-shadow:0_2px_4px_rgba(4,21,14,0.85),0_4px_26px_rgba(4,21,14,0.8)]">
+            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.12] text-paper md:text-5xl [text-shadow:0_2px_4px_rgba(4,21,14,0.85),0_4px_26px_rgba(4,21,14,0.8)]">
               <span className="block">From the farm</span>
               <span className="mt-1.5 flex items-center gap-3">
-                <Glyph name="arrow" size={22} className="shrink-0 text-muted" />
+                <Glyph name="arrow" size={22} className="shrink-0 text-paper/60" />
                 <span>to the market</span>
               </span>
-              <span className="mt-1.5 flex items-center gap-3 text-accent">
+              <span className="mt-1.5 flex items-center gap-3 text-accent-lift">
                 <Glyph name="arrow" size={22} className="shrink-0 opacity-60" />
                 <span>to you</span>
               </span>
             </h1>
 
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-primary md:text-lg [text-shadow:0_1px_3px_rgba(4,21,14,0.95),0_2px_20px_rgba(4,21,14,0.8)]">
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-paper md:text-lg [text-shadow:0_1px_3px_rgba(4,21,14,0.95),0_2px_20px_rgba(4,21,14,0.8)]">
               Every listing here is written by the farm that grew it. See what is actually left
               this week, reserve it against a pickup window, and pay the grower at the market.
               Nothing is charged online.
@@ -134,7 +143,7 @@ function Hero() {
                 className={buttonClass(
                   'ghost',
                   'md',
-                  'h-11 gap-2.5 border-accent/45 bg-accent-soft/45 px-6 text-base backdrop-blur hover:bg-accent-soft',
+                  'h-11 gap-2.5 border-accent/45 bg-accent-soft! px-6 text-base',
                 )}
               >
                 <Glyph name="leaf" size={18} className="text-accent" />
@@ -146,7 +155,7 @@ function Hero() {
                 className={buttonClass(
                   'ghost',
                   'md',
-                  'h-11 gap-2.5 bg-surface/80 px-6 text-base backdrop-blur',
+                  'h-11 gap-2.5 bg-surface! px-6 text-base',
                 )}
               >
                 <Glyph name="basket" size={18} className="text-accent" />
@@ -157,12 +166,16 @@ function Hero() {
 
             <div className="mt-3 flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
-                <Link key={c.slug} to={`/products?category=${c.slug}`} className={chipClass()}>
+                <Link
+                  key={c.slug}
+                  to={`/products?category=${c.slug}`}
+                  className={chipClass(false, CHIP_ON_PHOTO)}
+                >
                   <Glyph name={c.glyph} size={15} className={CATEGORY_TONE[c.slug] ?? 'text-primary'} />
                   {c.name}
                 </Link>
               ))}
-              <Link to="/products" className={chipClass()}>
+              <Link to="/products" className={chipClass(false, CHIP_ON_PHOTO)}>
                 <Glyph name="grid" size={15} />
                 More
               </Link>
@@ -171,7 +184,7 @@ function Hero() {
         </div>
       </div>
 
-      <span className="absolute right-5 top-6 hidden -rotate-3 rounded-lg border border-accent/40 bg-base/70 px-3 py-1.5 font-display text-xs font-semibold text-accent backdrop-blur md:block">
+      <span className="absolute right-5 top-6 hidden -rotate-3 rounded-lg border border-accent-lift/40 bg-ink/80 px-3 py-1.5 font-display text-xs font-semibold text-accent-lift backdrop-blur md:block">
         Local farms. Market pickup.
       </span>
     </section>
@@ -519,7 +532,7 @@ function AskPanel() {
           <button
             type="submit"
             aria-label="Search"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-110"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-paper transition hover:brightness-110"
           >
             <Glyph name="send" size={17} />
           </button>

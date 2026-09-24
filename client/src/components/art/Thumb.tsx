@@ -53,11 +53,13 @@ export function Thumb({
             className="absolute inset-0"
             style={{
               background:
-                'radial-gradient(120% 100% at 15% 0%, #17362a 0%, #0d1f1a 55%, #0a1a15 100%)',
+                'radial-gradient(120% 100% at 18% 6%, #fffdf6 0%, #f0e7d6 55%, #e3d8c1 100%)',
             }}
           />
-          <span className="absolute inset-0 grid place-items-center text-accent/70">
-            <Glyph name={glyph ?? glyphFor(seed, category)} size={glyphSize} />
+          <span className="absolute inset-0 grid place-items-center">
+            <span className="-rotate-2 text-ink/45">
+              <Glyph name={glyph ?? glyphFor(seed, category)} size={glyphSize} />
+            </span>
           </span>
         </>
       )}

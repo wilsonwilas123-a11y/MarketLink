@@ -1,9 +1,9 @@
 import { Link, useParams } from 'react-router-dom';
 import { StateNote } from '../components/discovery/StateNote';
-import { OpenState, WeekStrip } from '../components/discovery/pieces';
+import { OpenState, TradingDays } from '../components/discovery/pieces';
 import { Avatar } from '../components/ui/Avatar';
 import { ApiError } from '../lib/api';
-import { clock, useMarket } from '../lib/discovery';
+import { daysPhrase, useMarket } from '../lib/discovery';
 import type { RosterFarmer } from '../lib/types';
 import { Reveal } from '../motion/reveal';
 
@@ -18,7 +18,7 @@ import { Reveal } from '../motion/reveal';
 function RosterRow({ farmer }: { farmer: RosterFarmer }) {
   return (
     <li className="flex items-center gap-3 border-t border-line py-3 first:border-t-0">
-      <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-elevated">
+      <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-[2px] bg-elevated">
         <Avatar src={farmer.logo_url} size={40} />
       </span>
 
@@ -41,7 +41,7 @@ function RosterRow({ farmer }: { farmer: RosterFarmer }) {
             'no ratings yet'
           )}
         </span>
-        <WeekStrip days={farmer.days} />
+        <span className="text-xs text-muted">{daysPhrase(farmer.days)}</span>
       </div>
     </li>
   );
@@ -73,7 +73,10 @@ export default function MarketDetail() {
               : 'Give it another try, or go back to the list.'
           }
         />
-        <Link to="/markets" className="mt-4 inline-block text-sm text-accent hover:underline">
+        <Link
+          to="/markets"
+          className="mt-4 inline-block text-sm text-primary underline decoration-line underline-offset-2 hover:decoration-accent"
+        >
           All markets
         </Link>
       </div>
@@ -89,23 +92,24 @@ export default function MarketDetail() {
 
         <Reveal className="mt-4 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
           <div className="min-w-0">
-            <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">
+            <h1 className="font-display text-4xl font-semibold leading-[1.05] md:text-5xl">
               {market.name}
             </h1>
             <p className="mt-2 text-sm text-muted">
               {market.address} · {market.city}, {market.state}
             </p>
           </div>
-          <div className="flex flex-col items-start gap-2 md:items-end">
+          <div className="flex flex-col items-start gap-1 md:items-end">
             <OpenState open={market.is_open_now} />
-            <span className="num text-sm text-muted">
-              {clock(market.opens_at)}–{clock(market.closes_at)}
-            </span>
           </div>
         </Reveal>
 
         <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line pt-5">
-          <WeekStrip days={market.operating_days} />
+          <TradingDays
+            days={market.operating_days}
+            opensAt={market.opens_at}
+            closesAt={market.closes_at}
+          />
           <p className="num text-sm text-muted">
             <span className="text-primary">{market.farmers.length}</span>{' '}
             {market.farmers.length === 1 ? 'farm' : 'farms'} ·{' '}
@@ -122,7 +126,7 @@ export default function MarketDetail() {
         </p>
 
         {market.farmers.length === 0 ? (
-          <p className="mt-5 rounded-xl border border-line bg-surface/70 px-4 py-3 text-sm text-muted">
+          <p className="mt-5 rounded-[3px] border border-line bg-surface px-4 py-3 text-sm text-muted">
             No stall has published a pitch at this market yet. The market’s own hours above are
             still correct.
           </p>

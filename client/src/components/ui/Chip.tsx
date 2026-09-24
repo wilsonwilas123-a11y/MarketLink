@@ -1,11 +1,16 @@
 import type { ButtonHTMLAttributes } from 'react';
 
-/** The recipe on its own, so a chip that points at a URL can be an `<a>` and not a button. */
+/**
+ * The recipe on its own, so a chip that points at a URL can be an `<a>` and not a button.
+ *
+ * Chips are filters, not decoration. An unset one is a word with a hairline around it; the one
+ * thing you have filtered by is the only one that goes solid.
+ */
 export function chipClass(active = false, className = ''): string {
-  return `inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition ${
+  return `inline-flex h-8 items-center gap-1.5 rounded-[3px] border px-3 text-sm transition-colors ${
     active
-      ? 'border-accent/50 bg-accent-soft text-accent'
-      : 'border-line bg-elevated text-muted hover:text-primary'
+      ? 'border-ink bg-ink text-paper font-semibold'
+      : 'border-line bg-transparent text-muted hover:border-ink/40 hover:text-primary'
   } ${className}`;
 }
 

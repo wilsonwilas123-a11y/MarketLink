@@ -1,25 +1,29 @@
 import { Link } from 'react-router-dom';
 import { Thumb } from '../art/Thumb';
-import { clock } from '../../lib/discovery';
 import type { Market, NearbyMarket } from '../../lib/types';
 import { formatDistance } from '../../utils/distance';
-import { OpenState, WeekStrip } from './pieces';
+import { OpenState, TradingDays } from './pieces';
 
 /**
- * One market, as a row in the list or a card in the rail.
+ * One market, as a row on the board.
  *
- * The whole card is a link, laid over the content with an absolutely positioned anchor rather
- * than by wrapping the card in an `<a>`: that keeps the address, the week strip and the hours
- * as real text nodes for a screen reader, with one named destination. Anything inside it that
- * is itself a control has to be positioned, or that overlay paints over it and takes the click.
+ * The whole row is a link, laid over the content with an absolutely positioned anchor rather
+ * than by wrapping the row in an `<a>`: that keeps the address and the trading line as real text
+ * nodes for a screen reader, with one named destination. Anything inside it that is itself a
+ * control has to be positioned, or that overlay paints over it and takes the click.
+ *
+ * `prominent` is how the landing page gives its nearest market weight without inventing a second
+ * component: the same row, set larger.
  */
 export function MarketCard({
   market,
   selected = false,
+  prominent = false,
   onFocus,
 }: {
   market: Market | NearbyMarket;
   selected?: boolean;
+  prominent?: boolean;
   /** Present on the map screen, where pointing at a pin is a different act than opening it. */
   onFocus?: () => void;
 }) {
@@ -28,72 +32,88 @@ export function MarketCard({
   return (
     <article
       aria-current={selected || undefined}
-      className={`group relative flex gap-4 rounded-2xl border p-3 transition-colors sm:p-4 ${
-        selected
-          ? 'border-accent/45 bg-accent-soft/40'
-          : 'border-line bg-surface hover:border-accent/25 hover:bg-elevated/60'
+      className={`group relative border-t border-line transition-colors ${
+        selected ? 'bg-accent-soft/50' : 'hover:bg-elevated/45'
       }`}
     >
-      <Thumb
-        src={market.image_url}
-        seed={market.id}
-        glyph="farm"
-        label={market.name}
-        glyphSize={28}
-        className="h-[76px] w-[76px] shrink-0 rounded-xl border border-line sm:h-20 sm:w-20"
-      />
+      <div
+        className={`flex items-start gap-4 sm:gap-5 ${prominent ? 'py-5 sm:py-6' : 'py-4'}`}
+      >
+        <Thumb
+          src={market.image_url}
+          seed={market.id}
+          glyph="farm"
+          label={market.name}
+          glyphSize={prominent ? 32 : 26}
+          className={`shrink-0 rounded-[2px] ${
+            prominent ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-16 w-16 sm:h-[72px] sm:w-[72px]'
+          }`}
+        />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="truncate font-display text-base font-semibold leading-snug">
-              <Link to={`/markets/${market.id}`} className="after:absolute after:inset-0">
-                {market.name}
-              </Link>
-            </h3>
-            <p className="mt-0.5 truncate text-sm text-muted">
-              {market.address}
-              <span className="text-muted/50"> · {market.city}</span>
-            </p>
-          </div>
+        <div className="min-w-0 flex-1">
+          <h3
+            className={`font-display leading-tight ${
+              prominent
+                ? 'text-xl font-semibold sm:text-2xl'
+                : 'text-base font-semibold sm:text-[1.0625rem]'
+            }`}
+          >
+            <Link to={`/markets/${market.id}`} className="after:absolute after:inset-0">
+              {market.name}
+            </Link>
+          </h3>
 
-          <div className="flex flex-col items-end gap-1.5">
-            <OpenState open={market.is_open_now} />
-            {distance !== null ? (
-              <span className="num text-xs text-accent">{formatDistance(distance)}</span>
-            ) : null}
-          </div>
+          <p className="mt-1 truncate text-sm text-muted">
+            {market.address}
+            <span className="text-muted/70"> · {market.city}</span>
+          </p>
+
+          <TradingDays
+            days={market.operating_days}
+            opensAt={market.opens_at}
+            closesAt={market.closes_at}
+            className={`text-muted ${prominent ? 'mt-2.5' : 'mt-1.5'}`}
+          />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <WeekStrip days={market.operating_days} />
-          <div className="flex items-center gap-3">
-            <span className="num text-xs text-muted">
-              {clock(market.opens_at)}–{clock(market.closes_at)}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {distance !== null ? (
+            <span
+              className={`num font-semibold leading-none ${
+                prominent ? 'text-2xl text-primary' : 'text-lg text-primary/85'
+              }`}
+            >
+              {formatDistance(distance)}
             </span>
-            {onFocus ? (
-              <button
-                type="button"
-                onClick={onFocus}
-                className="relative rounded-full border border-line px-2.5 py-1 text-xs text-muted transition-colors hover:border-accent/40 hover:text-accent"
-              >
-                Show on map
-              </button>
-            ) : null}
-          </div>
+          ) : null}
+
+          <OpenState open={market.is_open_now} />
+
+          {onFocus ? (
+            <button
+              type="button"
+              onClick={onFocus}
+              className="relative mt-1 text-xs text-muted underline decoration-line underline-offset-2 transition-colors hover:text-primary hover:decoration-accent"
+            >
+              Show on map
+            </button>
+          ) : null}
         </div>
       </div>
     </article>
   );
 }
 
-/** A card that is still waiting for its row, holding the rail's height so nothing jumps. */
+/** A row that is still waiting for its data, holding the list's height so nothing jumps. */
 export function MarketCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-line bg-surface/60 p-4" aria-hidden>
-      <div className="h-4 w-2/5 rounded bg-elevated" />
-      <div className="mt-2 h-3 w-3/5 rounded bg-elevated/70" />
-      <div className="mt-4 h-5 w-32 rounded bg-elevated/50" />
+    <div className="flex items-start gap-4 border-t border-line py-4" aria-hidden>
+      <div className="h-16 w-16 shrink-0 rounded-[2px] bg-elevated sm:h-[72px] sm:w-[72px]" />
+      <div className="min-w-0 flex-1">
+        <div className="h-4 w-2/5 rounded-[2px] bg-elevated" />
+        <div className="mt-2 h-3 w-3/5 rounded-[2px] bg-elevated/70" />
+        <div className="mt-3 h-3 w-28 rounded-[2px] bg-elevated/70" />
+      </div>
     </div>
   );
 }

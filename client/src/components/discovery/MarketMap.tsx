@@ -193,7 +193,7 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
     if (origin) {
       L.circle([origin.lat, origin.lng], {
         radius: 700,
-        color: '#5fe38a',
+        color: '#1f4e79',
         weight: 1,
         fillOpacity: 0.08,
         interactive: false,
@@ -218,9 +218,15 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
 
   return (
     <div className="relative h-full w-full">
-      <div ref={host} className="ml-map-frame" role="region" aria-label="Market map" tabIndex={-1} />
+      <div
+        ref={host}
+        className={`ml-map-frame${base === 'map' ? ' ml-map-toned' : ''}`}
+        role="region"
+        aria-label="Market map"
+        tabIndex={-1}
+      />
 
-      <div className="absolute right-3 top-3 z-[500] flex overflow-hidden rounded-full border border-line bg-surface/95 backdrop-blur">
+      <div className="absolute right-3 top-3 z-[500] flex overflow-hidden rounded-[3px] border border-line bg-surface">
         {(Object.keys(TILES) as BaseLayer[]).map((key) => (
           <button
             key={key}
@@ -228,7 +234,7 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
             onClick={() => setBase(key)}
             aria-pressed={base === key}
             className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-              base === key ? 'bg-accent-soft text-accent' : 'text-muted hover:text-primary'
+              base === key ? 'bg-ink text-paper' : 'text-muted hover:bg-elevated hover:text-primary'
             }`}
           >
             {TILES[key].name}

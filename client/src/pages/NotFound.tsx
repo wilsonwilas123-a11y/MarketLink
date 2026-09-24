@@ -10,7 +10,7 @@ export default function NotFound() {
       </p>
       <Link
         to="/markets"
-        className="mt-8 inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-ink"
+        className="mt-8 inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-paper"
       >
         Browse markets
       </Link>

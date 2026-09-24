@@ -3,15 +3,22 @@ import type { ButtonHTMLAttributes } from 'react';
 type Variant = 'primary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md';
 
+/**
+ * Two buttons, not a family.
+ *
+ * `primary` is a block of ink — the letterpress move on a paper page, and the only thing on a
+ * screen allowed to be solid. `ghost` is a hairline the same colour as the type. The sign blue is
+ * kept off both: it belongs to the one fact that matters, not to the chrome.
+ */
 const variant: Record<Variant, string> = {
-  primary: 'bg-accent text-ink font-semibold hover:brightness-110',
-  ghost: 'border border-line bg-transparent text-primary hover:bg-elevated',
-  danger: 'border border-danger/40 bg-danger/15 text-danger hover:bg-danger/25',
+  primary: 'bg-ink text-paper font-semibold hover:bg-ink/85 active:translate-y-px',
+  ghost: 'border border-ink/25 bg-transparent text-primary hover:border-ink/60',
+  danger: 'border border-danger/45 bg-transparent text-danger hover:bg-danger/10',
 };
 
 const size: Record<Size, string> = {
   sm: 'h-8 px-3 text-sm',
-  md: 'h-10 px-5',
+  md: 'h-11 px-5',
 };
 
 /**
@@ -21,7 +28,7 @@ const size: Record<Size, string> = {
  * button and pointing at a URL needs these classes without the `<button>` element.
  */
 export function buttonClass(v: Variant = 'primary', s: Size = 'md', className = ''): string {
-  return `inline-flex items-center justify-center gap-2 rounded-full transition disabled:pointer-events-none disabled:opacity-50 ${size[s]} ${variant[v]} ${className}`;
+  return `inline-flex items-center justify-center gap-2 rounded-[3px] transition-colors disabled:pointer-events-none disabled:opacity-45 ${size[s]} ${variant[v]} ${className}`;
 }
 
 export function Button({

@@ -184,3 +184,16 @@ export function lagosToday(): Weekday {
 export function dayList(days: string[]): string {
   return days.map((d) => WEEK.find((w) => w.code === d)?.short ?? d).join(', ');
 }
+
+/**
+ * The same week as a sentence: `Sat & Sun`, `Tue, Thu & Sat`.
+ *
+ * A strip of seven cells asks the reader to decode which ones are lit. The market trades two
+ * days a week; the sentence is shorter, and it is the size of the fact.
+ */
+export function daysPhrase(days: string[]): string {
+  const named = days.map((d) => WEEK.find((w) => w.code === d)?.short ?? d);
+  if (named.length === 0) return 'No published trading days';
+  if (named.length === 1) return named[0] ?? '';
+  return `${named.slice(0, -1).join(', ')} & ${named.at(-1) ?? ''}`;
+}
