@@ -37,7 +37,7 @@ export function MarketCard({
       <Thumb
         src={market.image_url}
         seed={market.id}
-        glyph="stall"
+        glyph="farm"
         label={market.name}
         glyphSize={28}
         className="h-[76px] w-[76px] shrink-0 rounded-xl border border-line sm:h-20 sm:w-20"

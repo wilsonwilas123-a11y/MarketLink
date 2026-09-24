@@ -39,6 +39,7 @@ export type GlyphName =
   | 'basket'
   | 'grid'
   | 'stall'
+  | 'farm'
   | 'star'
   | 'search'
   | 'pin'
@@ -174,6 +175,14 @@ const paths: Record<GlyphName, ReactNode> = {
     <>
       <path {...stroke} d="M3.5 8.5h17L18.5 4h-13Z" />
       <path {...stroke} d="M5.5 8.5V20h13V8.5M5.5 14.5h13" />
+    </>
+  ),
+  farm: (
+    <>
+      <path {...stroke} d="M4.5 10.8 12 4.6l7.5 6.2V20h-15Z" />
+      <path {...stroke} d="M12 9.1a1.9 1.9 0 1 1 0 3.8 1.9 1.9 0 0 1 0-3.8Z" />
+      <path {...stroke} d="M9.5 20v-4.4h5V20" />
+      <path {...stroke} d="M2.5 20h19" />
     </>
   ),
   star: (
