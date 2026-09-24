@@ -63,9 +63,9 @@ on conflict (id) do nothing;
 
 insert into markets (id, name, address, city, state, lat, lng, operating_days, opens_at, closes_at, image_url, is_active)
 values
-  (md5('ml-market-mile12')::uuid, 'Mile 12 Market',
+  (md5('ml-market-mile12')::uuid, 'Mile 12 International Market',
    'Ikorodu Road, Mile 12, Ojo', 'Lagos', 'Lagos', 6.595500, 3.343300,
-   array['tue','thu','sat'], time '07:00', time '17:00',
+   array['tue','thu','sat','sun'], time '07:00', time '17:00',
    '/img/markets/mile-12.jpg', true),
   (md5('ml-market-balogun')::uuid, 'Balogun Market',
    'Balogun Square, Isale Eko', 'Lagos', 'Lagos', 6.454100, 3.398500,
@@ -74,18 +74,24 @@ values
   (md5('ml-market-oshodi')::uuid, 'Oshodi Market',
    'Alhaji Masha Way, Oshodi', 'Lagos', 'Lagos', 6.567000, 3.342100,
    array['sat','sun'], time '06:30', time '18:00',
-   '/img/markets/oshodi.jpg', true),
-  (md5('ml-market-lekki')::uuid, 'Mile 12 International Market',
-   'Ikorodu Road, Mile 12, Ojo', 'Lagos', 'Lagos', 6.455100, 3.379500,
-   array['sat','sun'], time '09:00', time '15:00',
-   '/img/markets/mile-12-international.jpg', true)
+   '/img/markets/oshodi.jpg', true)
 on conflict (id) do nothing;
 
-/* The insert above refuses to touch a row that already exists, so a database seeded under the
-   earlier wording would keep it. Restated here, and only here, to make the change self-applying. */
-update markets set name = 'Mile 12 International Market', address = 'Ikorodu Road, Mile 12, Ojo',
-                   image_url = '/img/markets/mile-12-international.jpg'
- where id = md5('ml-market-lekki')::uuid;
+/* Mile 12 is one market, not two. A database seeded while the second copy stood at Admiralty Way
+   is folded back into this row: the copy's two growers move across, their stall coordinates come
+   with them, and the copy is deleted. The last statement carries the name and the Sunday the
+   insert above cannot give a row that already exists. Each is a no-op once that has run. */
+update farmers set lat = 6.595500, lng = 3.343300
+ where id in (md5('marketlink-demo-yahaya')::uuid, md5('marketlink-demo-ifaturo')::uuid);
+
+update market_farmers set market_id = md5('ml-market-mile12')::uuid
+ where market_id = md5('ml-market-lekki')::uuid;
+
+delete from markets where id = md5('ml-market-lekki')::uuid;
+
+update markets set name = 'Mile 12 International Market',
+                   operating_days = array['tue','thu','sat','sun']
+ where id = md5('ml-market-mile12')::uuid;
 
 -- ---------------------------------------------------------------- categories
 
@@ -113,10 +119,10 @@ select
 from (values
   ('bola',     'Adeyemi Farms',        'Bola Adeyemi',    'Leaf vegetables and tubers grown at Epe, harvested two days before pickup.', 6.595500, 3.343300, array['tue','thu','sat'], time '08:00', time '12:00', 180, 'approved', 4.60, 38),
   ('chidinma', 'Eze Fresh Produce',    'Chidinma Eze',    'Peppers, tomatoes and onions sold by the crate.',                             6.567000, 3.342100, array['sat','sun'],      time '09:00', time '13:00', 120, 'approved', 4.30, 51),
-  ('yahaya',   'Sanni Dairy & Eggs',   'Yahaya Sanni',    'Farm milk, yoghurt and eggs, cold-chained from the Epe herd.',                6.455100, 3.379500, array['sat','sun'],      time '10:00', time '14:00', 240, 'approved', 4.80, 27),
+  ('yahaya',   'Sanni Dairy & Eggs',   'Yahaya Sanni',    'Farm milk, yoghurt and eggs, cold-chained from the Epe herd.',                6.595500, 3.343300, array['sat','sun'],      time '10:00', time '14:00', 240, 'approved', 4.80, 27),
   ('grace',    'Effiong Veg Baskets',  'Grace Effiong',   'Mixed vegetable baskets sized for a household week.',                         6.595500, 3.343300, array['tue','thu'],      time '07:30', time '11:30', 120, 'approved', 4.10, 19),
   ('sunday',   'Ochelula Herbs',       'Sunday Ochelula', 'Scent leaf, bitter leaf and curry leaf, cut and tied by hand.',                6.454100, 3.398500, array['mon','wed','fri'], time '08:00', time '12:00', 300, 'approved', 4.40, 44),
-  ('ifaturo',  'Ade Orchard',          'Ifaturo Ade',     'Seasonal fruit from Epe orchards, picked to order.',                          6.455100, 3.379500, array['sat','sun'],      time '09:30', time '13:30', 120, 'approved', 4.70, 33),
+  ('ifaturo',  'Ade Orchard',          'Ifaturo Ade',     'Seasonal fruit from Epe orchards, picked to order.',                          6.595500, 3.343300, array['sat','sun'],      time '09:30', time '13:30', 120, 'approved', 4.70, 33),
   ('kelechi',  'Anyanwu Bakery',       'Kelechi Anyanwu', 'Cassava bread, plantain chips and agege bread baked nightly.',                6.567000, 3.342100, array['sat','sun'],      time '07:00', time '11:00',  60, 'approved', 4.50, 62),
   ('mariam',   'Lawal Dairy',          'Mariam Lawal',    'Yoghurt, waraki and fresh milk kept cold from farm to stall.',                6.595500, 3.343300, array['tue','thu','sat'], time '07:00', time '10:00', 180, 'approved', 4.20, 15),
   ('seun',     'Oluwale Herb Stand',   'Seun Oluwale',    'Scent leaf, curry leaf and bitter tomato, potted or cut.',                    6.454100, 3.398500, array['mon','wed','fri'], time '08:30', time '12:30', 120, 'pending',  0.00,  0)
@@ -129,10 +135,10 @@ insert into market_farmers (market_id, farmer_id, stall_ref, days)
 values
   (md5('ml-market-mile12')::uuid, md5('marketlink-demo-bola')::uuid,     'A12', array['tue','thu']),
   (md5('ml-market-oshodi')::uuid, md5('marketlink-demo-chidinma')::uuid, 'B04', array['sat','sun']),
-  (md5('ml-market-lekki')::uuid,  md5('marketlink-demo-yahaya')::uuid,   'F01', array['sat']),
+  (md5('ml-market-mile12')::uuid, md5('marketlink-demo-yahaya')::uuid,   'F01', array['sat']),
   (md5('ml-market-mile12')::uuid, md5('marketlink-demo-grace')::uuid,    'A18', array['tue','thu']),
   (md5('ml-market-balogun')::uuid,md5('marketlink-demo-sunday')::uuid,   'C22', array['mon','wed']),
-  (md5('ml-market-lekki')::uuid,  md5('marketlink-demo-ifaturo')::uuid,  'F07', array['sat','sun']),
+  (md5('ml-market-mile12')::uuid, md5('marketlink-demo-ifaturo')::uuid,  'F07', array['sat','sun']),
   (md5('ml-market-oshodi')::uuid, md5('marketlink-demo-kelechi')::uuid,  'B11', array['sat','sun']),
   (md5('ml-market-mile12')::uuid, md5('marketlink-demo-mariam')::uuid,   'D03', array['tue','thu','sat']),
   (md5('ml-market-balogun')::uuid,md5('marketlink-demo-seun')::uuid,     'C30', array['fri'])
