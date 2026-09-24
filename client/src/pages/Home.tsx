@@ -45,25 +45,25 @@ function Hero() {
   }
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-line bg-elevated">
-      {/* Wide screens: the photograph is anchored to the right edge at its own aspect ratio, so
-          the farmer stands on the right of the frame instead of behind the copy and nothing about
-          it is cropped or dimmed. Narrow screens have no room beside the copy, so it bleeds. */}
+    <section className="relative isolate overflow-hidden border-b border-line">
+      {/* The photograph is the landing band, cropped at source so the farmer stands right of
+          centre and the copy has the left half to itself. The band is much wider than he is, so
+          the object position is chosen to keep his face and the top of the crate in the slice. */}
       <picture>
         <source srcSet="/img/hero-farmer.webp" type="image/webp" />
         <img
           src="/img/hero-farmer.jpg"
           alt="A farmer at the head of his row, holding a crate of just-picked vegetables"
-          width={1364}
-          height={768}
-          className="absolute inset-0 -z-10 h-full w-full object-cover object-center lg:left-auto lg:right-0 lg:h-full lg:w-auto lg:max-w-none lg:object-contain"
+          width={1200}
+          height={728}
+          className="absolute inset-0 -z-10 h-full w-full object-cover object-[55%_30%]"
         />
       </picture>
 
       <div className="mx-auto flex max-w-7xl flex-col px-4 pb-14 pt-16 md:pb-20 md:pt-24">
         <div className="max-w-2xl lg:max-w-xl">
           <Reveal className="flex flex-col" y={12} stagger={0.07}>
-            <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted [text-shadow:0_1px_14px_rgba(4,21,14,0.95)]">
+            <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary [text-shadow:0_1px_2px_rgba(4,21,14,0.9),0_2px_18px_rgba(4,21,14,0.85)]">
               Local farmers
               <span aria-hidden className="text-accent">
                 ·
@@ -75,12 +75,12 @@ function Hero() {
               Stronger communities
             </p>
 
-            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.05] md:text-6xl [text-shadow:0_2px_22px_rgba(4,21,14,0.95)]">
+            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.05] md:text-6xl [text-shadow:0_2px_4px_rgba(4,21,14,0.85),0_4px_26px_rgba(4,21,14,0.8)]">
               Fresh from the market.
               <span className="block text-accent">Before you get there.</span>
             </h1>
 
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-primary/85 md:text-lg [text-shadow:0_1px_16px_rgba(4,21,14,0.95)]">
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-primary md:text-lg [text-shadow:0_1px_3px_rgba(4,21,14,0.95),0_2px_20px_rgba(4,21,14,0.8)]">
               See what each stall actually has left this week, reserve it against a pickup
               window, and pay the farmer at the market. Nothing is charged online.
             </p>
