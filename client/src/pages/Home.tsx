@@ -45,7 +45,7 @@ function Hero() {
   }
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-line">
+    <section className="relative isolate overflow-hidden border-b border-line bg-elevated">
       {/* Wide screens: the photograph is anchored to the right edge at its own aspect ratio, so
           the farmer stands on the right of the frame instead of behind the copy and nothing about
           it is cropped or dimmed. Narrow screens have no room beside the copy, so it bleeds. */}
@@ -56,7 +56,7 @@ function Hero() {
           alt="A farmer at the head of his row, holding a crate of just-picked vegetables"
           width={1364}
           height={768}
-          className="absolute inset-0 -z-10 h-full w-full object-cover object-center lg:left-auto lg:right-0 lg:h-full lg:w-auto lg:max-w-none lg:object-contain lg:[mask-image:linear-gradient(to_right,transparent,rgba(0,0,0,0.4)_12%,#000_30%)]"
+          className="absolute inset-0 -z-10 h-full w-full object-cover object-center lg:left-auto lg:right-0 lg:h-full lg:w-auto lg:max-w-none lg:object-contain"
         />
       </picture>
 
