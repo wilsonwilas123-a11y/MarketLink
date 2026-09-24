@@ -193,7 +193,7 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
     if (origin) {
       L.circle([origin.lat, origin.lng], {
         radius: 700,
-        color: '#8ab6e0',
+        className: 'ml-origin',
         weight: 1,
         fillOpacity: 0.08,
         interactive: false,

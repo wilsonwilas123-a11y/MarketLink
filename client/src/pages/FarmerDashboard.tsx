@@ -45,7 +45,7 @@ export default function FarmerDashboard() {
         </p>
         <Link
           to="/signup"
-          className="mt-6 inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-ink"
+          className="mt-6 inline-flex h-10 items-center rounded-full bg-accent px-5 font-semibold text-paper"
         >
           Set up a stall
         </Link>
