@@ -22,6 +22,12 @@ export interface ShowcaseProduct {
   days: string;
   window: string;
   photo: string;
+  /**
+   * Which slice of this photograph the landing band keeps. The band is much wider than any of
+   * these pictures, so `object-cover` discards most of their height and each one has to say for
+   * itself whether the loss should fall on the sky or on the produce.
+   */
+  focus: string;
   glyph: GlyphName;
 }
 
@@ -40,6 +46,7 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     days: 'Tue, Thu, Sat',
     window: '8am–12pm',
     photo: '/img/products/ugu.jpg',
+    focus: 'object-bottom',
     glyph: 'leaf',
   },
   {
@@ -56,6 +63,7 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     days: 'Sat, Sun',
     window: '9am–1pm',
     photo: '/img/products/tatashe.jpg',
+    focus: 'object-center',
     glyph: 'pepper',
   },
   {
@@ -72,6 +80,7 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     days: 'Tue, Thu, Sat',
     window: '8am–12pm',
     photo: '/img/products/eggs.jpg',
+    focus: 'object-top',
     glyph: 'tuber',
   },
   {
@@ -88,6 +97,7 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     days: 'Sat, Sun',
     window: '9am–1pm',
     photo: '/img/products/tomato.jpg',
+    focus: 'object-center',
     glyph: 'tomato',
   },
 ];
