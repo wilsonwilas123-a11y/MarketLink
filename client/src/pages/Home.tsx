@@ -304,7 +304,7 @@ function MarketsNearYou() {
 }
 
 /** How long one listing holds the band before the next fades in over it. */
-const SLIDE_HOLD_MS = 2_000;
+const SLIDE_HOLD_MS = 1_300;
 
 /**
  * The produce band, which is one photograph at a time.
