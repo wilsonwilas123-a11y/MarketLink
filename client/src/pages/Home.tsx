@@ -309,10 +309,11 @@ const SLIDE_HOLD_MS = 4_500;
 /**
  * The produce band, which is one photograph at a time.
  *
- * The header sits on the sheet above the picture, styled exactly like the markets and farmers
- * headers, because the band is a section of the page and not a poster to be captioned. Below it the
- * photograph reaches both edges and carries no type at all: nothing has to be read off it, and a
- * picture of produce argues for the farm better than a price printed across its own face.
+ * The header sits above the picture styled exactly like the markets and farmers headers, because the
+ * band is a section of the page and not a poster to be captioned. Below it the photograph carries no
+ * type at all: nothing has to be read off it, and a picture of produce argues for the farm better
+ * than a price printed across its own face. It is framed like the map well rather than run to the
+ * edges of the window, so it keeps the page's column and the sections line up.
  *
  * Every few seconds the next picture arrives over the last one, and a pointer resting anywhere in
  * the band stops the rotation so whoever is looking at one can finish looking. Opacity carries the
@@ -337,34 +338,32 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
   if (count === 0) return null;
 
   return (
-    <section className="mt-16">
-      <div className="mx-auto w-full max-w-[1680px] px-6 md:px-10">
-        <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-              Straight from the farm
-            </p>
-            <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
-            <p className="mt-1 text-sm text-muted">
-              Seasonal produce, published by the farm that grew it.
-            </p>
-          </div>
-          <Link to="/products" className="text-sm text-accent hover:underline">
-            Browse everything
-          </Link>
-        </header>
-      </div>
+    <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+            Straight from the farm
+          </p>
+          <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
+          <p className="mt-1 text-sm text-muted">
+            Seasonal produce, published by the farm that grew it.
+          </p>
+        </div>
+        <Link to="/products" className="text-sm text-accent hover:underline">
+          Browse everything
+        </Link>
+      </header>
 
       <div
-        className="relative mt-5 min-h-[30rem] overflow-hidden border-y border-line md:min-h-[40rem]"
+        className="relative mt-5 min-h-[26rem] overflow-hidden rounded-2xl border border-line md:min-h-[32rem]"
         onMouseEnter={() => setHeld(true)}
         onMouseLeave={() => setHeld(false)}
       >
         {/* Every photograph stays mounted and the band moves them by opacity, so a change is a
             crossfade between two pictures rather than one picture being replaced. They are marked
             decorative: the picture shows what the header has already named. The crop is held to the
-            bottom edge, so the extra height goes to the produce on the stall rather than the crates
-            behind it. */}
+            bottom edge, so the produce on the stall stays in the frame and the crates behind it are
+            what gives way. */}
         <div aria-hidden className="absolute inset-0">
           {products.map((product, i) => (
             <div
