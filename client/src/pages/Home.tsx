@@ -367,7 +367,7 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
           {products.map((product, i) => (
             <div
               key={product.key}
-              className={`absolute inset-0 transition-opacity duration-400 ease-out motion-reduce:transition-none ${
+              className={`absolute inset-0 transition-opacity duration-600 ease-out motion-reduce:transition-none ${
                 i === slide ? 'opacity-100' : 'opacity-0'
               }`}
             >
