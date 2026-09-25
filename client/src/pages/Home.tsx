@@ -356,9 +356,10 @@ const STEP_BUTTON =
  * room. Every few seconds the next picture arrives over the last one. Opacity carries the change and
  * nothing else, because a slide or a zoom is the motion that reads as a template.
  *
- * The pair of arrows sits on the photograph rather than at the end of a header, because that is
- * where a reader looks for the thing that moves a picture — and because a visitor whose pointer
- * stops the rotation still needs a way to ask for the next one.
+ * The controls are one cluster centred along the foot of the picture — prev, the counter, next —
+ * because a position marker stranded at either end of the band reads as decoration rather than as
+ * something to press. A visitor whose pointer stops the rotation still needs a way to ask for the
+ * next listing.
  *
  * No quantity stepper and no cart button: a basket is assembled on the order screen in phase 10,
  * and a control that pretends to hold stock the shopper cannot yet reserve is worse than a link
@@ -433,14 +434,8 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
 
         {/* The listing sits at the foot of the picture, held to the left half where the photographs
             are composed to leave room for it. */}
-        <div className="mt-auto max-w-2xl pt-20">
-          <p
-            aria-hidden
-            className={`${ON_PHOTO} num text-[11px] font-medium uppercase tracking-[0.14em] opacity-80`}
-          >
-            {String(slide + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
-          </p>
-          <h3 className={`${ON_PHOTO} mt-2 font-display text-3xl font-bold leading-snug md:text-4xl`}>
+        <div className="mt-auto max-w-2xl pb-16 pt-20">
+          <h3 className={`${ON_PHOTO} font-display text-3xl font-bold leading-snug md:text-4xl`}>
             <Link to={`/products?q=${encodeURIComponent(active.name)}`}>{active.name}</Link>
           </h3>
 
@@ -477,12 +472,18 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
         </div>
       </div>
 
-      {/* Centred on the picture at its two edges, which is where a reader looks for the thing that
-          moves it. The band itself is transparent to the pointer so the photograph stays clickable. */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-between p-4 md:p-6">
+      {/* One cluster, centred along the foot of the picture: the counter between the two things that
+          move it, so the position marker is never stranded at an end of the band. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-5 flex items-center justify-center gap-4">
         <button type="button" onClick={() => go(-1)} aria-label="Previous listing" className={STEP_BUTTON}>
           <Glyph name="arrow" size={17} className="rotate-180" />
         </button>
+        <p
+          aria-hidden
+          className={`${ON_PHOTO} num text-xs font-medium uppercase tracking-[0.14em]`}
+        >
+          {String(slide + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
+        </p>
         <button type="button" onClick={() => go(1)} aria-label="Next listing" className={STEP_BUTTON}>
           <Glyph name="arrow" size={17} />
         </button>
