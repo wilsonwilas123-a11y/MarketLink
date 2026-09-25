@@ -96,7 +96,7 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     market: 'Oshodi',
     days: 'Sat, Sun',
     window: '9am–1pm',
-    photo: '/img/products/tomato.jpg',
+    photo: '/img/products/paddy.jpg',
     focus: 'object-center',
     glyph: 'tomato',
   },
