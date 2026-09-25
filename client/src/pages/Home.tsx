@@ -512,12 +512,10 @@ export default function Home() {
         <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-              The farms
+              Local Farmers, Local Produce
             </p>
             <h2 className="mt-1.5 font-display text-2xl font-bold">Meet the farmers</h2>
-            <p className="mt-1 text-sm text-muted">
-              Real farms. Their own words. Rated by the people who buy.
-            </p>
+            <p className="mt-1 text-sm text-muted">Discover trusted farms in your community.</p>
           </div>
           <Link to="/farmers" className="text-sm text-accent hover:underline">
             All {farmers.data?.meta.total ?? 'registered'} farms
