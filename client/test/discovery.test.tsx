@@ -167,7 +167,7 @@ describe('home', () => {
     expect(hero.getByRole('link', { name: 'More' })).toHaveAttribute('href', '/products');
   });
 
-  it('shows one listing at a time and answers to the arrows', async () => {
+  it('headers the produce band and leaves the photograph alone', () => {
     renderApp('/', {
       stubs: [
         { path: NEARBY_HOME, body: page([]) },
@@ -176,18 +176,25 @@ describe('home', () => {
     });
 
     const title = screen.getByRole('heading', { level: 2, name: 'Fresh this week' });
-    const band = within(title.closest('section') as HTMLElement);
+    const section = title.closest('section') as HTMLElement;
+    const band = within(section);
 
-    // The photographs are all mounted behind the type, but only the listing on show is in the tree.
-    const names = band.getAllByRole('heading', { level: 3 });
-    expect(names).toHaveLength(1);
-    expect(names[0]).toHaveTextContent('Ugu (Pumpkin Leaves)');
-    expect(band.getByText('Adeyemi Farms')).toBeInTheDocument();
-    expect(band.getByText('In stock')).toBeInTheDocument();
+    // The header is written like the markets and farmers headers, because the band is a section
+    // of the page and not a poster to be captioned.
+    expect(band.getByText('Straight from the farm')).toBeInTheDocument();
+    expect(band.getByRole('link', { name: 'Browse everything' })).toHaveAttribute(
+      'href',
+      '/products',
+    );
 
-    await userEvent.click(band.getByRole('button', { name: 'Next listing' }));
-    expect(band.getByRole('heading', { level: 3 })).toHaveTextContent('Tatashe (Bell Pepper)');
-    expect(band.getByText('Eze Fresh Produce')).toBeInTheDocument();
+    // Nothing sits on the picture: no listing, no price, and no arrows to work it by hand.
+    expect(band.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
+    expect(band.queryByRole('button')).not.toBeInTheDocument();
+
+    // Every photograph stays mounted and the band shows one at a time, by opacity and nothing else.
+    const photos = Array.from(section.querySelectorAll('img'));
+    expect(photos).toHaveLength(4);
+    expect(photos.filter((p) => p.closest('.opacity-100'))).toHaveLength(1);
   });
 
   it('rails four stalls, each linking to its own page', async () => {
