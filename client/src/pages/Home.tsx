@@ -356,13 +356,15 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
       </div>
 
       <div
-        className="relative mt-5 min-h-[26rem] overflow-hidden border-y border-line md:min-h-[34rem]"
+        className="relative mt-5 min-h-[30rem] overflow-hidden border-y border-line md:min-h-[40rem]"
         onMouseEnter={() => setHeld(true)}
         onMouseLeave={() => setHeld(false)}
       >
         {/* Every photograph stays mounted and the band moves them by opacity, so a change is a
             crossfade between two pictures rather than one picture being replaced. They are marked
-            decorative: the picture shows what the header has already named. */}
+            decorative: the picture shows what the header has already named. The crop is held to the
+            bottom edge, so the extra height goes to the produce on the stall rather than the crates
+            behind it. */}
         <div aria-hidden className="absolute inset-0">
           {products.map((product, i) => (
             <div
@@ -377,6 +379,7 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
                 category={product.category}
                 glyph={product.glyph}
                 glyphSize={96}
+                imgClass="object-bottom"
                 className="h-full w-full"
               />
             </div>

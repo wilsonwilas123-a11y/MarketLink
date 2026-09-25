@@ -25,6 +25,7 @@ export function Thumb({
   label,
   className = '',
   glyphSize = 34,
+  imgClass = '',
 }: {
   /** The photo, if the row has one. */
   src?: string | null;
@@ -37,6 +38,8 @@ export function Thumb({
   label?: string;
   className?: string;
   glyphSize?: number;
+  /** For the `<img>` alone, so a wide slot can choose which edge of the photo it keeps. */
+  imgClass?: string;
 }) {
   const [failed, setFailed] = useState(() => (src ? broken.has(src) : false));
   const show = Boolean(src) && !failed;
@@ -56,7 +59,7 @@ export function Thumb({
             if (src) broken.add(src);
             setFailed(true);
           }}
-          className="h-full w-full object-cover"
+          className={`h-full w-full object-cover ${imgClass}`}
         />
       ) : (
         <>
