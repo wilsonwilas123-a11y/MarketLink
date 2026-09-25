@@ -71,7 +71,7 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     market: 'Mile 12',
     days: 'Tue, Thu, Sat',
     window: '8am–12pm',
-    photo: '/img/products/yam.jpg',
+    photo: '/img/products/eggs.jpg',
     glyph: 'tuber',
   },
   {
