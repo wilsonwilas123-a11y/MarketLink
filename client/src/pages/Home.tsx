@@ -305,17 +305,19 @@ function MarketsNearYou() {
 }
 
 /**
- * The remaining-stock pill, shared by the band's lead and the rows beside it.
+ * The remaining-stock pill, read off the photograph behind it.
  *
  * Three states drawn the same way in three colours meant a shopper had to read the word to notice
  * the one state they can act on. So the common answer goes quiet — `In stock` is what a listing
- * normally is — and only running short and sold out are allowed to be a solid block.
+ * normally is — and only running short and sold out are allowed to be a solid block. The block
+ * takes ink rather than paper, because this sheet's ochre and rose are bright enough to swallow
+ * white type.
  */
 function StockPill({ state }: { state: StockLine }) {
   if (state.tone === 'ok') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-2 py-0.5 text-[11px] font-medium text-muted">
-        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-accent" />
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-paper/30 bg-ink/35 px-2.5 py-1 text-[11px] font-medium text-paper backdrop-blur">
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-accent-lift" />
         {state.label}
       </span>
     );
@@ -323,7 +325,7 @@ function StockPill({ state }: { state: StockLine }) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold text-paper ${
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold text-ink ${
         state.tone === 'low' ? 'bg-warn' : 'bg-danger'
       }`}
     >
@@ -336,10 +338,10 @@ function StockPill({ state }: { state: StockLine }) {
 const SLIDE_HOLD_MS = 4_500;
 
 /**
- * The photograph's own frame. Both the slide and the band of arrows laid over it are sized by this
- * one recipe, so the controls cannot drift off the picture at a breakpoint.
+ * Type laid on a photograph. The picture keeps its own brightness — no plate of colour is dropped
+ * over it — and the shadow is what carries the white through whatever is behind it.
  */
-const PLATE = 'aspect-[4/3] w-full sm:aspect-[16/9] md:aspect-[5/2]';
+const ON_PHOTO = 'text-paper [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_0_12px_rgba(0,0,0,0.7)]';
 
 /** A disc of the sheet's black with a paper arrow punched through it, so any photo stays readable. */
 const STEP_BUTTON =
@@ -349,12 +351,12 @@ const STEP_BUTTON =
 /**
  * The produce band, which is one photograph at a time.
  *
- * A slide is a listing's picture, full-bleed across the section and tall enough to be worth
- * photographing, with that listing's words printed on the paper underneath it. Every few seconds
- * the next picture arrives over the last one and the words change with it. Opacity carries the
- * change and nothing else, because a slide or a zoom is the motion that reads as a template.
+ * The picture is the section: it reaches all four edges, so no band of black is left behind it, and
+ * the listing's words are printed on the left half, where the photographs are composed to leave
+ * room. Every few seconds the next picture arrives over the last one. Opacity carries the change and
+ * nothing else, because a slide or a zoom is the motion that reads as a template.
  *
- * The pair of arrows sits on the photograph rather than at the end of the header, because that is
+ * The pair of arrows sits on the photograph rather than at the end of a header, because that is
  * where a reader looks for the thing that moves a picture — and because a visitor whose pointer
  * stops the rotation still needs a way to ask for the next one.
  *
@@ -377,131 +379,115 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
     return () => window.clearInterval(timer);
   }, [held, count]);
 
-  if (count === 0) return null;
+  const active = products[slide];
+  if (!active) return null;
+
+  const state = stockState(active.quantity);
 
   return (
-    // The one light panel on the board. Everything inside it reads its colours off the cream sheet
-    // the island redefines, so no component here knows it moved.
-    <div className="ml-paper rounded-3xl px-6 py-8 md:px-10 md:py-10">
-      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-            Straight from the farm
+    <section
+      className="relative isolate mt-16 flex min-h-[34rem] flex-col overflow-hidden border-y border-line md:min-h-[40rem]"
+      onMouseEnter={() => setHeld(true)}
+      onMouseLeave={() => setHeld(false)}
+      onFocus={() => setHeld(true)}
+      onBlur={() => setHeld(false)}
+    >
+      {/* Every photograph stays mounted behind the type and the band moves them by opacity, so a
+          change is a crossfade between two pictures rather than one picture being replaced. They
+          are marked decorative here: the listing names what is on show, and a reader should not be
+          handed four captions for the same basket. */}
+      <div aria-hidden className="absolute inset-0 -z-10">
+        {products.map((product, i) => (
+          <div
+            key={product.key}
+            className={`absolute inset-0 transition-opacity duration-700 ease-out motion-reduce:transition-none ${
+              i === slide ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <Thumb
+              src={product.photo}
+              seed={product.key}
+              category={product.category}
+              glyph={product.glyph}
+              glyphSize={96}
+              className="h-full w-full"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="mx-auto flex w-full max-w-[1680px] flex-col px-6 py-12 md:px-10 md:py-16">
+        <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          <div>
+            <p className={`${ON_PHOTO} text-[11px] font-medium uppercase tracking-[0.14em]`}>
+              Straight from the farm
+            </p>
+            <h2 className={`${ON_PHOTO} mt-1.5 font-display text-2xl font-bold md:text-3xl`}>
+              Fresh this week
+            </h2>
+          </div>
+          <Link to="/products" className={`${ON_PHOTO} text-sm hover:underline`}>
+            Browse everything
+          </Link>
+        </header>
+
+        {/* The listing sits at the foot of the picture, held to the left half where the photographs
+            are composed to leave room for it. */}
+        <div className="mt-auto max-w-2xl pt-20">
+          <p
+            aria-hidden
+            className={`${ON_PHOTO} num text-[11px] font-medium uppercase tracking-[0.14em] opacity-80`}
+          >
+            {String(slide + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
           </p>
-          <h2 className="mt-1.5 font-display text-2xl font-bold">Fresh this week</h2>
-          <p className="mt-1 text-sm text-muted">
-            Seasonal produce, published by the farm that grew it.
+          <h3 className={`${ON_PHOTO} mt-2 font-display text-3xl font-bold leading-snug md:text-4xl`}>
+            <Link to={`/products?q=${encodeURIComponent(active.name)}`}>{active.name}</Link>
+          </h3>
+
+          <p className={`${ON_PHOTO} mt-2 text-sm`}>
+            <span className="text-accent-lift">{active.stall}</span>
+            <span aria-hidden className="opacity-60">
+              {' '}
+              ·{' '}
+            </span>
+            {active.market}
           </p>
-        </div>
 
-        <Link to="/products" className="text-sm text-accent hover:underline">
-          Browse everything
-        </Link>
-      </header>
+          <p className={`${ON_PHOTO} mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-2`}>
+            <span className="num font-display text-3xl font-bold md:text-4xl">
+              {formatKobo(active.price_kobo)}
+            </span>
+            <span className="text-sm opacity-80">/{active.unit}</span>
+            <StockPill state={state} />
+          </p>
 
-      {/* Every listing stays mounted and the section moves them by opacity, so a change is a
-          crossfade between two whole slides rather than one picture swapped under the eye. The
-          slide in front keeps the height; the others sit flat underneath it, out of reach of the
-          pointer and of a reader, until it is their turn. */}
-      <div
-        className="relative mt-6"
-        onMouseEnter={() => setHeld(true)}
-        onMouseLeave={() => setHeld(false)}
-        onFocus={() => setHeld(true)}
-        onBlur={() => setHeld(false)}
-      >
-        {products.map((product, i) => {
-          const here = i === slide;
-          const state = stockState(product.quantity);
-
-          return (
-            <article
-              key={product.key}
-              aria-hidden={!here}
-              className={`card-lift overflow-hidden rounded-2xl transition-opacity duration-700 ease-out motion-reduce:transition-none ${
-                here ? 'relative' : 'pointer-events-none absolute inset-0 opacity-0'
-              }`}
-            >
-              <Thumb
-                src={product.photo}
-                seed={product.key}
-                category={product.category}
-                glyph={product.glyph}
-                label={product.name}
-                glyphSize={96}
-                className={PLATE}
-              />
-
-              <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 px-6 py-6 md:px-8">
-                <div className="min-w-0">
-                  <p
-                    aria-hidden
-                    className="num text-[11px] font-medium uppercase tracking-[0.14em] text-muted"
-                  >
-                    {String(i + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
-                  </p>
-                  <h3 className="mt-1.5 font-display text-2xl font-bold leading-snug md:text-3xl">
-                    <Link
-                      to={`/products?q=${encodeURIComponent(product.name)}`}
-                      tabIndex={here ? undefined : -1}
-                      className="after:absolute after:inset-0"
-                    >
-                      {product.name}
-                    </Link>
-                  </h3>
-                  <p className="mt-1.5 text-sm text-accent">
-                    {product.stall}
-                    <span aria-hidden className="text-line">
-                      {' '}
-                      ·{' '}
-                    </span>
-                    <span className="text-muted">{product.market}</span>
-                  </p>
-                </div>
-
-                <p className="flex items-baseline gap-2.5">
-                  <span className="flex items-baseline gap-1.5">
-                    <span className="num font-display text-3xl font-bold">
-                      {formatKobo(product.price_kobo)}
-                    </span>
-                    <span className="text-sm text-muted">/{product.unit}</span>
-                  </span>
-                  <StockPill state={state} />
-                </p>
-              </div>
-
-              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line px-6 py-4 text-xs text-muted md:px-8">
-                <Stars value={product.rating_avg} count={product.rating_count} />
-                <span aria-hidden className="text-line">
-                  ·
-                </span>
-                <span className="num">
-                  {product.quantity} {product.unit}s left
-                </span>
-                <span aria-hidden className="text-line">
-                  ·
-                </span>
-                <span className="num">pickup {product.window}</span>
-              </p>
-            </article>
-          );
-        })}
-
-        {/* The pair lives out here rather than inside a slide, so it does not crossfade with the
-            picture it belongs to. The band is the picture's own box: same width, same ratio, so the
-            discs stay centred on the photograph at every breakpoint. */}
-        <div
-          className={`pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-3 md:p-5 ${PLATE}`}
-        >
-          <button type="button" onClick={() => go(-1)} aria-label="Previous listing" className={STEP_BUTTON}>
-            <Glyph name="arrow" size={17} className="rotate-180" />
-          </button>
-          <button type="button" onClick={() => go(1)} aria-label="Next listing" className={STEP_BUTTON}>
-            <Glyph name="arrow" size={17} />
-          </button>
+          <p className={`${ON_PHOTO} mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs`}>
+            <Stars value={active.rating_avg} count={active.rating_count} />
+            <span aria-hidden className="opacity-60">
+              ·
+            </span>
+            <span className="num">
+              {active.quantity} {active.unit}s left
+            </span>
+            <span aria-hidden className="opacity-60">
+              ·
+            </span>
+            <span className="num">pickup {active.window}</span>
+          </p>
         </div>
       </div>
-    </div>
+
+      {/* Centred on the picture at its two edges, which is where a reader looks for the thing that
+          moves it. The band itself is transparent to the pointer so the photograph stays clickable. */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-between p-4 md:p-6">
+        <button type="button" onClick={() => go(-1)} aria-label="Previous listing" className={STEP_BUTTON}>
+          <Glyph name="arrow" size={17} className="rotate-180" />
+        </button>
+        <button type="button" onClick={() => go(1)} aria-label="Next listing" className={STEP_BUTTON}>
+          <Glyph name="arrow" size={17} />
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -623,9 +609,7 @@ export default function Home() {
       <Hero />
       <MarketsNearYou />
 
-      <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">
-        <FreshBand products={FRESH_THIS_WEEK} />
-      </section>
+      <FreshBand products={FRESH_THIS_WEEK} />
 
       <section className="mx-auto mt-16 w-full max-w-[1680px] px-6 md:px-10">
         <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-line pt-5">

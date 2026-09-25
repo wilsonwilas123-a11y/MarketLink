@@ -178,17 +178,16 @@ describe('home', () => {
     const title = screen.getByRole('heading', { level: 2, name: 'Fresh this week' });
     const band = within(title.closest('section') as HTMLElement);
 
-    // The other three slides are mounted behind this one and hidden from a reader, so a query that
-    // respects the accessibility tree can only ever find the listing actually on show.
-    const slides = band.getAllByRole('article');
-    expect(slides).toHaveLength(1);
-    expect(slides[0]).toHaveTextContent('Ugu (Pumpkin Leaves)');
-    expect(slides[0]).toHaveTextContent('Adeyemi Farms');
-    expect(slides[0]).toHaveTextContent('In stock');
+    // The photographs are all mounted behind the type, but only the listing on show is in the tree.
+    const names = band.getAllByRole('heading', { level: 3 });
+    expect(names).toHaveLength(1);
+    expect(names[0]).toHaveTextContent('Ugu (Pumpkin Leaves)');
+    expect(band.getByText('Adeyemi Farms')).toBeInTheDocument();
+    expect(band.getByText('In stock')).toBeInTheDocument();
 
     await userEvent.click(band.getByRole('button', { name: 'Next listing' }));
-    expect(band.getAllByRole('article')).toHaveLength(1);
-    expect(band.getByRole('article')).toHaveTextContent('Tatashe (Bell Pepper)');
+    expect(band.getByRole('heading', { level: 3 })).toHaveTextContent('Tatashe (Bell Pepper)');
+    expect(band.getByText('Eze Fresh Produce')).toBeInTheDocument();
   });
 
   it('rails four stalls, each linking to its own page', async () => {

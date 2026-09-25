@@ -50,64 +50,13 @@
   --font-body: 'Karla', ui-sans-serif, system-ui, sans-serif;
 }
 
-/*
-  ------------------------------------------------------------------ the paper island
-
-  The produce band is printed on cream and pinned to the black board. It is the one place on the
-  site allowed a light background, and it gets there by redefining the same colour names rather
-  than by any component knowing it moved: every Tailwind colour utility compiles to
-  `var(--color-…)`, so overriding the names on this container repaints everything inside it,
-  including the opacity modifiers, which are mixed from the same variables.
-
-  Contrast against the cream base: ink 15.1:1, pencil 6.3:1, sign blue 7.6:1, ochre 4.9:1,
-  brick 7.9:1, cream on a block of ink 16.2:1.
-*/
-.ml-paper {
-  --color-sheet: #f6efe3;
-  --color-surface: #fbf8f1;
-  --color-elevated: #eae1d0;
-  /* On paper an edge is the ink itself thinned to a pencil line, so a border never brings in a
-     colour of its own — that is how a layout starts reading as boxes. */
-  --color-line: color-mix(in oklab, #1d1b16 15%, transparent);
-
-  --color-primary: #1d1b16;
-  --color-muted: #5e574b;
-
-  --color-accent: #1f4e79;
-  --color-accent-soft: #dfe8f0;
-  --color-accent-lift: #a9cdea;
-  --color-warn: #8a6100;
-  --color-danger: #8e1b1b;
-
-  --color-paper: #fbf8f1;
-  --color-ink: #1d1b16;
-  --color-block: #1d1b16;
-  --color-on-block: #fbf8f1;
-
-  /* An empty photo slot. On the black sheet it is a hole; on paper it is a printed plate. */
-  --plate-hi: #fffdf6;
-  --plate-mid: #f0e7d6;
-  --plate-lo: #e3d8c1;
-  --plate-mark: color-mix(in oklab, #1d1b16 20%, transparent);
-
-  /* Paper gives a card no free contrast, so it has to arrive with its own wash of ink under it. */
-  --card-shadow:
-    0 1px 2px color-mix(in oklab, #1d1b16 5%, transparent),
-    0 14px 26px -20px color-mix(in oklab, #1d1b16 26%, transparent);
-
-  background: var(--color-sheet);
-  color: var(--color-primary);
-}
-
-/* The black sheet's own plate and wash. These cannot live in `@theme`: a token no utility
-   references is pruned from the built sheet, and only `.ml-plate` and `card-lift` read them. */
+/* The black sheet's own photo plate. It cannot live in `@theme`: a token no utility references is
+   pruned from the built sheet, and only `.ml-plate` and `.ml-plate-mark` read these. */
 :root {
   --plate-hi: #1c1c1c;
   --plate-mid: #121212;
   --plate-lo: #0b0b0b;
   --plate-mark: color-mix(in oklab, #ffffff 45%, transparent);
-  /* On black a lighter rectangle is already lifted; a shadow would only muddy it. */
-  --card-shadow: none;
 }
 
 @layer base {
@@ -150,19 +99,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/*
-  A card lifted off its sheet.
-
-  On black a card reads as a card because it is lighter than what it stands on, so the wash is
-  `none` there. Paper gives no such free contrast, so inside `.ml-paper` the same rectangle arrives
-  with a short ink shadow — which is what keeps a section from looking like it is floating.
-*/
-@utility card-lift {
-  border: 1px solid var(--color-line);
-  background: var(--color-surface);
-  box-shadow: var(--card-shadow);
-}
-
 /* Tailwind generates no `font-display` class from the token of that name, so the display face
    only reaches type through the base layer's h1–h4 rule. Anything else wearing the class — the
    hero's corner badge, a few labels — would otherwise render in the body font. */
@@ -171,8 +107,8 @@
 }
 
 /*
-  An empty photo slot: a printed plate. The wash and its watermark are read from the sheet the slot
-  is standing on, so the same component is a hole on the black page and a plate on the paper island.
+  An empty photo slot: a printed plate rather than a broken image. The wash and its watermark are
+  tokens so a slot on a lighter sheet could take its own.
 */
 .ml-plate {
   background: radial-gradient(
