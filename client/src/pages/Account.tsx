@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../auth/AuthProvider';
 import { Avatar } from '../components/ui/Avatar';
@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Glyph, type GlyphName } from '../components/art/glyphs';
 import { formatMinor } from '../utils/money';
+import { currencyForCountry, localeForCountry, MARKET_COUNTRIES } from '../lib/countries';
 import { Reveal } from '../motion/reveal';
 import type { Order } from '../lib/types';
 import { readLocalAvatar, saveLocalAvatar } from '../lib/localAvatar';
@@ -39,7 +40,6 @@ const accountLinks: { to: string; label: string; icon: GlyphName; customerOnly?:
 
 export default function Account() {
   const { profile, signOut, api, refresh } = useAuth();
-  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -47,8 +47,7 @@ export default function Account() {
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [localPhoto, setLocalPhoto] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [draft, setDraft] = useState({ full_name: '', phone: '', address: '' });
+  const [draft, setDraft] = useState({ full_name: '', phone: '', address: '', country: 'Nigeria' });
   const photoInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -76,6 +75,7 @@ export default function Account() {
         full_name: draft.full_name.trim(),
         phone: draft.phone.trim(),
         address: draft.address.trim() || null,
+        ...(profile?.role === 'customer' ? { country: draft.country } : {}),
       });
       await refresh();
       setEditing(false);
@@ -88,15 +88,9 @@ export default function Account() {
 
   function editProfile() {
     if (!profile) return;
-    setDraft({ full_name: profile.full_name, phone: profile.phone, address: profile.address ?? '' });
+    setDraft({ full_name: profile.full_name, phone: profile.phone, address: profile.address ?? '', country: profile.country });
     setError('');
     setEditing((current) => !current);
-  }
-
-  function searchProducts(event: FormEvent) {
-    event.preventDefault();
-    const query = search.trim();
-    navigate(query ? `/products?q=${encodeURIComponent(query)}` : '/products');
   }
 
   async function uploadAvatar(file?: File) {
@@ -126,7 +120,8 @@ export default function Account() {
     }
   }
 
-  const joined = new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(profile.created_at));
+  const locale = localeForCountry(profile.country);
+  const joined = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(profile.created_at));
   const firstName = profile.full_name.trim().split(/\s+/)[0] || 'there';
 
   return (
@@ -151,12 +146,7 @@ export default function Account() {
 
         <main className="min-w-0">
           <header className="flex flex-wrap items-center gap-3 rounded-2xl bg-[#0e513b] p-3 text-white shadow-[0_12px_34px_rgba(14,81,59,.15)] sm:p-4">
-            <form onSubmit={searchProducts} className="flex h-11 min-w-[min(100%,18rem)] flex-1 items-center gap-2 rounded-full bg-white pl-4 pr-1.5 text-primary focus-within:ring-4 focus-within:ring-white/20">
-              <label className="sr-only" htmlFor="account-search">Search markets, farms or produce</label>
-              <input id="account-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search markets, farms or produce" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted" />
-              <button type="submit" aria-label="Search" className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-primary transition hover:bg-accent-soft hover:text-accent"><Glyph name="search" size={17} /></button>
-            </form>
-            <span className="order-3 w-full pl-2 text-xs font-medium text-white/85 sm:order-2 sm:w-auto sm:px-2">{new Intl.DateTimeFormat('en-NG', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</span>
+            <span className="order-3 w-full pl-2 text-xs font-medium text-white/85 sm:order-2 sm:w-auto sm:px-2">{new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</span>
             <div className="ml-auto flex items-center gap-2 sm:order-3">
               {profile.role === 'customer' ? <Link to="/notifications" aria-label="Notifications" className="relative grid h-10 w-10 place-items-center rounded-xl bg-white/95 text-primary transition hover:bg-white"><Glyph name="clock" size={18} /></Link> : null}
               {profile.role === 'customer' ? <Link to="/cart" aria-label="Your pickup basket" className="grid h-10 w-10 place-items-center rounded-xl bg-white/95 text-primary transition hover:bg-white"><Glyph name="basket" size={18} /></Link> : null}
@@ -191,6 +181,7 @@ export default function Account() {
                 <label className="text-xs font-medium text-muted">Full name<input required maxLength={120} value={draft.full_name} onChange={(event) => setDraft({ ...draft, full_name: event.target.value })} className="mt-1.5 block h-11 w-full rounded-xl border border-line bg-white px-3 text-sm text-primary outline-none focus:border-accent focus:ring-4 focus:ring-accent/10" /></label>
                 <label className="text-xs font-medium text-muted">Phone number<input required minLength={7} maxLength={20} value={draft.phone} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} className="mt-1.5 block h-11 w-full rounded-xl border border-line bg-white px-3 text-sm text-primary outline-none focus:border-accent focus:ring-4 focus:ring-accent/10" /></label>
                 <label className="text-xs font-medium text-muted sm:col-span-2">Where you are<input maxLength={240} value={draft.address} onChange={(event) => setDraft({ ...draft, address: event.target.value })} placeholder="Market, neighbourhood or LGA" className="mt-1.5 block h-11 w-full rounded-xl border border-line bg-white px-3 text-sm text-primary outline-none focus:border-accent focus:ring-4 focus:ring-accent/10" /></label>
+                {profile.role === 'customer' ? <label className="text-xs font-medium text-muted">Country<select value={draft.country} onChange={(event) => setDraft({ ...draft, country: event.target.value })} className="mt-1.5 block h-11 w-full rounded-xl border border-line bg-white px-3 text-sm text-primary outline-none focus:border-accent focus:ring-4 focus:ring-accent/10">{MARKET_COUNTRIES.map(({ name }) => <option key={name} value={name}>{name}</option>)}</select><span className="mt-1 block">Currency: {currencyForCountry(draft.country)}</span></label> : null}
                 {error ? <p role="alert" className="text-sm text-danger sm:col-span-2">{error}</p> : null}
                 <Button type="submit" loading={saving}>{saving ? 'Saving…' : 'Save changes'}</Button>
               </form>
@@ -198,7 +189,8 @@ export default function Account() {
               <dl className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
                 <InfoField label="Full name" value={profile.full_name} />
                 <InfoField label="Phone number" value={profile.phone} />
-                <InfoField label="Account type" value={profile.role[0]!.toUpperCase() + profile.role.slice(1)} />
+                <InfoField label="Account type" value={profile.role === 'customer' ? 'Buyer' : profile.role === 'farmer' ? 'Seller' : 'Admin'} />
+                <InfoField label="Country & currency" value={`${profile.country} · ${currencyForCountry(profile.country)}`} />
                 <InfoField label="Member since" value={joined} />
               </dl>
             )}

@@ -4,7 +4,7 @@ MarketLink helps shoppers find African farmers markets and current produce, then
 
 ## Requirements and design
 
-The supplied [MarketLink SRS](docs/reference/MarketLink%20End-to-End%20Web%20Solutions_SRS.pdf) is kept with the project. [Implementation notes](docs/project-implementation-notes.md) provide a working reference for the architecture, data model and feature coverage; prepare and verify your own formal report for submission. A [demo recording script](docs/demo-video-script.md) outlines the evaluation walkthrough. The interface uses warm white surfaces, forest-green actions, modern Manrope and DM Sans typography, and locally matched Lagos market and farm photography. The main screens cover the landing page, market discovery/map, product catalogue and details, farmer profiles, cart and pickup checkout, order tracking, customer account, farmer dashboard, and admin dashboard. The optional AI assistant is not required for core operation.
+The supplied [MarketLink SRS](docs/reference/MarketLink%20End-to-End%20Web%20Solutions_SRS.pdf) is kept with the project. The [site guide](docs/site-guide.md) covers roles, workflows, routes, configuration, currencies, images and troubleshooting. [Implementation notes](docs/project-implementation-notes.md) provide architecture, data model and feature coverage. A [demo recording script](docs/demo-video-script.md) outlines the evaluation walkthrough. The interface uses warm white surfaces, forest-green actions, modern Manrope and DM Sans typography, and locally matched Lagos market and farm photography. The main screens cover the landing page, market discovery/map, product catalogue and details, farmer profiles, cart and pickup checkout, order tracking, customer account, farmer dashboard, and admin dashboard. The optional AI assistant is not required for core operation.
 
 ## Run locally
 
@@ -24,13 +24,13 @@ Google sign-in uses Supabase OAuth; Google credentials do not belong in the web 
 
 ## Seeded evaluation accounts
 
-The demo seed creates customer, farmer, and admin accounts. Their email addresses are their lowercase seed names followed by `@marketlink.test`; the shared demo password is `marketlink-demo`.
+The demo seed creates customer and farmer accounts. Their email addresses are their lowercase seed names followed by `@marketlink.test`; the shared demo password is `marketlink-demo`. Admin access uses the server-only `ADMIN_EMAIL` and `ADMIN_PASSWORD` settings described in [Private admin access](docs/admin-access.md); the Supabase demo accounts cannot sign in to the admin dashboard.
 
 | Role | Email addresses |
 |---|---|
 | Customer | `adaeze@marketlink.test`, `tunde@marketlink.test`, `zainab@marketlink.test`, `emeka@marketlink.test` |
 | Farmer | `bola@marketlink.test`, `chidinma@marketlink.test`, `yahaya@marketlink.test`, `grace@marketlink.test`, `sunday@marketlink.test`, `ifaturo@marketlink.test`, `kelechi@marketlink.test`, `mariam@marketlink.test`, `seun@marketlink.test` |
-| Admin | `admin@marketlink.test` |
+| Admin | Set `ADMIN_PASSWORD` in `server/.env`; use the configured `ADMIN_EMAIL` |
 
 These are demo-only credentials for an isolated evaluation environment. Change or remove them before exposing a deployment publicly. Supabase may restrict direct writes to `auth.users`; if seeding there is refused, follow the alternative account setup in [db/README.md](db/README.md).
 

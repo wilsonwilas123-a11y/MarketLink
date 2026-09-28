@@ -29,13 +29,16 @@ flowchart LR
 flowchart TB
   Browser[React client · Vite · responsive UI]
   API[Express REST API · validation · OpenAPI]
-  Auth[Supabase Auth]
+  Auth[Supabase Auth for buyer and seller accounts]
+  AdminAuth[Server-only admin password session]
   DB[(PostgreSQL / Supabase Postgres)]
   Storage[Supabase Storage · product and stall photos]
   OSM[OpenStreetMap / Photon place lookup]
   Photo[Wikipedia / Mapillary photo lookup]
   Browser -->|Bearer token| API
   Browser --> Auth
+  Browser -->|Admin session token| AdminAuth
+  AdminAuth --> API
   API --> DB
   API --> Storage
   API --> OSM
@@ -48,7 +51,7 @@ The browser uses the API for marketplace data and uploads. The Supabase service-
 
 | Entity | Purpose and relationships |
 |---|---|
-| `profiles` | Authenticated customer, farmer or admin identity and account status. |
+| `profiles` | Authenticated customer/farmer identity and account status. The administrator signs in using a separate server-side password session. |
 | `markets` | Named market, city/address, coordinates, active state and operating hours. |
 | `farmers` | Stall profile, approval state, pickup hours/cutoff, currency and location; linked to a profile. |
 | `market_farmers` | Many-to-many association between stalls and markets, including trading days. |
@@ -101,7 +104,7 @@ Schema changes are numbered SQL migrations in `db/migrations/`; demo data is in 
 
 ## Setup and evaluation
 
-Follow the installation and environment-variable steps in [README.md](../README.md) and [db/README.md](../db/README.md). Product/stall image bucket setup is documented in [product-image-storage.md](product-image-storage.md). The Lagos demo seed includes customer, farmer and admin accounts listed in the root README. The supplied [SRS](reference/MarketLink%20End-to-End%20Web%20Solutions_SRS.pdf) is included for a self-contained handoff.
+Follow the installation and environment-variable steps in [README.md](../README.md) and [db/README.md](../db/README.md). Product/stall image bucket setup is documented in [product-image-storage.md](product-image-storage.md). The Lagos demo seed includes customer and farmer accounts listed in the root README. Admin access uses `ADMIN_EMAIL` and a server-only `ADMIN_PASSWORD`; see [Private admin access](admin-access.md). The supplied [SRS](reference/MarketLink%20End-to-End%20Web%20Solutions_SRS.pdf) is included for a self-contained handoff.
 
 Useful project commands:
 
@@ -120,4 +123,4 @@ The API schema is generated at `openapi.json`. Database checks are under `db/tes
 
 The executable web app, source, migrations, seeds, setup instructions and generated OpenAPI contract are in the repository. A recording outline is in [demo-video-script.md](demo-video-script.md). A packaged ZIP is created as a separate release artifact; the actual demonstration video still needs to be recorded from the intended demo environment.
 
-> Working implementation notes, not a submission-ready report. Verify all details against your own implementation and write your own report for the SRS evaluation. The SRS requires an actual recorded demonstration video; the accompanying script is only a guide.
+The SRS calls for a recorded demonstration video. The repository contains a [demo video script](demo-video-script.md), but the recording itself must be made separately. Contact-page details and the admin password are deployment-owned values; configure them before a live presentation. A focused visual and image-source sweep is recorded in [Pre-submission review](pre-submission-review.md).

@@ -31,7 +31,7 @@ from (values
   ('garden-egg',    'chidinma', 'vegetables', 'Garden Egg',              'Purple garden egg, picked young.',                    'bunch',  70000,  28, false, 4.05,  8),
 
   -- Effiong Veg Baskets — mixed household baskets
-  ('basket-soup',   'grace', 'vegetables', 'Soup Basket',                'Ugu, efo, waterleaf and pepper for one pot.',         'basket', 1200000, 16, false, 4.30, 13),
+  ('basket-soup',   'grace', 'vegetables', 'Super Basket',               'Ugu, efo, waterleaf and pepper for one pot.',         'basket', 1200000, 16, false, 4.30, 13),
   ('basket-week',   'grace', 'vegetables', 'Household Week Basket',       'Seven days of leaf veg for a family of four.',        'basket', 2400000,  8, false, 4.00,  6),
   ('basket-starter','grace', 'vegetables', 'Starter Basket',              'A small first-week basket for a new kitchen.',        'basket',  900000, 12, true,  3.90,  4),
   ('basket-organic','grace', 'vegetables', 'Organic Leaf Basket',         'Certified-organic leaves, no synthetic spray.',       'basket', 1800000,  6, true,  4.80,  9),
@@ -53,7 +53,7 @@ from (values
   ('pawpaw',        'ifaturo', 'fruits', 'Pawpaw',                       'Half a ripe pawpaw, seeds removed.',                  'pack',  180000,  30, false, 4.25, 16),
   ('avocado',       'ifaturo', 'fruits', 'Avocado',                      'Butter avocado, ripened off the tree.',               'kg',    300000,  20, true,  4.80, 18),
   ('orange',        'ifaturo', 'fruits', 'Orange',                       'A crate of pressing oranges.',                        'crate', 850000,  11, false, 4.05,  9),
-  ('coconut',       'ifaturo', 'fruits', 'Coconut (Cold)',               'Chilled coconut with the husk trimmed.',              'pack',  150000,  45, false, 4.55, 23),
+  ('coconut',       'ifaturo', 'fruits', 'Coconut',                      'Fresh coconut, husk trimmed.',                        'pack',  150000,  45, false, 4.55, 23),
 
   -- Anyanwu Bakery
   ('agege-bread',   'kelechi', 'bakery', 'Agege Bread',                  'The daily round loaf, baked overnight.',              'pack',   90000,  70, false, 4.60, 58),

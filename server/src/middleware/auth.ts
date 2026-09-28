@@ -2,6 +2,8 @@ import type { NextFunction, Request, RequestHandler } from 'express';
 import type { Pool } from 'pg';
 import { ApiError } from '../errors.js';
 import type { AuthSubject, AuthVerifier } from '../lib/auth.js';
+import { isDesignatedAdmin } from '../lib/adminAccess.js';
+import { verifyAdminSession } from '../lib/adminSession.js';
 import type { Role } from '../api/schemas.js';
 
 declare global {
@@ -17,6 +19,7 @@ declare global {
 /** Who is calling, as resolved from the database rather than from a token claim. */
 export interface AuthUser {
   id: string;
+  email: string | null;
   role: Role;
   isActive: boolean;
 }
@@ -27,6 +30,25 @@ function bearer(req: { header(name: string): string | undefined }): string | nul
   const [scheme, token] = header.split(' ');
   if (scheme?.toLowerCase() !== 'bearer' || !token) return null;
   return token;
+}
+
+/** Dedicated server-password admin sessions are accepted only by admin routes. */
+export function requireAdminSession(): RequestHandler {
+  return (req, _res, next) => {
+    const token = bearer(req);
+    const session = token ? verifyAdminSession(token) : null;
+    if (!session) {
+      next(new ApiError('unauthenticated', 'A valid admin session is required.'));
+      return;
+    }
+    req.user = {
+      id: '00000000-0000-4000-8000-000000000001',
+      email: session.email,
+      role: 'admin',
+      isActive: true,
+    };
+    next();
+  };
 }
 
 /**
@@ -102,7 +124,8 @@ async function loadProfile(req: Request, pool: Pool, next: NextFunction): Promis
       next(new ApiError('account_disabled', 'This account has been deactivated.'));
       return;
     }
-    req.user = { id: String(row.id), role: row.role as Role, isActive: true };
+    const role = row.role as Role;
+    req.user = { id: String(row.id), email: currentSubject(req).email, role, isActive: true };
     next();
   } catch (err) {
     next(err);
@@ -122,6 +145,10 @@ export function requireRole(...roles: Role[]): RequestHandler {
     }
     if (!roles.includes(req.user.role)) {
       next(new ApiError('forbidden', 'This account is not permitted to do that.'));
+      return;
+    }
+    if (roles.includes('admin') && !isDesignatedAdmin(req.user.email)) {
+      next(new ApiError('forbidden', 'This account is not the designated admin email.'));
       return;
     }
     next();

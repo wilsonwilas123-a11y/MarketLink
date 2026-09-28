@@ -388,6 +388,8 @@ function boxCandidateOf(el: OverpassElement): PlaceCandidate {
 
 const COMMONS_API = 'https://commons.wikimedia.org/w/api.php';
 const PHOTO_TIMEOUT_MS = 3_500;
+const PHOTO_MISS_RETRY_MS = 2 * 60_000;
+const regionalPhotoCache = new Map<string, Promise<PlacePhoto[]>>();
 
 const CommonsPhotoResponseSchema = z.object({
   query: z.object({
@@ -556,17 +558,46 @@ async function bestPhotoFor(
   if (exact || !country) return exact;
   let photos = regionalCache.get(country);
   if (!photos) {
-    photos = commonsPhotos(fetchImpl, headers, `${country} market`,
+    const queries = [
+      `${country} market`,
+      `${country} street market`,
+      `${country} food market`,
+      `${country} produce market`,
+      `${country} fruit market`,
+      `African market ${country}`,
+    ];
+    if (country === 'Nigeria') {
+      queries.push('Lagos market Nigeria', 'traditional market Nigeria', 'Nigerian farmers market', 'local market Nigeria');
+    }
+    photos = Promise.all(queries.map((query) => commonsPhotos(
+      fetchImpl,
+      headers,
+      query,
       (title, description) => regionalMatchScore(title, description, null, country),
-      'regional', country);
+      'regional',
+      country,
+    ))).then((groups) => {
+      const unique = new Map<string, PlacePhoto>();
+      for (const photo of groups.flat()) {
+        // Commons often publishes a numbered burst as separate files (for example `_01`,
+        // `_02`, `_03`). They are near-identical frames, so keep just one in the regional pool.
+        const family = photo.link.replace(/_(?:0?[1-9]|[1-9]\d)(?=\.(?:jpe?g|png|webp)(?:[?#]|$))/i, '');
+        if (!unique.has(family)) unique.set(family, photo);
+      }
+      return [...unique.values()];
+    }).then((matches) => {
+        // Keep successful licensed photo sets for later map boxes. Do not cache an upstream
+        // miss, which could otherwise leave every place in a country without images for 15 min.
+        if (matches.length === 0) regionalCache.delete(country);
+        return matches;
+      });
     regionalCache.set(country, photos);
   }
   const matches = await photos;
   if (matches.length === 0) return null;
-  // Reuse one small, verified country-level photo set without making every market card identical.
-  const key = `${candidate.ref}:${candidate.name}`;
-  const hash = [...key].reduce((value, char) => (value * 31 + char.charCodeAt(0)) >>> 0, 7);
-  return matches[hash % Math.min(5, matches.length)] ?? matches[0] ?? null;
+  // `withPhotos` rotates the complete regional pool through candidates, so nearby cards get
+  // different Commons files before the set needs to repeat.
+  return matches[0] ?? null;
 }
 
 async function withPhotos(
@@ -574,11 +605,28 @@ async function withPhotos(
   headers: Record<string, string>,
   candidates: PlaceCandidate[],
 ): Promise<PlaceCandidate[]> {
-  const regionalCache = new Map<string, Promise<PlacePhoto[]>>();
+  const regionalCache = regionalPhotoCache;
   const results = await Promise.allSettled(candidates.map((candidate) => bestPhotoFor(fetchImpl, headers, candidate, regionalCache)));
+
+  const pools = new Map<string, PlacePhoto[]>();
+  for (const candidate of candidates) {
+    const country = regionalCountry(candidate);
+    const photos = country ? regionalCache.get(country) : undefined;
+    if (country && photos && !pools.has(country)) pools.set(country, await photos);
+  }
+  const regionalCursor = new Map<string, number>();
   return candidates.map((candidate, index) => {
     const result = results[index];
-    const photo = result?.status === 'fulfilled' ? result.value : null;
+    let photo = result?.status === 'fulfilled' ? result.value : null;
+    if (photo?.kind === 'regional') {
+      const country = photo.region ?? regionalCountry(candidate);
+      const pool = country ? pools.get(country) : undefined;
+      if (country && pool?.length) {
+        const cursor = regionalCursor.get(country) ?? 0;
+        photo = pool[cursor % pool.length] ?? photo;
+        regionalCursor.set(country, cursor + 1);
+      }
+    }
     return {
       ...candidate, image_url: photo?.url ?? null,
       image_credit: photo?.credit ?? null, image_link: photo?.link ?? null,
@@ -807,7 +855,15 @@ export function makeCachedGeocoder(
       // Re-inserting makes the Map's own order the least-recently-used order.
       entries.delete(key);
       entries.set(key, hit);
-      return hit.value;
+      return hit.value.then((result) => {
+        const hasPhotoMiss = (method === 'markets' || method === 'inBox') && result.some((place) => !place.image_url);
+        if (hasPhotoMiss && Date.now() - hit.at >= PHOTO_MISS_RETRY_MS) {
+          // A transient Commons outage should not turn into a fifteen-minute run of empty photos.
+          if (entries.get(key) === hit) entries.delete(key);
+          return remember(method, query, limit, run);
+        }
+        return result;
+      });
     }
 
     if (entries.size >= maxEntries) {

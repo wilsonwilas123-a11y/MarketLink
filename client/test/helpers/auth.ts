@@ -8,6 +8,7 @@ export const customerProfile: Profile = {
   full_name: 'Amaka Obi',
   phone: '+2348030000000',
   address: null,
+  country: 'Nigeria',
   avatar_url: null,
   is_active: true,
   created_at: '2026-09-24T09:00:00.000Z',

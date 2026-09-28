@@ -11,8 +11,9 @@ export default function App() {
   const location = useLocation();
   const { status } = useAuth();
   const [initialLoadShown, setInitialLoadShown] = useState(false);
-  const isAuthScreen = ['/signin', '/signup', '/complete-profile'].includes(location.pathname)
+  const isAuthScreen = ['/signin', '/signup', '/complete-profile', '/admin/signin'].includes(location.pathname)
     || (location.pathname === '/' && status !== 'ready');
+  const isAdminPage = location.pathname === '/admin';
   const route = useRoutes(routes);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function App() {
       >
         Skip to content
       </a>
-      {!isAuthScreen ? <TopNav /> : null}
+      {!isAuthScreen && !isAdminPage ? <TopNav /> : null}
       <main id="main" className="flex-1">
         <Suspense
           fallback={initialLoadShown ? <LoadingScreen label="Opening your page…" /> : null}
@@ -38,7 +39,7 @@ export default function App() {
           </RouteTransition>
         </Suspense>
       </main>
-      {!isAuthScreen ? <Footer /> : null}
+      {!isAuthScreen && !isAdminPage ? <Footer /> : null}
       {!initialLoadShown ? (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-sheet">
           <LoadingScreen label="Opening your page…" />

@@ -54,7 +54,8 @@ export type GlyphName =
   | 'clock'
   | 'arrow'
   | 'send'
-  | 'truck';
+  | 'truck'
+  | 'bell';
 
 const paths: Record<GlyphName, ReactNode> = {
   leaf: (
@@ -242,6 +243,12 @@ const paths: Record<GlyphName, ReactNode> = {
     <>
       <path {...stroke} d="M11 4.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Z" />
       <path {...stroke} d="m15.8 15.8 3.7 3.7" />
+    </>
+  ),
+  bell: (
+    <>
+      <path {...stroke} d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" />
+      <path {...stroke} d="M10 21h4" />
     </>
   ),
   pin: (

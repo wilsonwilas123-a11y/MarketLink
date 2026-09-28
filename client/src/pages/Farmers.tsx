@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Button, buttonClass } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
 import { Thumb } from '../components/art/Thumb';
 import { Stars } from '../components/discovery/pieces';
 import { useFarmer, useFarmerList, useMarketList, WEEK } from '../lib/discovery';
@@ -13,6 +12,27 @@ import { formatMinor } from '../utils/money';
 import { localProductGlyph, localProductPhoto } from '../lib/productPhoto';
 import { FavoriteToggle } from '../components/FavoriteToggle';
 import { Reveal } from '../motion/reveal';
+import { SearchAutocomplete } from '../components/discovery/SearchAutocomplete';
+import { farmerCover } from '../lib/farmerPhoto';
+
+/**
+ * Demo cover photography for the seeded stalls, by contact name — the seeded ids are md5 uuids the
+ * browser cannot reproduce.
+ *
+ * A farmer's own `cover_url` always wins. Demo stalls use Unsplash imagery first, with the
+ * bundled local copies as an offline fallback. These are representative farm photos, not portraits
+ * of the named stall owners.
+ */
+const DEMO_COVERS: Record<string, string> = {
+  'Bola Adeyemi': '/img/farmers/bola.jpg',
+  'Chidinma Eze': '/img/farmers/chidinma.jpg',
+  'Grace Effiong': '/img/farmers/grace.jpg',
+  'Mariam Lawal': '/img/farmers/mariam.jpg',
+  'Sunday Ochelula': '/img/farmers/sunday.jpg',
+  'Ifaturo Ade': '/img/farmers/ifaturo.jpg',
+  'Kelechi Anyanwu': '/img/farmers/kelechi.jpg',
+  'Seun Oluwale': '/img/farmers/seun.jpg',
+};
 
 export default function Farmers() {
   const [params, setParams] = useSearchParams();
@@ -41,14 +61,14 @@ export default function Farmers() {
 
   const rows = farmers.data?.data ?? [];
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
+    <section className="mx-auto w-full max-w-[1720px] px-4 py-7 sm:px-6 lg:px-7 md:py-10">
       <header className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Meet the growers</p>
         <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">Local Farmers</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">Browse approved farm stalls, their markets, pickup days, and the harvest they have this week.</p>
       </header>
-      <form onSubmit={search} className="mt-6 grid gap-3 rounded-2xl border border-line bg-surface p-4 md:grid-cols-[minmax(0,1fr)_14rem_14rem_auto] md:items-end">
-        <Input label="Search farmers" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Stall or farmer name" />
+      <form onSubmit={search} className="mt-6 grid gap-3 rounded-3xl border border-line bg-surface p-4 shadow-[0_8px_30px_rgba(21,39,29,0.05)] md:grid-cols-[minmax(0,1fr)_14rem_14rem_auto] md:items-end md:p-5">
+        <SearchAutocomplete label="Search farmers" value={draft} onChange={setDraft} placeholder="Stall or farmer name" kinds={['farmers']} resultPath="/farmers" />
         <label className="text-sm text-muted">Market
           <select value={filters.marketId ?? ''} onChange={(event) => patch('market_id', event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-line bg-elevated px-3 text-primary">
             <option value="">All markets</option>
@@ -61,37 +81,43 @@ export default function Farmers() {
             {CATEGORIES.map((category) => <option key={category.slug} value={category.slug}>{category.name}</option>)}
           </select>
         </label>
-        <Button type="submit" size="sm">Search</Button>
+        <Button type="submit" size="md">Search</Button>
       </form>
 
       {farmers.isError ? <Card className="mt-5 p-6 text-sm text-muted">We couldn’t load the farmer directory. Please try again.</Card> : null}
       {farmers.isPending ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading farmers">
+        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading farmers">
           {Array.from({ length: 6 }, (_, index) => <Card key={index} className="h-80 animate-pulse bg-elevated"><span className="sr-only">Loading farmer</span></Card>)}
         </div>
       ) : rows.length === 0 ? (
-        <Card className="mt-6 p-10 text-center">
+        <Card className="mt-5 p-10 text-center">
           <h2 className="font-display text-xl font-semibold">No farmers match these filters</h2>
           <p className="mt-2 text-sm text-muted">Try a different market or category.</p>
         </Card>
       ) : (
-        <Reveal className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" y={18} stagger={0.055}>
+        <>
+        <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted">
+          <p>Showing {rows.length} {rows.length === 1 ? 'farmer' : 'farmers'}</p>
+          <p className="hidden sm:block">{markets.data?.data.length ?? 0} pickup markets</p>
+        </div>
+        <Reveal className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" y={18} stagger={0.055}>
           {rows.map((farmer) => (
-            <Card key={farmer.id} className="relative overflow-hidden">
+            <Card key={farmer.id} className="group relative overflow-hidden rounded-3xl border-line/90 shadow-[0_8px_28px_rgba(21,39,29,0.06)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(21,39,29,0.13)]">
               <div className="absolute right-3 top-3 z-10"><FavoriteToggle type="farmer" id={farmer.id} /></div>
               <Link to={`/farmers/${farmer.id}`} className="block">
-                <Thumb src={farmer.cover_url} seed={farmer.id} glyph="farm" label={farmer.stall_name} className="aspect-[16/9] w-full" glyphSize={52} />
+                <Thumb src={farmerCover(farmer)} fallbackSrc={DEMO_COVERS[farmer.contact_person] || '/img/farmers/bola.jpg'} seed={farmer.id} glyph="farm" label={farmer.cover_url ? farmer.stall_name : `${farmer.stall_name} — representative farm photo`} className="aspect-[2.05/1] w-full" glyphSize={52} imgClass="object-[center_33%] transition-transform duration-500 group-hover:scale-[1.03]" />
               </Link>
-              <div className="p-4">
-                <Link to={`/farmers/${farmer.id}`} className="font-display text-lg font-semibold hover:text-accent">{farmer.stall_name}</Link>
-                <p className="mt-1 text-sm text-muted">{farmer.contact_person}</p>
+              <div className="p-4 md:p-5">
+                <Link to={`/farmers/${farmer.id}`} className="font-display text-xl font-semibold leading-snug hover:text-accent">{farmer.stall_name}</Link>
+                <p className="mt-1 text-base text-muted">{farmer.contact_person}</p>
                 <Stars value={farmer.rating_avg} count={farmer.rating_count} className="mt-2" />
-                <p className="mt-3 line-clamp-2 text-sm text-muted">{farmer.description || 'Local produce, available for pickup at the market.'}</p>
-                <Link to={`/farmers/${farmer.id}`} className={`${buttonClass('ghost', 'sm', 'mt-4 w-full')}`}>View farm</Link>
+                <p className="mt-3 line-clamp-2 min-h-10 text-base leading-relaxed text-muted">{farmer.description || 'Local produce, available for pickup at the market.'}</p>
+                <Link to={`/farmers/${farmer.id}`} className={`${buttonClass('ghost', 'md', 'mt-4 w-full text-base')}`}>View farm</Link>
               </div>
             </Card>
           ))}
         </Reveal>
+        </>
       )}
     </section>
   );
@@ -125,7 +151,7 @@ export function FarmerProfile() {
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
       <Link to="/farmers" className="text-sm text-muted hover:text-primary">← Farmers</Link>
       <Card className="mt-4 overflow-hidden">
-        <div className="relative"><Thumb src={profile.cover_url} seed={profile.id} glyph="farm" label={profile.stall_name} className="h-56 w-full md:h-80" glyphSize={72} imgClass="object-[center_40%]" /><div className="absolute right-4 top-4"><FavoriteToggle type="farmer" id={profile.id} /></div></div>
+        <div className="relative"><Thumb src={profile.cover_url || farmerCover({ cover_url: null, contact_person: profile.contact_person, id: profile.id })} fallbackSrc={DEMO_COVERS[profile.contact_person] || '/img/farmers/bola.jpg'} seed={profile.id} glyph="farm" label={profile.cover_url ? profile.stall_name : `${profile.stall_name} — representative farm photo`} className="h-56 w-full md:h-80" glyphSize={72} imgClass="object-[center_40%]" /><div className="absolute right-4 top-4"><FavoriteToggle type="farmer" id={profile.id} /></div></div>
         <div className="flex flex-wrap items-end justify-between gap-5 p-5 md:p-7">
           <div>
             <p className="text-sm text-accent">Local farm stall</p>
@@ -172,7 +198,7 @@ export function FarmerProfile() {
             const available = !product.is_sold_out && (product.quantity_available ?? 0) > 0;
             const marketId = profile.markets[0]?.id;
             return <Card key={product.id} className="overflow-hidden">
-              <Link to={`/products/${product.id}`}><Thumb src={product.image_urls[0] ?? localProductPhoto(product.name)} seed={product.id} category={product.category.slug} glyph={localProductGlyph(product.name)} className="aspect-[4/3] w-full" /></Link>
+              <Link to={`/products/${product.id}`}><Thumb src={product.image_urls[0]} fallbackSrc={localProductPhoto(product.name)} seed={product.id} category={product.category.slug} glyph={localProductGlyph(product.name)} className="aspect-[4/3] w-full" /></Link>
               <div className="p-4">
                 <Link to={`/products/${product.id}`} className="font-semibold hover:text-accent">{product.name}</Link>
                 <p className="mt-2 font-semibold">{formatMinor(product.price_minor, profile.currency)} <span className="text-xs font-normal text-muted">/ {product.unit}</span></p>

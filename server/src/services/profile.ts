@@ -3,7 +3,7 @@ import { ApiError } from '../errors.js';
 import type { AuthSubject } from '../lib/auth.js';
 import type { BootstrapInput, FarmerLink, Me, Profile, UpdateMeInput } from '../api/schemas.js';
 
-const PROFILE_COLUMNS = `id, role, full_name, phone, address, avatar_url, is_active,
+const PROFILE_COLUMNS = `id, role, full_name, phone, address, country, avatar_url, is_active,
                          created_at, updated_at`;
 
 const FARMER_CURRENCY: Record<string, string> = {
@@ -37,14 +37,15 @@ export async function bootstrapProfile(
   try {
     await client.query('begin');
     const { rows } = await client.query(
-      `insert into profiles (id, role, full_name, phone, address)
-       values ($1, $2, $3, $4, $5)
+      `insert into profiles (id, role, full_name, phone, address, country)
+       values ($1, $2, $3, $4, $5, $6)
        on conflict (id) do update
           set full_name = excluded.full_name,
               phone     = excluded.phone,
-              address   = coalesce(excluded.address, profiles.address)
+              address   = coalesce(excluded.address, profiles.address),
+              country   = excluded.country
        returning ${PROFILE_COLUMNS}`,
-      [subject.id, input.role, input.full_name, input.phone, input.address ?? null],
+      [subject.id, input.role, input.full_name, input.phone, input.address ?? null, input.country],
     );
 
     const profile = rows[0] as Profile;

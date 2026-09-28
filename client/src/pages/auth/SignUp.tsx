@@ -91,7 +91,7 @@ export default function SignUp() {
         full_name: details.values.full_name.trim(),
         phone: details.values.phone.trim(),
         address: details.values.address.trim(),
-        country: details.values.role === 'farmer' ? details.values.country : undefined,
+        country: details.values.country,
         stall_name: details.values.role === 'farmer' ? details.values.stall_name.trim() : undefined,
         ...credentials,
         email: credentials.email.trim(),

@@ -1,13 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { glyphFor, Glyph, type GlyphName } from './glyphs';
 
 /**
  * A photo slot that is never empty.
  *
- * `image_url` is null for most seeded rows and a farmer's upload can 404 between a deploy and
- * a cache clear, so every slot here resolves in the same order: the real photo if it loads,
- * line art derived from the row's own id if it does not. The `<img>` is dropped rather than
- * hidden, because a broken image icon inside a card is worse than a card without one.
+ * Seeded rows can have no photo and farmer uploads can expire, so each slot tries the primary
+ * photo, then a matching local photo, then line art derived from the row. Broken URLs are cached
+ * so repeated cards do not keep retrying them.
  */
 /**
  * Sources this page has already failed to load.
@@ -19,6 +18,7 @@ const broken = new Set<string>();
 
 export function Thumb({
   src,
+  fallbackSrc,
   seed,
   category,
   glyph,
@@ -29,6 +29,8 @@ export function Thumb({
 }: {
   /** The photo, if the row has one. */
   src?: string | null;
+  /** A known-good local/category photo to try if the primary image cannot load. */
+  fallbackSrc?: string | null;
   /** The row's id, so the fallback art is stable for that row. */
   seed: string;
   category?: string | null;
@@ -41,23 +43,36 @@ export function Thumb({
   /** For the `<img>` alone, so a wide slot can choose which edge of the photo it keeps. */
   imgClass?: string;
 }) {
-  const [failed, setFailed] = useState(() => (src ? broken.has(src) : false));
-  const show = Boolean(src) && !failed;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [src, fallbackSrc]);
+
+  // Never let an earlier failed request hide a local public asset. This can happen
+  // during Vite HMR when an image is added after the page has already rendered.
+  const isUsable = (candidate: string) => candidate.startsWith('/') || !broken.has(candidate);
+  const imageSrc = src && src !== failedSrc && isUsable(src)
+    ? src
+    : fallbackSrc && fallbackSrc !== src && fallbackSrc !== failedSrc && isUsable(fallbackSrc)
+      ? fallbackSrc
+      : null;
 
   return (
     <div
       className={`relative overflow-hidden bg-elevated ${className}`}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
     >
-      {show ? (
+      {imageSrc ? (
         <img
-          src={src ?? ''}
+          src={imageSrc ?? ''}
           alt=""
           loading="lazy"
           decoding="async"
           onError={() => {
-            if (src) broken.add(src);
-            setFailed(true);
+            // Local public assets can appear while Vite is running; don't poison their path
+            // for the rest of the session if an earlier request happened before the file existed.
+            if (!imageSrc.startsWith('/')) broken.add(imageSrc);
+            setFailedSrc(imageSrc);
           }}
           className={`h-full w-full object-cover ${imgClass}`}
         />

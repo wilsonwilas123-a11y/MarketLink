@@ -8,12 +8,10 @@ export interface ProductFilters {
   category?: string;
   marketId?: string;
   day?: Weekday;
-  currency?: string;
-  minPriceMinor?: number;
-  maxPriceMinor?: number;
   inStockOnly?: boolean;
   sort?: 'popular' | 'price_low' | 'price_high' | 'newest';
   page?: number;
+  limit?: number;
 }
 
 export function useProducts(filters: ProductFilters) {
@@ -23,13 +21,10 @@ export function useProducts(filters: ProductFilters) {
     category: filters.category,
     market_id: filters.marketId,
     day: filters.day,
-    currency: filters.currency,
-    min_price_minor: filters.minPriceMinor,
-    max_price_minor: filters.maxPriceMinor,
     in_stock_only: filters.inStockOnly,
     sort: filters.sort,
     page: filters.page ?? 1,
-    limit: 24,
+    limit: filters.limit ?? 24,
   });
 
   return useQuery({

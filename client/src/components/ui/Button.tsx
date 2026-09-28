@@ -13,7 +13,7 @@ type Size = 'sm' | 'md';
 const variant: Record<Variant, string> = {
   primary: 'bg-block text-on-block font-bold shadow-[0_8px_24px_rgba(33,106,73,0.16)] hover:brightness-105 active:translate-y-px',
   ghost: 'border border-line bg-elevated/55 text-primary hover:border-muted/70 hover:bg-elevated',
-  danger: 'border border-danger/35 bg-danger/5 text-danger hover:border-danger/60 hover:bg-danger/10',
+  danger: 'border border-danger/70 bg-danger/5 text-danger hover:border-danger hover:bg-danger/10',
 };
 
 const size: Record<Size, string> = {

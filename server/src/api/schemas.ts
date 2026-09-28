@@ -13,6 +13,10 @@ export type Role = z.infer<typeof RoleSchema>;
  * in the database instead.
  */
 const RequestableRoleSchema = z.enum(['customer', 'farmer']);
+export const MarketCountrySchema = z.enum([
+  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Senegal', "Côte d'Ivoire", 'Cameroon',
+  'Uganda', 'Tanzania', 'Rwanda', 'Egypt', 'Morocco', 'Ethiopia', 'Botswana', 'Zambia', 'Mozambique',
+]);
 
 export const BootstrapSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
@@ -20,16 +24,10 @@ export const BootstrapSchema = z.object({
   address: z.string().trim().min(1, 'Enter your address or the area where you shop.').max(240),
   role: RequestableRoleSchema,
   stall_name: z.string().trim().min(2).max(80).optional(),
-  country: z.enum([
-    'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Senegal', "Côte d'Ivoire", 'Cameroon',
-    'Uganda', 'Tanzania', 'Rwanda', 'Egypt', 'Morocco', 'Ethiopia', 'Botswana', 'Zambia', 'Mozambique',
-  ]).optional(),
+  country: MarketCountrySchema,
 }).strict().superRefine((value, context) => {
   if (value.role === 'farmer' && !value.stall_name) {
     context.addIssue({ code: 'custom', path: ['stall_name'], message: 'Enter your stall or farm business name.' });
-  }
-  if (value.role === 'farmer' && !value.country) {
-    context.addIssue({ code: 'custom', path: ['country'], message: 'Choose the country where your farm or stall operates.' });
   }
 });
 export type BootstrapInput = z.infer<typeof BootstrapSchema>;
@@ -40,6 +38,7 @@ export const UpdateMeSchema = z
     phone: z.string().trim().min(7).max(20).optional(),
     address: z.string().trim().max(240).nullable().optional(),
     avatar_url: z.string().url().max(2048).nullable().optional(),
+    country: MarketCountrySchema.optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, { message: 'Provide at least one field to change.' });
@@ -51,6 +50,7 @@ export const ProfileSchema = z.object({
   full_name: z.string(),
   phone: z.string(),
   address: z.string().nullable(),
+  country: MarketCountrySchema,
   avatar_url: z.string().nullable(),
   is_active: z.boolean(),
   created_at: z.string(),
@@ -255,6 +255,7 @@ export const ProductMarketSchema = z.object({
   id: UuidSchema,
   name: z.string(),
   city: z.string(),
+  timezone: z.string(),
   days: z.array(z.string()),
   opens_at: TimeSchema,
   closes_at: TimeSchema,

@@ -40,12 +40,12 @@ export function MarketCard({
         if (event.pointerType === 'mouse') onFocus?.();
       }}
       onFocus={onFocus}
-      className={`motion-card group relative border-t border-line transition-colors ${
-        selected ? 'bg-accent-soft/50' : 'hover:bg-elevated/45'
+      className={`motion-card group relative rounded-2xl border p-3 transition-[background,border-color,box-shadow] duration-200 sm:p-3.5 ${
+        selected ? 'border-accent/45 bg-accent-soft/45 shadow-[0_8px_24px_rgba(21,39,29,0.08)]' : 'border-line bg-surface hover:border-accent/25 hover:shadow-[0_8px_24px_rgba(21,39,29,0.06)]'
       }`}
     >
       <div
-        className={`flex items-start gap-4 sm:gap-5 ${prominent ? 'py-5 sm:py-6' : 'py-4'}`}
+        className={`flex items-center gap-4 sm:gap-5 ${prominent ? 'py-1 sm:py-1.5' : 'py-1'}`}
       >
         <div className="shrink-0">
           <Thumb
@@ -54,14 +54,14 @@ export function MarketCard({
             glyph="farm"
             label={satellitePreview && !market.image_url ? `Satellite view of ${market.name}` : market.name}
             glyphSize={prominent ? 48 : 36}
-            className={`rounded-[2px] ${
-              prominent ? 'h-32 w-32 sm:h-36 sm:w-36' : 'h-24 w-24 sm:h-28 sm:w-28'
+            className={`rounded-xl ${
+              prominent ? 'h-28 w-36 sm:h-28 sm:w-44' : 'h-28 w-36 sm:h-28 sm:w-44'
             }`}
           />
           {satellitePreview ? <p className="mt-1 max-w-36 truncate text-[10px] text-muted">Satellite view · Mapbox</p> : null}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 py-1">
           <h3
             className={`font-display leading-tight ${
               prominent
@@ -136,15 +136,15 @@ export function PlaceCard({
   const where = placeLine(place);
   return (
     <article
-      className="border-t border-line"
+      className="rounded-2xl border border-line bg-surface p-3 sm:p-3.5"
       tabIndex={onFocus ? 0 : undefined}
       onPointerEnter={(event) => {
         if (event.pointerType === 'mouse') onFocus?.();
       }}
       onFocus={onFocus}
     >
-      <div className="flex items-start gap-4 py-4 sm:gap-5">
-        <div className="w-24 shrink-0 sm:w-28">
+      <div className="flex items-center gap-4 sm:gap-5">
+        <div className="w-36 shrink-0 sm:w-44">
           <Thumb
             src={place.image_url}
             seed={place.ref}
@@ -153,7 +153,7 @@ export function PlaceCard({
               ? `${place.image_region ?? 'Regional'} market photo; ${place.name} is marked nearby`
               : place.name}
             glyphSize={36}
-            className="h-24 w-24 rounded-[2px] sm:h-28 sm:w-28"
+            className="h-28 w-36 rounded-xl sm:h-28 sm:w-44"
           />
           {place.image_url && place.image_credit && place.image_link ? (
             <a href={place.image_link} target="_blank" rel="noreferrer" className="mt-1 block text-[10px] leading-tight text-muted underline underline-offset-2">
@@ -185,8 +185,8 @@ export function PlaceCard({
 /** A row that is still waiting for its data, holding the list's height so nothing jumps. */
 export function MarketCardSkeleton() {
   return (
-    <div className="flex items-start gap-4 border-t border-line py-4" aria-hidden>
-      <div className="h-24 w-24 shrink-0 rounded-[2px] bg-elevated sm:h-28 sm:w-28" />
+    <div className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-3 sm:gap-5 sm:p-3.5" aria-hidden>
+      <div className="h-28 w-36 shrink-0 rounded-xl bg-elevated sm:w-44" />
       <div className="min-w-0 flex-1">
         <div className="h-4 w-2/5 rounded-[2px] bg-elevated" />
         <div className="mt-2 h-3 w-3/5 rounded-[2px] bg-elevated/70" />

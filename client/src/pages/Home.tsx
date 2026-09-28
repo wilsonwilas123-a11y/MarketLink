@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Glyph, type GlyphName } from '../components/art/glyphs';
 import { Thumb } from '../components/art/Thumb';
@@ -13,6 +13,7 @@ import type { ShowcaseProduct } from '../lib/showcase';
 import type { FarmerSummary } from '../lib/types';
 import { formatKobo } from '../utils/kobo';
 import { prefersReducedMotion, Reveal } from '../motion/reveal';
+import { farmerCover } from '../lib/farmerPhoto';
 
 /**
  * The landing screen.
@@ -72,15 +73,6 @@ const CHIP_ON_PHOTO =
   'border-paper/25! bg-ink/55! text-paper! backdrop-blur hover:border-paper/50! hover:text-paper!';
 
 function Hero() {
-  const [term, setTerm] = useState('');
-  const navigate = useNavigate();
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    const q = term.trim();
-    navigate(q ? `/markets?q=${encodeURIComponent(q)}` : '/markets');
-  }
-
   return (
     <section className="relative isolate overflow-hidden border-b border-line">
       {/* This local farm photograph anchors the landing band. It is mirrored so the farmer
@@ -123,31 +115,6 @@ function Hero() {
               this week, reserve it against a pickup window, and pay the grower at the market.
               Nothing is charged online.
             </p>
-
-            {/* One pill holding the field and its action: in the reference the button is the
-                right end of the search bar, not a separate control standing beside it. */}
-            <form
-              onSubmit={submit}
-              className="mt-8 flex w-full max-w-2xl items-center gap-2 rounded-full border border-paper/20 bg-ink/55 p-2 backdrop-blur-md [text-shadow:none] focus-within:border-accent"
-            >
-              <label htmlFor="hero-search" className="sr-only">
-                Search markets, farmers or produce
-              </label>
-              <input
-                id="hero-search"
-                value={term}
-                onChange={(e) => setTerm(e.target.value)}
-                placeholder="Search markets, farmers or produce…"
-                className="h-11 min-w-0 flex-1 bg-transparent px-3.5 text-base text-paper outline-none placeholder:text-paper/55"
-              />
-              <button
-                type="submit"
-                aria-label="Search"
-                className={buttonClass('primary', 'md', 'h-11 w-16 shrink-0 p-0!')}
-              >
-                <Glyph name="search" size={21} />
-              </button>
-            </form>
 
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
@@ -402,7 +369,7 @@ function FarmerCard({ farmer }: { farmer: FarmerSummary }) {
     <li className="w-[300px] min-w-0 shrink-0 snap-start sm:w-auto sm:shrink sm:snap-auto">
       <article className="relative flex h-full min-h-[40rem] snap-start flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
         <Thumb
-          src={farmer.cover_url}
+          src={farmerCover(farmer)}
           seed={farmer.id}
           glyph="farm"
           label={farmer.stall_name}

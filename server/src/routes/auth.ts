@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { ApiError } from '../errors.js';
 import { registry } from '../api/registry.js';
 import {
   BootstrapSchema,
@@ -100,7 +101,12 @@ export function authRouter(deps: AppDeps): Router {
     requireAuth(deps.auth, deps.pool),
     validate({ body: UpdateMeSchema }),
     route(async (req, res) => {
-      const updated = await updateMe(deps.pool, currentUser(req).id, req.valid.body as UpdateMeInput);
+      const user = currentUser(req);
+      const input = req.valid.body as UpdateMeInput;
+      if (input.country !== undefined && user.role !== 'customer') {
+        throw new ApiError('validation_failed', 'Only buyer accounts can change their home country here.');
+      }
+      const updated = await updateMe(deps.pool, user.id, input);
       res.json(updated satisfies Profile);
     }),
   );

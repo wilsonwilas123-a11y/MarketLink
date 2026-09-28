@@ -7,14 +7,17 @@ import type { Role } from '../lib/types';
  * exists; everyone else goes to their own dashboard.
  */
 export function homeFor(role: Role): string {
-  return role === 'farmer' ? '/farmers/dashboard' : '/account';
+  if (role === 'farmer') return '/farmers/dashboard';
+  if (role === 'admin') return '/admin';
+  return '/account';
 }
 
 export const COMPLETE_PROFILE_PATH = '/complete-profile';
 
 /** Keeps the query string, so a filtered page is the place you return to. */
 export function signInPath(current: string): string {
-  return `/signin?returnTo=${encodeURIComponent(current)}`;
+  const route = current === '/admin' || current.startsWith('/admin/') ? '/admin/signin' : '/signin';
+  return `${route}?returnTo=${encodeURIComponent(current)}`;
 }
 
 /**

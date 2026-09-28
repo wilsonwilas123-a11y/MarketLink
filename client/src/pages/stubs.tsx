@@ -74,8 +74,8 @@ export function About() {
         </Card>
       ) : null}
       <p className="mt-6 text-xs text-muted">
-        MarketLink is being developed as a community marketplace project. Public team contact
-        information is shown on the Contact page when configured.
+        MarketLink brings local growers and neighborhood market communities together. Use the
+        Contact page for help with the marketplace or a scheduled pickup.
       </p>
     </section>
   );

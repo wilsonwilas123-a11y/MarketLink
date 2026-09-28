@@ -39,6 +39,7 @@ export interface MarketFilters {
   city?: string;
   day?: Weekday;
   openNow?: boolean;
+  limit?: number;
 }
 
 export interface NearbyFilters extends MarketFilters {
@@ -96,6 +97,7 @@ export function useMarketList(filters: MarketFilters) {
     city: filters.city,
     day: filters.day,
     open_now: filters.openNow,
+    limit: filters.limit,
   })}`;
 
   return useQuery({
@@ -163,6 +165,9 @@ export function useMarketsInBox(bbox: string, enabled = true) {
       api.get<PlaceCandidate[]>(`/places/markets/box${searchParams({ bbox, limit: 50 })}`),
     enabled,
     staleTime: PLACES_STALE_MS,
+    // Photo matches may have been added since an older cached place list was first loaded.
+    // Revalidate when this screen mounts while keeping the server-side upstream cache intact.
+    refetchOnMount: 'always',
   });
 }
 
@@ -187,6 +192,7 @@ export function useMarketPlaces(term: string | undefined) {
       api.get<PlaceCandidate[]>(`/places/markets${searchParams({ q: query, limit: 50 })}`),
     enabled: query.length >= 3,
     staleTime: PLACES_STALE_MS,
+    refetchOnMount: 'always',
   });
 }
 
@@ -205,6 +211,9 @@ export function useFarmerList(filters: { marketId?: string; category?: string; q
     market_id: filters.marketId,
     category: filters.category,
     q: filters.q,
+    // The server answers 24 by default and this screen has no pager, so past that the extra
+    // stalls simply never appear. 100 is the most the route will hand back.
+    limit: 100,
   })}`;
 
   return useQuery({

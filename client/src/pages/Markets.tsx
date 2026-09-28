@@ -4,11 +4,9 @@ import { MarketCard, PlaceCard } from '../components/discovery/MarketCard';
 import { StateNote } from '../components/discovery/StateNote';
 import type { MarketMapHandle } from '../components/discovery/MarketMap';
 import { Button } from '../components/ui/Button';
-import { Chip } from '../components/ui/Chip';
 import { Input } from '../components/ui/Input';
 import {
   LAGOS,
-  WEEK,
   marketBox,
   useMarketList,
   useMarketPlaces,
@@ -16,15 +14,16 @@ import {
   useNearbyMarkets,
   type MarketFilters,
 } from '../lib/discovery';
-import type { Market, NearbyMarket, PlaceCandidate, Weekday } from '../lib/types';
+import type { Market, NearbyMarket, PlaceCandidate } from '../lib/types';
 import { Reveal } from '../motion/reveal';
+import { SearchAutocomplete } from '../components/discovery/SearchAutocomplete';
 
 /**
  * Market discovery: the list and the map, over one set of filters.
  *
  * The filters live in the URL rather than in component state. That is what makes a link to
- * `?day=sat` mean the same thing to the person it was sent to, what makes the back button
- * undo a filter rather than leave the screen, and what forces the list and the map to read
+ * Search terms live in the URL. That is what makes a market link shareable, what forces the
+ * list and map to read
  * the same answer instead of each keeping its own copy of the question.
  *
  * Leaflet is loaded on demand. It is the heaviest thing on this page, a visitor who only
@@ -34,10 +33,6 @@ import { Reveal } from '../motion/reveal';
 const MarketMap = lazy(() => import('../components/discovery/MarketMap'));
 
 const RADII = [5, 10, 25, 50];
-
-function asDay(value: string | null): Weekday | undefined {
-  return WEEK.find((d) => d.code === value)?.code;
-}
 
 function asNumber(value: string | null): number | undefined {
   if (value === null || value === '') return undefined;
@@ -72,8 +67,6 @@ export default function Markets() {
 
   const q = params.get('q') ?? '';
   const city = params.get('city') ?? '';
-  const day = asDay(params.get('day'));
-  const openNow = params.get('open') === '1';
   const radius = asNumber(params.get('radius')) ?? 10;
   const lat = asNumber(params.get('lat'));
   const lng = asNumber(params.get('lng'));
@@ -87,15 +80,13 @@ export default function Markets() {
   useEffect(() => setQDraft(q), [q]);
   useEffect(() => setCityDraft(city), [city]);
 
-  const filters: MarketFilters = { q: q || undefined, city: city || undefined, day, openNow };
+  const filters: MarketFilters = { q: q || undefined, city: city || undefined };
 
   const list = useMarketList(filters);
   const near = useNearbyMarkets({
     lat: lat ?? LAGOS.lat,
     lng: lng ?? LAGOS.lng,
     radiusKm: radius,
-    day,
-    openNow,
     enabled: nearby,
   });
 
@@ -150,7 +141,7 @@ export default function Markets() {
   function findMe() {
     setWhere(null);
     if (!navigator.geolocation) {
-      setWhere('This browser cannot share a location. Filter by area and day instead.');
+      setWhere('This browser cannot share a location. Search by market or area instead.');
       return;
     }
 
@@ -163,7 +154,7 @@ export default function Markets() {
         });
       },
       () => {
-        setWhere('No location was shared. The list is still filtered by area and day.');
+        setWhere('No location was shared. You can still search markets by area.');
       },
       { timeout: 8000, maximumAge: 300_000 },
     );
@@ -175,29 +166,22 @@ export default function Markets() {
     mapRef.current?.focus(id);
   }
 
-  const total = active.data?.meta.total ?? 0;
-  const hasFilters = Boolean(q || city || day) || openNow;
-  const dayLabel = WEEK.find((d) => d.code === day)?.label;
+  const hasFilters = Boolean(q || city);
 
   return (
     <div className="pb-20">
-      <header className="mx-auto max-w-7xl px-4 pt-12">
-        <h1 className="font-display text-3xl font-bold md:text-4xl">Markets</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+      <header className="mx-auto w-full max-w-[1720px] px-4 pt-7 sm:px-6 lg:px-7 md:pt-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Fresh produce. Local markets. Better prices.</p>
+        <h1 className="mt-2 font-display text-4xl font-bold tracking-tight md:text-5xl">Markets</h1>
+        <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted">
           Every market MarketLink tracks, the days it runs, and the farms trading there.
           Opening state is computed against Lagos time, not your device’s.
         </p>
       </header>
 
-      <section aria-label="Filters" className="mx-auto mt-6 max-w-7xl px-4">
-        <form onSubmit={submitText} className="grid gap-3 sm:grid-cols-2 lg:max-w-3xl">
-          <Input
-            label="Search"
-            name="q"
-            value={qDraft}
-            onChange={(e) => setQDraft(e.target.value)}
-            placeholder="Market, area or landmark"
-          />
+      <section aria-label="Filters" className="mx-auto mt-6 w-full max-w-[1720px] px-4 sm:px-6 lg:px-7">
+        <form onSubmit={submitText} className="grid gap-3 rounded-3xl border border-line bg-surface p-4 shadow-[0_8px_30px_rgba(21,39,29,0.05)] sm:grid-cols-2 md:grid-cols-[minmax(0,1.2fr)_minmax(15rem,0.85fr)_auto] md:items-end md:p-5">
+          <SearchAutocomplete label="Search" value={qDraft} onChange={setQDraft} placeholder="Market, area or landmark" kinds={['markets']} resultPath="/markets" />
           <Input
             label="City or state"
             name="city"
@@ -205,30 +189,12 @@ export default function Markets() {
             onChange={(e) => setCityDraft(e.target.value)}
             placeholder="Lagos"
           />
-          <Button type="submit" size="sm" className="sm:col-span-2 sm:justify-self-start">
+          <Button type="submit" size="md" className="sm:col-span-2 sm:justify-self-start md:col-span-1">
             Search markets
           </Button>
         </form>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3">
-          <div className="flex items-center gap-1.5" role="group" aria-label="Day of the week">
-            {WEEK.map((d) => (
-              <Chip
-                key={d.code}
-                active={day === d.code}
-                onClick={() => patch({ day: day === d.code ? undefined : d.code })}
-              >
-                {d.short}
-              </Chip>
-            ))}
-          </div>
-
-          <span aria-hidden className="mx-1 hidden h-6 w-px bg-line sm:block" />
-
-          <Chip active={openNow} onClick={() => patch({ open: openNow ? undefined : '1' })}>
-            Open now
-          </Chip>
-
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-x-2 gap-y-3">
           {nearby ? (
             <span className="flex items-center gap-2 text-sm text-muted">
               within
@@ -270,16 +236,8 @@ export default function Markets() {
         ) : null}
       </section>
 
-      <section className="mx-auto mt-6 max-w-7xl px-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="num text-sm text-muted" aria-live="polite">
-            {active.isPending
-              ? 'Loading markets…'
-              : `${total} ${total === 1 ? 'market' : 'markets'}`}
-            {!active.isPending && nearby ? ` within ${radius} km` : ''}
-            {!active.isPending && dayLabel ? ` on ${dayLabel}` : ''}
-          </p>
-
+      <section className="mx-auto mt-5 w-full max-w-[1720px] px-4 sm:px-6 lg:px-7">
+        <div className="mb-3 flex items-center justify-end gap-3">
           <div className="flex overflow-hidden rounded-full border border-line lg:hidden">
             {(['list', 'map'] as const).map((v) => (
               <button
@@ -310,8 +268,8 @@ export default function Markets() {
                 label="No market matches all of that"
                 body={
                   nearby
-                    ? 'Nothing trades at that day or hour inside the circle. Widen the radius, or drop the day.'
-                    : 'Try a wider term, or clear the day and the open-now filter.'
+                    ? 'No markets were found inside this radius. Widen the radius or search a different area.'
+                    : 'Try a wider search term or clear your search filters.'
                 }
               />
             ) : (
@@ -319,7 +277,7 @@ export default function Markets() {
                 className="flex flex-col gap-3"
                 y={10}
                 stagger={0.035}
-                revealKey={`${q}|${city}|${day ?? ''}|${openNow}|${nearby ? `${lat},${lng},${radius}` : ''}`}
+                revealKey={`${q}|${city}|${nearby ? `${lat},${lng},${radius}` : ''}`}
               >
                 {markets.map((market) => (
                   <MarketCard
@@ -335,7 +293,7 @@ export default function Markets() {
 
             {unlisted.length > 0 ? (
               <section aria-label="Additional mapped market places" className="mt-10">
-                <div>
+                <div className="grid gap-3">
                   {unlisted.map((place) => (
                     <PlaceCard key={place.ref} place={place} onFocus={() => focus(place.ref)} />
                   ))}

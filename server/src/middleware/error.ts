@@ -37,7 +37,10 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       message: (err as Error)?.message,
       stack: (err as Error)?.stack,
     });
-    res.status(status).json(new ApiError('internal', 'Something went wrong on our side.').toJSON());
+    res.status(status).json(new ApiError('internal', 'Something went wrong on our side.', {
+      request_id: req.requestId,
+      ...(process.env.NODE_ENV === 'development' ? { diagnostic: (err as Error)?.message } : {}),
+    }).toJSON());
     return;
   }
 

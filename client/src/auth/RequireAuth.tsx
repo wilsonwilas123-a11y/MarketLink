@@ -11,7 +11,7 @@ import { COMPLETE_PROFILE_PATH, signInPath } from './paths';
  * whether the visitor is signed in, and redirecting on that assumption is how a reload of a
  * dashboard throws you out to the sign-in page.
  */
-export function RequireAuth({ roles, children }: { roles?: readonly Role[]; children: ReactNode }) {
+export function RequireAuth({ roles, loginPath, children }: { roles?: readonly Role[]; loginPath?: string; children: ReactNode }) {
   const { status, profile } = useAuth();
   const location = useLocation();
 
@@ -20,9 +20,9 @@ export function RequireAuth({ roles, children }: { roles?: readonly Role[]; chil
   if (status === 'profile_needed') return <Navigate to={COMPLETE_PROFILE_PATH} replace />;
 
   if (status !== 'ready' || !profile)
-    return <Navigate to={signInPath(location.pathname + location.search)} replace />;
+    return <Navigate to={loginPath ?? signInPath(location.pathname + location.search)} replace />;
 
-  if (roles && !roles.includes(profile.role)) return <WrongRole role={profile.role} />;
+  if (roles && !roles.includes(profile.role)) return <WrongRole role={profile.role} adminLoginPath={loginPath} />;
 
   return <>{children}</>;
 }
@@ -51,7 +51,7 @@ const roleLanding: Record<Role, { label: string; to: string }> = {
  * Says why the screen did not open instead of redirecting: a redirect on a role mismatch can
  * bounce a farmer and a customer between two dashboards forever.
  */
-function WrongRole({ role }: { role: Role }) {
+function WrongRole({ role, adminLoginPath }: { role: Role; adminLoginPath?: string }) {
   const landing = roleLanding[role];
 
   return (
@@ -66,6 +66,7 @@ function WrongRole({ role }: { role: Role }) {
       >
         Go to {landing.label}
       </Link>
+      {adminLoginPath ? <Link to="/admin/signin" className="ml-4 text-sm font-semibold text-accent underline underline-offset-4">Use the admin sign-in</Link> : null}
     </section>
   );
 }

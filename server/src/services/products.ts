@@ -78,7 +78,7 @@ async function queryProducts(
        join lateral (
          select bool_or(m.is_active) as active_market,
                 jsonb_agg(distinct jsonb_build_object(
-                  'id', m.id, 'name', m.name, 'city', m.city,
+                  'id', m.id, 'name', m.name, 'city', m.city, 'timezone', m.timezone,
                   'days', mf.days, 'opens_at', m.opens_at, 'closes_at', m.closes_at
                 ))
                   filter (where m.is_active) as markets

@@ -4,7 +4,8 @@ import { ApiError } from '../errors.js';
 import { moderateReview } from '../services/reviews.js';
 import { registry } from '../api/registry.js';
 import { error } from '../api/responses.js';
-import { currentUser, requireAuth, requireRole } from '../middleware/auth.js';
+import { currentUser, requireAdminSession, requireRole } from '../middleware/auth.js';
+import { createAdminSession } from '../lib/adminSession.js';
 import { route } from '../lib/route.js';
 import { validate } from '../middleware/validate.js';
 import type { AppDeps } from '../app.js';
@@ -42,7 +43,17 @@ for (const [method,path,summary] of [
 
 export function adminRouter(deps: AppDeps): Router {
   const r = Router();
-  const admin = [requireAuth(deps.auth, deps.pool), requireRole('admin')];
+  const admin = [requireAdminSession(), requireRole('admin')];
+  r.post('/admin/session', route(async (req, res) => {
+    const body = z.object({ email: z.string().trim().email(), password: z.string().min(1) }).strict().safeParse(req.body);
+    if (!body.success) throw new ApiError('validation_failed', 'Enter the designated admin email and password.');
+    const session = createAdminSession(body.data.email, body.data.password);
+    if (!session) throw new ApiError('unauthenticated', 'The admin email or password is incorrect, or admin sign-in is not configured.');
+    res.json(session);
+  }));
+  r.get('/admin/session', ...admin, route(async (req, res) => {
+    res.json({ email: currentUser(req).email });
+  }));
   r.get('/admin/overview', ...admin, route(async (_req, res) => {
     const [counts, farmers, products] = await Promise.all([
       deps.pool.query(`select (select count(*)::int from farmers) as total_farmers,

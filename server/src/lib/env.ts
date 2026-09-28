@@ -39,6 +39,9 @@ const EnvSchema = z.object({
   DATABASE_URL: url('DATABASE_URL'),
   SUPABASE_URL: url('SUPABASE_URL'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(40),
+  ADMIN_EMAIL: z.string().trim().email().default('wilsontechtechy@gmail.com'),
+  // Leave empty in a fresh checkout; admin sign-in stays disabled until the operator sets it.
+  ADMIN_PASSWORD: z.string().default(''),
   SUPABASE_PRODUCT_BUCKET: z.string().trim().min(1).default('product-images'),
   CLIENT_ORIGIN: url('CLIENT_ORIGIN'),
   /**

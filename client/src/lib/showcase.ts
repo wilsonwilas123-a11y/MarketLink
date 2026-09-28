@@ -105,14 +105,10 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     market: 'Oshodi',
     days: 'Sat, Sun',
     window: '9am–1pm',
-    // Nigerian tomatoes photographed at a market (Wikimedia Commons, CC BY-SA 4.0).
-    photo: '/img/products/nigerian-tomatoes.jpg',
+    // Local tomato market photo supplied for this listing.
+    photo: '/img/products/tomato.png',
     focus: 'object-center',
     glyph: 'tomato',
-    photoCredit: {
-      author: 'Blossom Ozurumba · Wikimedia Commons · CC BY-SA 4.0',
-      href: 'https://commons.wikimedia.org/wiki/File:Nigerian_Tomato.jpg',
-    },
   },
 ];
 

@@ -69,6 +69,17 @@ function pin(active: boolean, open: boolean): L.DivIcon {
   });
 }
 
+/** Mapped places need a marker that stays visible over busy street tiles. */
+function placePin(active: boolean): L.DivIcon {
+  const size = active ? 34 : 22;
+  return L.divIcon({
+    className: '',
+    html: `<span class="ml-place-pin${active ? ' ml-place-pin-active' : ''}"><span></span></span>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 /**
  * Popup content built from nodes rather than an HTML string.
  *
@@ -175,14 +186,12 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
 
   function show(id: string) {
     const marker = byId.current.get(id);
-    if (!marker) {
-      pointed.current = null;
-      return;
-    }
+    // Keep a focus request pending if the map or its current result markers are still loading.
+    if (!marker) return;
     if (!map) return;
     // List hover should bring the place into view at street level without opening a popup.
     // Preserve closer zoom levels if the visitor has already zoomed further in.
-    map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 15), { duration: 0.6 });
+    map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 18), { duration: 0.85 });
   }
 
   useImperativeHandle(ref, () => ({
@@ -265,15 +274,20 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
     }
 
     for (const place of places) {
-      const ring = L.circleMarker([place.lat, place.lng], {
-        // The ring that was pointed at fills, so the pan has somewhere to land. Same accent as a
-        // selected pin, different shape: an approved market and a mapped name stay distinguishable
-        // when both are lit.
-        className: `ml-pin-osm${place.ref === selectedId ? ' ml-pin-osm-active' : ''}`,
-        radius: place.ref === selectedId ? 11 : 8,
-        weight: 1.5,
-        fillOpacity: 0,
+      const active = place.ref === selectedId;
+      const ring = L.marker([place.lat, place.lng], {
+        icon: placePin(active),
+        title: place.name,
+        alt: `${place.name}, mapped place not yet listed on MarketLink${active ? ', selected' : ''}`,
+        riseOnHover: true,
+        zIndexOffset: active ? 2000 : 500,
       })
+        .bindTooltip(place.name, {
+          permanent: active,
+          direction: 'top',
+          offset: [0, -14],
+          className: 'ml-place-tooltip',
+        })
         .bindPopup(() => placePopupContent(place), { closeButton: true })
         .addTo(group);
       byId.current.set(place.ref, ring);

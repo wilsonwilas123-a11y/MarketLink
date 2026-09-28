@@ -146,7 +146,7 @@ export async function placeOrder(
 
       const reserved = await client.query(
         `update weekly_stock
-            set quantity_available = quantity_available - $3
+            set quantity_available = quantity_available - $2
           where product_id = $1 and week = iso_week()
             and is_sold_out = false and quantity_available >= $2
           returning quantity_available`,

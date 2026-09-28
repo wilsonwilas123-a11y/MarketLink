@@ -4,6 +4,7 @@ import { Avatar } from '../ui/Avatar';
 import { useAuth } from '../../auth/AuthProvider';
 import { COMPLETE_PROFILE_PATH, homeFor } from '../../auth/paths';
 import { localAvatarEventName, readLocalAvatar } from '../../lib/localAvatar';
+import { ADMIN_SESSION_EVENT, getAdminEmail } from '../../auth/adminSession';
 
 /**
  * The account corner of the nav.
@@ -15,6 +16,17 @@ import { localAvatarEventName, readLocalAvatar } from '../../lib/localAvatar';
 export function AccountSlot() {
   const { status, profile, refresh } = useAuth();
   const [localAvatar, setLocalAvatar] = useState<string | null>(null);
+  const [adminEmail, setAdminEmail] = useState<string | null>(() => getAdminEmail());
+
+  useEffect(() => {
+    const update = () => setAdminEmail(getAdminEmail());
+    window.addEventListener(ADMIN_SESSION_EVENT, update);
+    window.addEventListener('storage', update);
+    return () => {
+      window.removeEventListener(ADMIN_SESSION_EVENT, update);
+      window.removeEventListener('storage', update);
+    };
+  }, []);
 
   useEffect(() => {
     if (!profile) {
@@ -33,6 +45,19 @@ export function AccountSlot() {
     };
   }, [profile?.id]);
 
+  if (adminEmail) {
+    return (
+      <Link
+        to="/admin"
+        aria-label={`Admin profile: ${adminEmail}`}
+        className="flex items-center gap-2 rounded-full border border-line bg-elevated py-1 pl-1 pr-3 text-sm text-primary transition hover:border-accent/50"
+      >
+        <Avatar size={26} />
+        <span className="max-w-[9rem] truncate">Admin</span>
+      </Link>
+    );
+  }
+
   if (status === 'loading') return null;
 
   if (status === 'ready' && profile) {
@@ -43,6 +68,7 @@ export function AccountSlot() {
       >
         <Avatar src={localAvatar ?? profile.avatar_url} size={26} />
         <span className="max-w-[9rem] truncate">{profile.full_name.split(' ')[0]}</span>
+        <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m5.5 7.5 4.5 4.5 4.5-4.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </Link>
     );
   }

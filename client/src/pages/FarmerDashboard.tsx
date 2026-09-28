@@ -10,6 +10,9 @@ import type { Order } from '../lib/types';
 import type { FarmerMarket, Market } from '../lib/types';
 import { formatMinor } from '../utils/money';
 import { minorUnitDigits } from '../utils/money';
+import { Avatar } from '../components/ui/Avatar';
+import { Glyph } from '../components/art/glyphs';
+import { localeForCountry } from '../lib/countries';
 
 const weekdays = ['mon','tue','wed','thu','fri','sat','sun'];
 
@@ -113,7 +116,7 @@ export default function FarmerDashboard() {
   const orders = useQuery({
     queryKey: ['farmer-orders'],
     enabled: farmer?.status === 'approved',
-    queryFn: () => api.get<{ data: Order[]; meta: { total: number } }>('/orders?scope=today&limit=100'),
+    queryFn: () => api.get<{ data: Order[]; meta: { total: number } }>('/orders?limit=100'),
   });
   const categories = useQuery({ queryKey: ['product-categories'], queryFn: () => api.get<Category[]>('/categories') });
   const listings = useQuery({ queryKey: ['farmer-products'], enabled: farmer?.status === 'approved', queryFn: () => api.get<FarmerListing[]>('/farmers/me/products') });
@@ -212,8 +215,34 @@ export default function FarmerDashboard() {
   const state = states[farmer.status];
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 py-12">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <section className="mx-auto w-full max-w-[1600px] px-4 pb-14 pt-6 sm:px-6 lg:px-10 lg:pt-8">
+      <div className="grid items-start gap-6 lg:grid-cols-[245px_minmax(0,1fr)] lg:gap-8">
+      <aside className="rounded-2xl border border-line bg-surface p-4 shadow-[0_10px_32px_rgba(21,39,29,.045)] lg:sticky lg:top-24">
+        <Link to="/farmers/dashboard" className="flex items-center gap-3 px-2 py-2">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-on-block"><Glyph name="leaf" size={19} /></span>
+          <span><span className="block font-display text-base font-extrabold leading-tight text-primary">MarketLink</span><span className="mt-0.5 block text-[11px] text-muted">Your seller account</span></span>
+        </Link>
+        <div className="my-4 h-px bg-line" />
+        <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[.16em] text-muted">Seller menu</p>
+        <nav aria-label="Seller account navigation" className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-1">
+          {[
+            { to: '/farmers/dashboard', label: 'My stall', icon: 'farm' as const },
+            { to: '/orders', label: 'Orders', icon: 'basket' as const },
+            { to: '/products', label: 'Browse produce', icon: 'leaf' as const },
+            { to: '/markets', label: 'Markets', icon: 'pin' as const },
+            { to: '/account', label: 'Account details', icon: 'grid' as const },
+          ].map((item) => <Link key={item.to} to={item.to} aria-current={item.to === '/farmers/dashboard' ? 'page' : undefined} className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition ${item.to === '/farmers/dashboard' ? 'bg-accent-soft text-accent' : 'text-body hover:bg-elevated hover:text-primary'}`}><Glyph name={item.icon} size={17} /><span>{item.label}</span></Link>)}
+        </nav>
+        <button type="button" className="mt-4 px-3 py-2 text-sm text-muted transition hover:text-primary" onClick={() => void signOut()}>Sign out</button>
+      </aside>
+
+      <main className="min-w-0">
+      <header className="flex flex-wrap items-center gap-3 rounded-2xl bg-[#0e513b] p-3 text-white shadow-[0_12px_34px_rgba(14,81,59,.15)] sm:p-4">
+        <div className="flex min-w-0 flex-1 items-center gap-3"><Avatar src={profile.avatar_url} size={38} /><div className="min-w-0"><p className="truncate font-display font-bold">{profile.full_name}</p><p className="text-xs text-white/75">Seller dashboard · {profile.country}</p></div></div>
+        <span className="text-xs font-medium text-white/85">{new Intl.DateTimeFormat(localeForCountry(profile.country), { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</span>
+      </header>
+      <div className="mt-7">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <p className="text-sm text-muted">Stall</p>
           <h1 className="font-display text-3xl font-bold leading-tight">{farmer.stall_name}</h1>
@@ -264,15 +293,15 @@ export default function FarmerDashboard() {
       </form></Card>:null}
 
       {farmer.status === 'approved' ? <section className="mt-8">
-        <div className="flex items-end justify-between gap-3"><div><p className="text-sm text-accent">Pickup management</p><h2 className="font-display text-2xl font-bold">Today’s orders</h2></div><Link to="/orders" className="text-sm text-accent">Order history →</Link></div>
-        {orders.isPending ? <Card className="mt-4 p-5 text-sm text-muted">Loading today’s orders…</Card> : null}
+        <div className="flex items-end justify-between gap-3"><div><p className="text-sm text-accent">Pickup management</p><h2 className="font-display text-2xl font-bold">Incoming orders</h2></div><Link to="/orders" className="text-sm text-accent">Order history →</Link></div>
+        {orders.isPending ? <Card className="mt-4 p-5 text-sm text-muted">Loading incoming orders…</Card> : null}
         {orders.error ? <Card className="mt-4 p-5 text-sm text-danger">{orders.error instanceof Error ? orders.error.message : 'Could not load orders.'}</Card> : null}
         <div className="mt-4 space-y-3">{orders.data?.data.map((order) => {
           const next: Partial<Record<Order['status'], Extract<Order['status'], 'accepted' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled'>>> = { placed: 'accepted', accepted: 'preparing', preparing: 'ready_for_pickup', ready_for_pickup: 'completed' };
           const action = next[order.status];
-          return <Card key={order.id} className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><Link to={`/orders/${encodeURIComponent(order.reference)}`} className="font-semibold hover:text-accent">{order.reference}</Link><p className="mt-1 text-sm text-muted">{order.pickup_slot_start.slice(0,5)}–{order.pickup_slot_end.slice(0,5)} · {order.market.name}</p><ul className="mt-2 text-xs text-muted">{order.items.map((item) => <li key={item.product_id}>{item.quantity} × {item.name}</li>)}</ul></div><div className="text-right"><p className="font-semibold">{formatMinor(order.subtotal_minor, order.currency)}</p><p className="text-xs capitalize text-muted">{order.status.replaceAll('_', ' ')}</p>{action ? <Button size="sm" className="mt-3" onClick={() => void move(order, action)}>{action.replaceAll('_', ' ')}</Button> : null}{order.status === 'placed' ? <Button variant="danger" size="sm" className="mt-3 ml-2" onClick={() => void move(order, 'cancelled')}>Decline</Button> : null}</div></div></Card>;
+          return <Card key={order.id} className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><Link to={`/orders/${encodeURIComponent(order.reference)}`} className="font-semibold hover:text-accent">{order.reference}</Link><p className="mt-1 text-sm text-muted">{order.pickup_date} · {order.pickup_slot_start.slice(0,5)}–{order.pickup_slot_end.slice(0,5)} · {order.market.name}</p><ul className="mt-2 text-xs text-muted">{order.items.map((item) => <li key={item.product_id}>{item.quantity} × {item.name}</li>)}</ul></div><div className="text-right"><p className="font-semibold">{formatMinor(order.subtotal_minor, order.currency)}</p><p className="text-xs capitalize text-muted">{order.status.replaceAll('_', ' ')}</p>{action ? <Button size="sm" className="mt-3" onClick={() => void move(order, action)}>{action.replaceAll('_', ' ')}</Button> : null}{order.status === 'placed' ? <Button variant="danger" size="sm" className="mt-3 ml-2" onClick={() => void move(order, 'cancelled')}>Decline</Button> : null}</div></div></Card>;
         })}</div>
-        {!orders.isPending && !orders.data?.data.length ? <Card className="mt-4 p-5 text-sm text-muted">No pickup orders scheduled today.</Card> : null}
+        {!orders.isPending && !orders.data?.data.length ? <Card className="mt-4 p-5 text-sm text-muted">No incoming orders yet.</Card> : null}
       </section> : null}
 
       {farmer.status === 'approved' ? <section className="mt-9">
@@ -316,6 +345,9 @@ export default function FarmerDashboard() {
         <Button variant="danger" onClick={() => void signOut()}>
           Sign out
         </Button>
+      </div>
+      </div>
+      </main>
       </div>
     </section>
   );

@@ -15,12 +15,16 @@ const localeForCurrency: Record<string, string> = {
 /** Format a database amount stored in the currency's smallest unit. */
 export function formatMinor(amount: number, currency: string): string {
   const code = currency.toUpperCase();
-  const formatter = new Intl.NumberFormat(localeForCurrency[code] ?? 'en', {
+  return formatMajor(amount / 10 ** minorUnitDigits(code), code);
+}
+
+/** Format a major-unit amount (for example 12.34 NGN) as the given currency. */
+export function formatMajor(amount: number, currency: string): string {
+  const code = currency.toUpperCase();
+  return new Intl.NumberFormat(localeForCurrency[code] ?? 'en', {
     style: 'currency',
     currency: code,
-  });
-  const digits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
-  return formatter.format(amount / 10 ** digits);
+  }).format(amount);
 }
 
 export function minorUnitDigits(currency: string): number {

@@ -246,6 +246,54 @@
   filter: drop-shadow(0 0 4px var(--color-accent));
 }
 
+/* High-contrast, distinct marker for the OSM place currently pointed at from the list. */
+.ml-place-pin {
+  box-sizing: border-box;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--color-warn);
+  box-shadow: 0 1px 5px rgb(0 0 0 / 0.7);
+  transition: width 160ms ease, height 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ml-place-pin > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.ml-place-pin-active {
+  width: 34px;
+  height: 34px;
+  border-width: 3px;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 5px rgb(255 255 255 / 0.82), 0 0 0 9px rgb(154 101 27 / 0.55), 0 2px 10px rgb(0 0 0 / 0.65);
+}
+
+.ml-place-pin-active > span {
+  width: 8px;
+  height: 8px;
+}
+
+.ml-place-tooltip {
+  padding: 5px 9px !important;
+  border: 1px solid var(--color-line) !important;
+  border-radius: 999px !important;
+  background: var(--color-primary) !important;
+  color: #fff !important;
+  font: 600 12px/1.2 var(--font-body) !important;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 0.35) !important;
+}
+
+.ml-place-tooltip::before {
+  border-top-color: var(--color-primary) !important;
+}
+
 .leaflet-bar,
 .leaflet-control-attribution {
   border: 1px solid var(--color-line) !important;

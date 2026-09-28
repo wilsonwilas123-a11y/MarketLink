@@ -11,6 +11,7 @@ export interface Profile {
   full_name: string;
   phone: string;
   address: string | null;
+  country: string;
   avatar_url: string | null;
   is_active: boolean;
   created_at: string;
@@ -174,7 +175,7 @@ export interface ProductCard extends ListedProduct {
     pickup_window_end: string | null;
     order_cutoff_minutes: number;
   };
-  markets: { id: string; name: string; city: string; days: string[]; opens_at: string; closes_at: string }[];
+  markets: { id: string; name: string; city: string; timezone: string; days: string[]; opens_at: string; closes_at: string }[];
 }
 
 export type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled';

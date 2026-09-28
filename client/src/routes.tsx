@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { RequireAuth } from './auth/RequireAuth';
+import { RequireAdminSession } from './auth/RequireAdminSession';
 
 const CompleteProfile = lazy(() => import('./pages/auth/CompleteProfile'));
 const SignIn = lazy(() => import('./pages/auth/SignIn'));
@@ -42,11 +43,12 @@ export const routes: RouteObject[] = [
   {
     path: '/admin',
     element: (
-      <RequireAuth roles={['admin']}>
+      <RequireAdminSession>
         <AdminDashboard />
-      </RequireAuth>
+      </RequireAdminSession>
     ),
   },
+  { path: '/admin/signin', element: <SignIn adminMode /> },
   { path: '/about', element: <About /> },
   { path: '/contact', element: <Contact /> },
 
