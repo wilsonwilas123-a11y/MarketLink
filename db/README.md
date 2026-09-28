@@ -29,6 +29,13 @@ Migrations are tracked in `schema_migrations`, so re-running applies only what i
 Seeds carry no ledger — every insert ends in `ON CONFLICT DO NOTHING`, so they are safe
 to repeat.
 
+For the running app, it is valid to keep MarketLink data in this local database while
+Supabase handles sign-in. Migration `0016_local_auth_identity.sql` detects the local
+stand-in `auth.users` table and removes only the profile foreign key to that stand-in;
+the API still checks each Supabase token before creating or reading a profile. When
+`DATABASE_URL` points to the same Supabase project used for auth, the migration preserves
+the managed `auth.users` foreign key.
+
 ## Against Supabase
 
 Point `DATABASE_URL` at the project's session pooler connection string and run the same

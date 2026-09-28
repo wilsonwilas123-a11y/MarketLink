@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { ApiError } from '../errors.js';
 import { registry } from '../api/registry.js';
 import {
   FarmerDetailRef,
@@ -6,6 +7,8 @@ import {
   FarmerListQuerySchema,
   FarmerListRef,
   FarmerMarketListRef,
+  FarmerMarketAssignmentsRef,
+  FarmerMarketAssignmentsSchema,
   GeoPinRef,
   GeoPinSchema,
   MyStallRef,
@@ -26,10 +29,14 @@ import {
   listFarmers,
   myStall,
   myStallMarkets,
+  saveMyStallMarkets,
   pinStall,
   updateStall,
 } from '../services/farmers.js';
 import type { AppDeps } from '../app.js';
+import { FarmerReplySchema } from '../api/schemas.js';
+import { listFarmerReviews, replyToReview } from '../services/reviews.js';
+import { z } from 'zod';
 
 /**
  * Two halves in one router.
@@ -53,6 +60,23 @@ registry.registerPath({
     200: { description: 'A page of stalls.', content: json(FarmerListRef) },
     400: error('`market_id` is not a uuid, or a page number is not positive.'),
   },
+});
+
+registry.registerPath({
+  method: 'put',
+  path: '/farmers/me/markets',
+  tags: ['Farmers'],
+  summary: 'Set the markets where the caller trades',
+  description: 'The stall owner can choose active markets in the same currency and only days both the stall and market operate.',
+  security: [{ bearerAuth: [] }],
+  request: { body: { required: true, content: { 'application/json': { schema: FarmerMarketAssignmentsRef } } } },
+  responses: { 200: { description: 'Updated stall markets.', content: json(FarmerMarketListRef) }, 400: error('Market assignments or trading days are invalid.'), 403: error('Farmer accounts only.') },
+});
+
+registry.registerPath({
+  method: 'get', path: '/farmers/me/insights', tags: ['Farmers'], summary: 'Read sales and weekly stock insights',
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'All-time order totals, completed pickup value and best sellers.' }, 401: error('No valid token.'), 403: error('The account is not a farmer.'), 404: error('The farmer stall does not exist.') },
 });
 
 registry.registerPath({
@@ -198,6 +222,40 @@ export function farmersRouter(deps: AppDeps): Router {
       res.json(await myStallMarkets(deps.pool, currentUser(req).id));
     }),
   );
+  r.put('/farmers/me/markets', ...asStallOwner,
+    validate({ body: FarmerMarketAssignmentsSchema }),
+    route(async (req, res) => {
+      res.json(await saveMyStallMarkets(deps.pool, currentUser(req).id, req.valid.body as { markets: { market_id: string; stall_ref: string | null; days: string[] }[] }));
+    }),
+  );
+
+  r.get('/farmers/me/insights', ...asStallOwner, route(async (req, res) => {
+    const ownerId = currentUser(req).id;
+    const { rows: stallRows } = await deps.pool.query('select id,currency from farmers where profile_id=$1', [ownerId]);
+    const stall = stallRows[0];
+    if (!stall) throw new ApiError('not_found', 'No such farmer stall.');
+    const [totals, bestSellers] = await Promise.all([
+      deps.pool.query(`select count(*)::int as total_orders,
+                              count(*) filter(where status in ('placed','accepted','preparing','ready_for_pickup'))::int as pending_orders,
+                              coalesce(sum(subtotal_kobo) filter(where status='completed'),0)::float8 as completed_pickup_value
+                         from orders where farmer_id=$1`, [stall.id]),
+      deps.pool.query(`select oi.product_name_snapshot as name,sum(oi.quantity)::int as quantity,
+                              count(distinct o.id)::int as orders
+                         from order_items oi join orders o on o.id=oi.order_id
+                        where o.farmer_id=$1 and o.status='completed'
+                        group by oi.product_name_snapshot order by quantity desc,name limit 5`, [stall.id]),
+    ]);
+    res.json({ ...totals.rows[0], currency: stall.currency, best_sellers: bestSellers.rows });
+  }));
+
+  r.get('/farmers/me/reviews', ...asStallOwner, route(async (req, res) => {
+    res.json(await listFarmerReviews(deps.pool, currentUser(req).id));
+  }));
+  r.patch('/farmers/me/reviews/:id/reply', ...asStallOwner,
+    validate({ params: z.object({ id: FarmerIdParamSchema.shape.id }), body: FarmerReplySchema }),
+    route(async (req, res) => {
+      res.json(await replyToReview(deps.pool, currentUser(req).id, (req.valid.params as { id: string }).id, (req.valid.body as { body: string }).body));
+    }));
 
   r.get(
     '/farmers/:id',

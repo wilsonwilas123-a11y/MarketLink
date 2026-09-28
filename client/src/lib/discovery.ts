@@ -7,6 +7,7 @@ import type {
   Market,
   MarketDetail,
   NearbyMarket,
+  PlaceCandidate,
   Weekday,
 } from './types';
 
@@ -71,6 +72,8 @@ export const discoveryKeys = {
   markets: (filters: MarketFilters) => ['markets', filters] as const,
   nearby: (filters: NearbyFilters) => ['markets', 'nearby', filters] as const,
   market: (id: string) => ['markets', 'detail', id] as const,
+  places: (term: string) => ['places', term] as const,
+  placesIn: (bbox: string) => ['places', 'box', bbox] as const,
   farmers: (filters: { marketId?: string; category?: string; q?: string }) =>
     ['farmers', filters] as const,
   farmer: (id: string) => ['farmers', 'detail', id] as const,
@@ -118,6 +121,72 @@ export function useNearbyMarkets(filters: NearbyFilters & { enabled?: boolean })
     queryFn: () => api.get<ApiPage<NearbyMarket>>(path),
     enabled,
     refetchInterval: LIST_POLL_MS,
+  });
+}
+
+export const PLACES_STALE_MS = 600_000;
+
+/**
+ * `south,west,north,east` around a point, as the map data service wants it.
+ *
+ * In degrees, because the server's cap is in degrees: the half-span is the radius converted at
+ * ~111 km per degree, held under 0.25 so the whole box stays inside what the route will accept,
+ * and floored so a five kilometre search still covers a city's worth of gates. Rounded to two
+ * decimals — the server memoises on the string, and dragging the map fifty metres is not a new
+ * question.
+ */
+export function marketBox(centre: { lat: number; lng: number }, radiusKm?: number): string {
+  const half = radiusKm === undefined ? 0.25 : Math.min(0.25, Math.max(0.05, radiusKm / 111));
+  const corner = (value: number): string => value.toFixed(2);
+  return [
+    corner(centre.lat - half),
+    corner(centre.lng - half),
+    corner(centre.lat + half),
+    corner(centre.lng + half),
+  ].join(',');
+}
+
+/**
+ * The markets in the corner of the map the visitor is looking at.
+ *
+ * This is what fills the screen before anyone has typed: a gazetteer ranks names, so `Lagos`
+ * answers with the city and whatever it happens to have labelled — the probe on 2026-09-26
+ * returned six nodes all literally called "Market". Asking for an area is the only way to get
+ * the gates that have real names.
+ */
+export function useMarketsInBox(bbox: string, enabled = true) {
+  const { api } = useAuth();
+
+  return useQuery({
+    queryKey: discoveryKeys.placesIn(bbox),
+    queryFn: () =>
+      api.get<PlaceCandidate[]>(`/places/markets/box${searchParams({ bbox, limit: 50 })}`),
+    enabled,
+    staleTime: PLACES_STALE_MS,
+  });
+}
+
+/**
+ * Markets the map knows about that this list has not got yet.
+ *
+ * `q` and `city` are both worth feeding in — a visitor who typed `Ibadan` into the city box is
+ * asking the same question as one who typed it into the search box. Below three characters the
+ * server answers 400, so the query stays disabled rather than firing on every keystroke.
+ *
+ * Not polled: the gazetteer changes on the scale of a mapper's week, and the server memoises
+ * each term for fifteen minutes, so refetching on a timer would spend neither our patience nor
+ * OpenStreetMap's goodwill on an identical answer.
+ */
+export function useMarketPlaces(term: string | undefined) {
+  const { api } = useAuth();
+  const query = (term ?? '').trim();
+
+  return useQuery({
+    queryKey: discoveryKeys.places(query),
+    queryFn: () =>
+      api.get<PlaceCandidate[]>(`/places/markets${searchParams({ q: query, limit: 50 })}`),
+    enabled: query.length >= 3,
+    staleTime: PLACES_STALE_MS,
   });
 }
 

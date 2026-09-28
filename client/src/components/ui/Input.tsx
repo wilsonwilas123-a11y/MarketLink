@@ -17,7 +17,7 @@ export function Input({
         {...rest}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`h-10 w-full rounded-xl border bg-elevated px-3 text-primary outline-none transition placeholder:text-muted/60 focus:border-accent ${
+        className={`h-11 w-full rounded-xl border bg-elevated/75 px-3.5 text-primary outline-none transition placeholder:text-muted/60 focus:border-accent focus:ring-4 focus:ring-accent/10 ${
           error ? 'border-danger' : 'border-line'
         } ${className}`}
       />

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderApp } from './helpers/render';
-import { clock, dayList, searchParams } from '../src/lib/discovery';
+import { LAGOS, clock, dayList, marketBox, searchParams } from '../src/lib/discovery';
 import { formatDistance } from '../src/utils/distance';
 
 /**
@@ -34,6 +34,20 @@ const market = (over: Record<string, unknown> = {}) => ({
 });
 
 const nearRow = (over: Record<string, unknown> = {}) => ({ ...market(over), distance_km: 8.84 });
+
+/** Mapo Market, as `/places/markets` answered for `Ibadan` on 2026-09-26. */
+const place = (over: Record<string, unknown> = {}) => ({
+  ref: 'n3084974661',
+  name: 'Mapo Market',
+  lat: 7.3762823,
+  lng: 3.8957192,
+  address: 'Mapo Street, Ìbàdàn, 200252, Oyo, Nigeria',
+  city: 'Ìbàdàn',
+  state: 'Oyo',
+  country: 'Nigeria',
+  kind: 'amenity/marketplace',
+  ...over,
+});
 
 const farmer = (over: Record<string, unknown> = {}) => ({
   id: ADEYEMI,
@@ -77,6 +91,16 @@ describe('discovery formatting', () => {
   it('spells a market week in the order the market published it', () => {
     expect(dayList(['sat', 'tue'])).toBe('Sat, Tue');
   });
+
+  it('rounds a viewport box so a small pan is not a new question', () => {
+    expect(marketBox({ lat: 6.5244, lng: 3.3792 })).toBe('6.27,3.13,6.77,3.63');
+    expect(marketBox({ lat: 6.5249, lng: 3.3795 })).toBe('6.27,3.13,6.77,3.63');
+  });
+
+  it('sizes the box by the radius being searched, up to what the server will take', () => {
+    expect(marketBox(LAGOS, 10)).toBe('6.43,3.29,6.61,3.47');
+    expect(marketBox(LAGOS, 50)).toBe(marketBox(LAGOS));
+  });
 });
 
 describe('home', () => {
@@ -93,7 +117,7 @@ describe('home', () => {
     expect(screen.getByText('1 of 4 markets within 25 km of central Lagos')).toBeInTheDocument();
   });
 
-  it('shows a stall card with its rating and its own trading days', async () => {
+  it('shows a stall card with its rating and who runs it', async () => {
     renderApp('/', {
       stubs: [
         { path: NEARBY_HOME, body: page([]) },
@@ -106,9 +130,26 @@ describe('home', () => {
     const stallHeading = await within(section).findByRole('heading', { name: 'Adeyemi Farms' });
     const card = stallHeading.closest('article') as HTMLElement;
 
-    expect(within(card).getByText('Trades Tue, Thu, Sat')).toBeInTheDocument();
+    expect(within(card).getByText('Bola Adeyemi')).toBeInTheDocument();
     expect(within(card).getByText('4.6')).toBeInTheDocument();
     expect(card).toHaveTextContent('4.6 out of 5 from 38 reviews');
+  });
+
+  it('closes on the week offers, priced from the seed rather than from a mockup', async () => {
+    renderApp('/', {
+      stubs: [
+        { path: NEARBY_HOME, body: page([]) },
+        { path: '/farmers', body: page([farmer()]) },
+      ],
+    });
+
+    await screen.findByRole('heading', { level: 2, name: 'Best deals from local farmers' });
+    await screen.findByRole('heading', { name: 'Top offers' });
+
+    const row = (screen.getByText('Tomato (Fresh)').closest('a')) as HTMLElement;
+    expect(within(row).getByText('₦9,000')).toBeInTheDocument();
+    expect(within(row).getByText('Eze Fresh Produce · Oshodi')).toBeInTheDocument();
+    expect(within(row).getByText('/ crate')).toBeInTheDocument();
   });
 
   it('sends the hero search to the market list with the term', async () => {
@@ -128,25 +169,6 @@ describe('home', () => {
       expect(requests.some((r) => r.path === '/markets?q=Balogun')).toBe(true),
     );
     expect(await screen.findByText('Balogun Market')).toBeInTheDocument();
-  });
-
-  it('offers quick links that carry a real filter', () => {
-    renderApp('/', {
-      stubs: [
-        { path: NEARBY_HOME, body: page([]) },
-        { path: '/farmers', body: page([]) },
-      ],
-    });
-
-    const ask = screen.getByPlaceholderText(/fresh tomatoes near lekki/i);
-    const panel = ask.closest('aside') as HTMLElement;
-    expect(within(panel).getByRole('link', { name: 'Open right now' })).toHaveAttribute(
-      'href',
-      '/markets?open=1',
-    );
-    expect(
-      within(panel).getByRole('link', { name: /Near Lekki Phase 1/ }),
-    ).toHaveAttribute('href', '/markets?lat=6.4551&lng=3.3795&radius=10');
   });
 
   it('offers the produce categories under the search bar', () => {
@@ -197,7 +219,7 @@ describe('home', () => {
     expect(photos.filter((p) => p.closest('.opacity-100'))).toHaveLength(1);
   });
 
-  it('rails four stalls, each linking to its own page', async () => {
+  it('shows three stalls and no more, each linking to its own page', async () => {
     const stalls = ['Adeyemi Farms', 'Eze Fresh Produce', 'Baba Oja Greens', 'Chukwuma Yams'].map(
       (stall_name, i) =>
         farmer({ stall_name, id: `44444444-4444-4444-8444-${String(i).padStart(12, '0')}` }),
@@ -214,9 +236,9 @@ describe('home', () => {
     const band = within(title.closest('section') as HTMLElement);
     const cards = await band.findAllByRole('heading', { name: /Farms|Produce|Greens|Yams/ });
 
-    expect(cards).toHaveLength(4);
-    const lastCard = cards[3] as HTMLElement;
-    expect(lastCard.querySelector('a')).toHaveAttribute('href', `/farmers/${stalls[3]?.id}`);
+    expect(cards).toHaveLength(3);
+    const lastCard = cards[2] as HTMLElement;
+    expect(lastCard.querySelector('a')).toHaveAttribute('href', `/farmers/${stalls[2]?.id}`);
   });
 });
 
@@ -259,6 +281,125 @@ describe('markets screen', () => {
     });
 
     expect(await screen.findByText('Markets did not load')).toBeInTheDocument();
+  });
+
+  it('shows the marketplaces the map knows about under their own heading', async () => {
+    renderApp('/markets?q=Ibadan', {
+      stubs: [
+        { path: '/markets?q=Ibadan', body: page([]) },
+        {
+          path: '/places/markets?q=Ibadan&limit=6',
+          body: [
+            place({ name: 'Mapo Market', ref: 'n3084974661', address: 'Mapo Street, Ìbàdàn, Oyo, Nigeria' }),
+            place({ name: 'Oja Oba Market', ref: 'n3084824648', address: 'Gege, Ìbàdàn, Oyo, Nigeria' }),
+          ],
+        },
+      ],
+    });
+
+    const heading = await screen.findByRole('heading', { name: 'Also on the map' });
+    const band = within(heading.closest('section') as HTMLElement);
+
+    expect(band.getByText('Mapo Market')).toBeInTheDocument();
+    expect(band.getByText('Gege, Ìbàdàn, Oyo, Nigeria')).toBeInTheDocument();
+    // ODbL: showing these names means owing the source, in the same breath as the list.
+    expect(band.getByRole('link', { name: 'OpenStreetMap contributors' })).toHaveAttribute(
+      'href',
+      'https://www.openstreetmap.org/copyright',
+    );
+  });
+
+  it('does not repeat a market that is already in the list', async () => {
+    renderApp('/markets?q=Ibadan', {
+      stubs: [
+        { path: '/markets?q=Ibadan', body: page([market({ name: 'Bodija Market' })]) },
+        {
+          path: '/places/markets?q=Ibadan&limit=6',
+          body: [place({ name: 'Bodija', ref: 'n1' }), place({ name: 'Mapo Market', ref: 'n2' })],
+        },
+      ],
+    });
+
+    const heading = await screen.findByRole('heading', { name: 'Also on the map' });
+    const band = within(heading.closest('section') as HTMLElement);
+
+    // `Bodija` and the row's `Bodija Market` are one gate.
+    expect(band.queryByText('Bodija')).not.toBeInTheDocument();
+    expect(band.getByText('Mapo Market')).toBeInTheDocument();
+  });
+
+  it('fills the screen from the corner of the map when nothing has been typed', async () => {
+    const { requests } = renderApp('/markets', {
+      stubs: [
+        { path: '/markets', body: page([market()]) },
+        {
+          path: '/places/markets/box?bbox=6.27%2C3.13%2C6.77%2C3.63&limit=8',
+          body: [
+            place({ name: 'Obuzu Market', ref: 'n3023669230', address: '', city: null, state: null, country: null }),
+            place({ name: 'Owode Oniri Market', ref: 'n12281469935', address: '', city: null, state: null, country: null }),
+          ],
+        },
+      ],
+    });
+
+    const heading = await screen.findByRole('heading', { name: 'Also on the map' });
+    const band = within(heading.closest('section') as HTMLElement);
+
+    expect(band.getByText('Obuzu Market')).toBeInTheDocument();
+    expect(band.getByText('Owode Oniri Market')).toBeInTheDocument();
+    expect(requests.some((r) => r.path.startsWith('/places/markets?'))).toBe(false);
+  });
+
+  it('asks a term by name and leaves the viewport question for later', async () => {
+    const { requests } = renderApp('/markets?q=Ibadan', {
+      stubs: [
+        { path: '/markets?q=Ibadan', body: page([]) },
+        { path: '/places/markets?q=Ibadan&limit=6', body: [place()] },
+      ],
+    });
+
+    await screen.findByText('Mapo Market');
+    expect(requests.some((r) => r.path.startsWith('/places/markets/box'))).toBe(false);
+  });
+
+  it('shows a name alone when the map has nothing else about that place', async () => {
+    renderApp('/markets?q=Ibadan', {
+      stubs: [
+        { path: '/markets?q=Ibadan', body: page([]) },
+        {
+          path: '/places/markets?q=Ibadan&limit=6',
+          body: [place({ address: '', city: null, state: null, country: null })],
+        },
+      ],
+    });
+
+    const heading = await screen.findByRole('heading', { name: 'Also on the map' });
+    const item = within(heading.closest('section') as HTMLElement).getByText('Mapo Market')
+      .closest('article') as HTMLElement;
+
+    // Most marketplace nodes carry a name and no address tags at all; the gap is honest, a blank
+    // paragraph is a hole in the list.
+    expect(item.querySelectorAll('p')).toHaveLength(1);
+  });
+
+  it('gives a place the map knows the same row as a market we approved', async () => {
+    renderApp('/markets?q=Ibadan', {
+      stubs: [
+        { path: '/markets?q=Ibadan', body: page([market()]) },
+        { path: '/places/markets?q=Ibadan&limit=6', body: [place()] },
+      ],
+    });
+
+    const heading = await screen.findByRole('heading', { name: 'Also on the map' });
+    const band = within(heading.closest('section') as HTMLElement);
+
+    // OpenStreetMap carries no photo for these nodes, so the slot is filled with the app's own
+    // plate rather than left blank beside the cards above it.
+    expect(band.getByRole('img', { name: 'Mapo Market' })).toBeInTheDocument();
+    expect(band.getByRole('button', { name: 'Show on map' })).toBeInTheDocument();
+    expect(band.getByText('On the map, not on MarketLink yet')).toBeInTheDocument();
+    // The trading line is a claim this row cannot make.
+    expect(band.queryByText(/^Trades /)).not.toBeInTheDocument();
   });
 });
 

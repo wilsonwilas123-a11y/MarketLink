@@ -7,10 +7,11 @@ import { SkeletonRow, StateNote } from '../components/discovery/StateNote';
 import { OpenState, Stars } from '../components/discovery/pieces';
 import { buttonClass } from '../components/ui/Button';
 import { chipClass } from '../components/ui/Chip';
-import { LAGOS, dayList, lagosClock, lagosToday, useFarmerList, useNearbyMarkets } from '../lib/discovery';
+import { LAGOS, lagosClock, lagosToday, useFarmerList, useNearbyMarkets } from '../lib/discovery';
 import { CATEGORIES, FRESH_THIS_WEEK } from '../lib/showcase';
 import type { ShowcaseProduct } from '../lib/showcase';
 import type { FarmerSummary } from '../lib/types';
+import { formatKobo } from '../utils/kobo';
 import { prefersReducedMotion, Reveal } from '../motion/reveal';
 
 /**
@@ -25,16 +26,6 @@ import { prefersReducedMotion, Reveal } from '../motion/reveal';
  */
 const MarketMap = lazy(() => import('../components/discovery/MarketMap'));
 
-/** A fix on Lekki Phase 1, so a first-time visitor can see the distance query work at all. */
-const LEKKI = { lat: 6.4551, lng: 3.3795 };
-
-const QUICK_LINKS: { label: string; to: string; glyph: GlyphName }[] = [
-  { label: 'Open right now', to: '/markets?open=1', glyph: 'clock' },
-  { label: 'Saturday markets', to: '/markets?day=sat', glyph: 'stall' },
-  { label: 'Near Lekki Phase 1', to: `/markets?lat=${LEKKI.lat}&lng=${LEKKI.lng}&radius=10`, glyph: 'pin' },
-  { label: 'All markets', to: '/markets', glyph: 'grid' },
-];
-
 /** Each category's mark carries its own tone, so the row reads as produce and not as tags. */
 const CATEGORY_TONE: Record<string, string> = {
   vegetables: 'text-accent',
@@ -43,6 +34,28 @@ const CATEGORY_TONE: Record<string, string> = {
   bakery: 'text-warn',
   herbs: 'text-accent',
 };
+
+/**
+ * The four claims the closing band makes, each with the mark that holds it.
+ *
+ * Every sub-line is something the app actually does rather than a marketing adjective: the
+ * farm publishes its own week, listings only appear once an admin has approved the farm,
+ * and nothing is charged here so the price on the card is the farm's price.
+ */
+const DEAL_POINTS: { title: string; body: string; glyph: GlyphName }[] = [
+  { title: 'Fresh produce', body: 'Picked the week you order', glyph: 'leaf' },
+  { title: 'Trusted farmers', body: 'Approved before they list', glyph: 'shield' },
+  { title: 'Local communities', body: 'Lagos farms, Lagos stalls', glyph: 'pin' },
+  { title: 'Fair prices', body: 'No middlemen, no commission', glyph: 'tag' },
+];
+
+/**
+ * The three listings the band shows, by seed key.
+ *
+ * They are read out of the same showcase rows the produce band above uses, so the price and
+ * the stall on each line are the seeded ones and not figures lifted from a mockup.
+ */
+const DEAL_KEYS = ['tomato-crate', 'ugu-500', 'tatashe-crate'];
 
 /**
  * The chip recipe, given a sheet to stand on.
@@ -70,20 +83,17 @@ function Hero() {
 
   return (
     <section className="relative isolate overflow-hidden border-b border-line">
-      {/* The photograph is the landing band, cropped at source so the farmer stands right of
-          centre and the copy has the left half to itself. This is the one band the black sheet
-          does not reach — the hero is the photo, and the type on it is white. The band is much
-          wider than he is, so the object position keeps his face and the crate in the slice. */}
-      <picture>
-        <source srcSet="/img/hero-farmer.webp" type="image/webp" />
-        <img
-          src="/img/hero-farmer.jpg"
-          alt="A farmer at the head of his row, holding a crate of just-picked vegetables"
-          width={1200}
-          height={728}
-          className="absolute inset-0 -z-10 h-full w-full object-cover object-[55%_30%]"
-        />
-      </picture>
+      {/* This local farm photograph anchors the landing band. It is mirrored so the farmer
+          sits opposite the copy, matching the reference layout while keeping the source image. */}
+      <img
+        src="/img/farmers/yahaya.jpg"
+        alt="A Nigerian farmer tending leafy greens in a field"
+        width={1000}
+        height={667}
+        className="absolute inset-0 -z-10 h-full w-full -scale-x-100 object-cover object-center"
+      />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-veil/90 via-veil/55 to-veil/10" />
+      <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-veil/50 to-transparent" />
 
       <div className="mx-auto flex w-full max-w-[1680px] flex-col px-6 pb-14 pt-16 md:px-10 md:pb-20 md:pt-24">
         <div className="max-w-2xl lg:max-w-xl">
@@ -153,7 +163,7 @@ function Hero() {
                 className={buttonClass(
                   'ghost',
                   'md',
-                  'h-11 gap-2.5 border-paper/35! bg-ink/45! px-6 text-base backdrop-blur hover:border-paper/70!',
+                  'h-11 gap-2.5 border-paper/35! bg-ink/55! px-6 text-base text-paper! backdrop-blur hover:border-paper/70!',
                 )}
               >
                 <Glyph name="basket" size={18} className="text-accent-lift" />
@@ -304,7 +314,7 @@ function MarketsNearYou() {
 }
 
 /** How long one listing holds the band before the next fades in over it. */
-const SLIDE_HOLD_MS = 6_800;
+const SLIDE_HOLD_MS = 5_600;
 
 /**
  * The produce band, which is one photograph at a time.
@@ -349,9 +359,6 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
             Seasonal produce, published by the farm that grew it.
           </p>
         </div>
-        <Link to="/products" className="text-sm text-accent hover:underline">
-          Browse everything
-        </Link>
       </header>
 
       <div
@@ -363,7 +370,7 @@ function FreshBand({ products }: { products: ShowcaseProduct[] }) {
             crossfade between two pictures rather than one picture being replaced. They are marked
             decorative: the picture shows what the header has already named. The band is far wider
             than any of these photographs, so each row says which slice of itself to keep. */}
-        <div aria-hidden className="absolute inset-0">
+        <div className="absolute inset-0">
           {products.map((product, i) => (
             <div
               key={product.key}
@@ -392,108 +399,225 @@ function FarmerCard({ farmer }: { farmer: FarmerSummary }) {
   const tradesToday = farmer.operating_days.includes(lagosToday());
 
   return (
-    <li className="w-[272px] shrink-0 snap-start sm:w-[302px]">
-      <article className="relative flex h-full snap-start flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
+    <li className="w-[300px] min-w-0 shrink-0 snap-start sm:w-auto sm:shrink sm:snap-auto">
+      <article className="relative flex h-full min-h-[40rem] snap-start flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
         <Thumb
           src={farmer.cover_url}
           seed={farmer.id}
           glyph="farm"
           label={farmer.stall_name}
-          glyphSize={44}
-          className="aspect-[4/3] w-full border-b border-line"
+          glyphSize={72}
+          className="h-[260px] w-full shrink-0 border-b border-line sm:h-[280px] xl:h-[300px]"
         />
         {tradesToday ? (
-          <span className="absolute left-3 top-3 rounded-full bg-sheet/85 px-2 py-0.5 text-[11px] font-medium text-accent backdrop-blur">
+          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-sheet/90 px-3 py-1.5 text-[13px] font-semibold text-accent backdrop-blur">
+            <span aria-hidden>
+              <Glyph name="leaf" size={13} />
+            </span>
             Trades today
           </span>
         ) : null}
 
-        <div className="flex flex-1 flex-col p-4">
-          <h3 className="font-display text-base font-semibold leading-snug">
-            <Link to={`/farmers/${farmer.id}`} className="after:absolute after:inset-0">
+        <div className="flex flex-1 flex-col px-6 py-7 text-primary">
+          <h3 className="font-display text-[26px] font-bold leading-[1.15] tracking-tight">
+            <Link
+              to={`/farmers/${farmer.id}`}
+              className="after:absolute after:inset-0 focus-visible:outline-accent"
+            >
               {farmer.stall_name}
             </Link>
           </h3>
-          <p className="mt-0.5 text-xs text-muted">Run by {farmer.contact_person}</p>
+          <p className="mt-2 text-[15px] text-muted">
+            Run by <span className="font-semibold text-accent">{farmer.contact_person}</span>
+          </p>
 
-          <Stars value={farmer.rating_avg} count={farmer.rating_count} className="mt-2" />
+          <Stars value={farmer.rating_avg} count={farmer.rating_count} className="mt-5" />
 
-          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
+          <p className="mt-5 min-h-[6.5rem] text-[15px] leading-relaxed text-body">
             {farmer.description ?? 'This farm has not written a description yet.'}
           </p>
 
-          <p className="mt-auto flex items-center gap-1.5 border-t border-line pt-3 text-xs text-muted">
-            <span aria-hidden className="text-accent/70">
-              <Glyph name="clock" size={13} />
-            </span>
-            {farmer.operating_days.length
-              ? `Trades ${dayList(farmer.operating_days)}`
-              : 'No published trading days'}
-          </p>
+          <div aria-hidden className="mt-auto border-t border-line pt-4" />
         </div>
       </article>
     </li>
   );
 }
 
-function AskPanel() {
-  const [term, setTerm] = useState('');
-  const navigate = useNavigate();
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    const q = term.trim();
-    navigate(q ? `/markets?q=${encodeURIComponent(q)}` : '/markets');
-  }
+/**
+ * The closing band: the week's offers beside the four reasons to order from a farm at all.
+ *
+ * The three listings are read out of the same showcase rows the produce band above uses, so
+ * every price, stall and unit on the right is a seeded one. The farm photograph is a separate
+ * feature image from the landing hero, and the overlay sits on the open side of its composition.
+ */
+function DealsBand({ products }: { products: ShowcaseProduct[] }) {
+  const deals = DEAL_KEYS.flatMap((key) => products.filter((p) => p.key === key));
 
   return (
-    <aside className="grid gap-6 rounded-2xl border border-line bg-elevated/50 p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,300px)] md:items-center md:p-6">
-      <div>
-        <h3 className="font-display text-lg font-bold leading-snug">
-          What are you looking for this week?
-        </h3>
-        <p className="mt-1 max-w-md text-sm text-muted">
-          Type a crop, an area or a market. The results open on the map, with each farm&apos;s
-          own stock beside it.
+    <div className="grid gap-8 rounded-2xl border border-line bg-surface p-6 md:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)]">
+      <div className="relative">
+        <p aria-hidden className="pointer-events-none absolute right-0 top-0 hidden -rotate-3 text-right font-display text-lg italic leading-snug text-accent lg:block">
+          Support local
+          <br />
+          Grow together
+          <span className="ml-auto mt-1.5 block h-px w-28 bg-accent/40" />
         </p>
 
-        <form onSubmit={submit} className="mt-4 flex max-w-md gap-2">
-          <label htmlFor="ask-search" className="sr-only">
-            What are you looking for?
-          </label>
-          <input
-            id="ask-search"
-            value={term}
-            onChange={(e) => setTerm(e.target.value)}
-            placeholder="e.g. fresh tomatoes near Lekki"
-            className="h-10 min-w-0 flex-1 rounded-full border border-line bg-surface px-3.5 text-sm text-primary outline-none transition placeholder:text-muted/60 focus:border-accent"
+        <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+          <span aria-hidden className="h-px w-8 bg-accent" />
+          Top picks this week
+        </p>
+        <h2 className="mt-4 max-w-[18ch] font-display text-[32px] font-bold leading-[1.08] tracking-tight md:text-[40px]">
+          Best deals from <span className="text-accent">local farmers</span>
+        </h2>
+        <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-body">
+          Fresh produce, fair prices, and a farm you can look up. These are the listings Lagos
+          stalls have published for this week.
+        </p>
+
+        <ul className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {DEAL_POINTS.map((point) => (
+            <li
+              key={point.title}
+              className="flex items-start gap-3 rounded-xl border border-line bg-elevated/50 p-4"
+            >
+              <span
+                aria-hidden
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent"
+              >
+                <Glyph name={point.glyph} size={20} />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-[15px] font-semibold leading-tight">{point.title}</h3>
+                <p className="mt-1 text-[13px] leading-snug text-muted">{point.body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="relative mt-4 min-h-[19rem] overflow-hidden rounded-2xl border border-line bg-block sm:min-h-[21rem]">
+          <Thumb
+            src="/img/farmers/harvest-feature.webp"
+            seed="deals-banner"
+            glyph="farm"
+            label="A farmer harvesting leafy greens on a farm"
+            imgClass="object-center"
+            className="absolute inset-0"
           />
-          <button
-            type="submit"
-            aria-label="Search"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-ink transition hover:brightness-110"
-          >
-            <Glyph name="send" size={17} />
-          </button>
-        </form>
+          <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/15 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 flex justify-end p-6 text-white md:p-8">
+            <div className="max-w-md text-right">
+              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/25 bg-ink/25 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] backdrop-blur-sm">
+                <Glyph name="sprout" size={14} />
+                From farm to market
+              </p>
+              <h3 className="font-display text-2xl font-bold tracking-tight md:text-3xl">Real farmers. Real food.</h3>
+              <p className="mt-2 ml-auto max-w-[42ch] text-sm leading-relaxed text-white/85">
+                Meet the people growing your food, then find their fresh listings nearby.
+              </p>
+              <Link
+                to="/farmers"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-ink shadow-lg transition hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Meet our farmers
+                <Glyph name="arrow" size={15} />
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-          Or start from
-        </p>
-        <ul className="mt-2.5 flex flex-wrap gap-2">
-          {QUICK_LINKS.map((link) => (
-            <li key={link.label}>
-              <Link to={link.to} className={chipClass()}>
-                <Glyph name={link.glyph} size={15} className="text-accent" />
-                {link.label}
+      <section
+        aria-labelledby="deals-offers"
+        className="flex flex-col rounded-2xl border border-line bg-elevated/40 p-4 md:p-5"
+      >
+        <header className="flex items-center justify-between gap-4">
+          <h3 id="deals-offers" className="flex items-center gap-2 text-[15px] font-semibold">
+            <span aria-hidden className="text-accent">
+              <Glyph name="basket" size={18} />
+            </span>
+            This week’s offers
+          </h3>
+          <Link
+            to="/products"
+            className="flex items-center gap-1.5 text-[13px] font-medium text-accent hover:underline"
+          >
+            View all
+            <span aria-hidden>
+              <Glyph name="arrow" size={14} />
+            </span>
+          </Link>
+        </header>
+
+        <ul className="mt-3 border-t border-line">
+          {deals.map((product) => (
+            <li key={product.key} className="border-b border-line last:border-b-0">
+              <Link
+                to="/products"
+                className="group flex items-center gap-3 rounded-xl border-b border-line px-2 py-3.5 transition-colors last:border-b-0 hover:bg-surface focus-visible:outline-accent"
+              >
+                <Thumb
+                  src={product.photo}
+                  seed={product.key}
+                  category={product.category}
+                  glyph={product.glyph}
+                  glyphSize={26}
+                  imgClass={product.focus}
+                  className="h-16 w-16 shrink-0 rounded-xl"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-semibold leading-snug">
+                    {product.name}
+                  </span>
+                  <span className="mt-0.5 block text-[12px] text-muted">
+                    {product.stall} · {product.market}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="num block text-[15px] font-bold text-accent">
+                    {formatKobo(product.price_minor)}
+                  </span>
+                  <span className="mt-0.5 block text-[12px] text-muted">/ {product.unit}</span>
+                </span>
+                <span
+                  aria-hidden
+                  className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+                >
+                  <Glyph name="arrow" size={16} />
+                </span>
               </Link>
             </li>
           ))}
         </ul>
-      </div>
-    </aside>
+
+        <div className="mt-4 rounded-xl bg-block p-5 text-on-block">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-on-block/65">Shop close to home</p>
+          <p className="mt-2 font-display text-lg font-semibold">Fresh picks, local pickup.</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-on-block/75">Explore produce from Mile 12 and Oshodi market sellers.</p>
+          <Link
+            to="/markets"
+            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-on-block underline decoration-on-block/35 underline-offset-4 transition hover:decoration-on-block focus-visible:outline-accent"
+          >
+            Find a market
+            <Glyph name="arrow" size={15} />
+          </Link>
+        </div>
+
+        <figure className="relative mt-4 min-h-[15rem] flex-1 overflow-hidden rounded-xl border border-line bg-elevated">
+          <img
+            src="/img/markets/oshodi.jpg"
+            alt="Traders and shoppers among fresh produce stalls at Oshodi market"
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/85 via-ink/35 to-transparent px-5 pb-4 pt-16 text-white">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/75">The market community</span>
+            <span className="mt-1 block font-display text-xl font-semibold">Oshodi, Lagos</span>
+          </figcaption>
+        </figure>
+      </section>
+    </div>
   );
 }
 
@@ -517,13 +641,14 @@ export default function Home() {
             <h2 className="mt-1.5 font-display text-2xl font-bold">Meet the farmers</h2>
             <p className="mt-1 text-sm text-muted">Discover trusted farms in your community.</p>
           </div>
-          <Link to="/farmers" className="text-sm text-accent hover:underline">
-            All {farmers.data?.meta.total ?? 'registered'} farms
-          </Link>
         </header>
 
         {farmers.isPending ? (
-          <SkeletonRow count={3} className="mt-6 grid gap-4 sm:grid-cols-3" />
+          <SkeletonRow
+            count={3}
+            className="mt-6 flex gap-4 overflow-hidden max-sm:pr-6 sm:grid sm:grid-cols-3 sm:gap-6"
+            itemClass="h-[40rem] w-[300px] shrink-0 rounded-2xl border border-line bg-surface/50 sm:w-auto sm:shrink"
+          />
         ) : farmers.error ? (
           <div className="mt-6">
             <StateNote
@@ -536,42 +661,20 @@ export default function Home() {
           <>
             <Reveal
               as="ul"
-              className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-pl-6 pb-2 md:scroll-pl-10"
+              className="mt-6 flex snap-x gap-4 overflow-x-auto scroll-pl-6 pb-2 max-sm:pr-6 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-x-visible sm:pb-0 md:scroll-pl-10"
               y={14}
               stagger={0.05}
             >
-              {stalls.slice(0, 4).map((farmer) => (
+              {stalls.slice(0, 3).map((farmer) => (
                 <FarmerCard key={farmer.id} farmer={farmer} />
               ))}
             </Reveal>
-
-            <p className="mt-2 text-xs text-muted">
-              Scroll sideways for the rest of this week&apos;s approved farms.
-            </p>
           </>
         )}
       </section>
 
       <section className="mx-auto mt-14 w-full max-w-[1680px] px-6 md:px-10">
-        <AskPanel />
-      </section>
-
-      <section className="mx-auto mt-14 w-full max-w-[1680px] px-6 md:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-line bg-surface p-6 md:p-8">
-          <div className="max-w-xl">
-            <h2 className="font-display text-xl font-bold">
-              Farming within reach of these markets?
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Publish what you harvested, set the quantities you are willing to hold, and stop
-              selling the same basket to whoever got there first. Listing is free; an admin checks
-              the farm before it appears to shoppers.
-            </p>
-          </div>
-          <Link to="/signup" className={buttonClass('primary', 'md', 'shrink-0')}>
-            List your farm
-          </Link>
-        </div>
+        <DealsBand products={FRESH_THIS_WEEK} />
       </section>
     </div>
   );

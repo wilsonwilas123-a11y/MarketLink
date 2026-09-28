@@ -52,12 +52,12 @@ describe('POST /api/auth/bootstrap', () => {
     const res = await request(createApp(testDeps({ pool })))
       .post('/api/auth/bootstrap')
       .set(auth)
-      .send({ full_name: 'Amara Okafor', phone: '+2348030000000', role: 'farmer' });
+      .send({ full_name: 'Amara Okafor', phone: '+2348030000000', address: 'Mile 12, Oshodi', role: 'farmer', country: 'Nigeria', stall_name: 'Amara Farms' });
 
     expect(res.status).toBe(200);
     expect(pool.calls[1]?.text).toContain('insert into farmers');
     expect(pool.calls[1]?.text).toContain("'pending'");
-    expect(pool.calls[1]?.values).toEqual([demoSubject.id, 'Amara Okafor']);
+    expect(pool.calls[1]?.values).toEqual([demoSubject.id, 'Amara Farms', 'Amara Okafor', 'Nigeria', 'NGN']);
   });
 
   it('refuses to hand out admin', async () => {

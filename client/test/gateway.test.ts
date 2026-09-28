@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { AuthChangeEvent, Session, SupabaseClient } from '@supabase/supabase-js';
-import { getSupabase } from '../src/lib/supabase';
 import { ApiError } from '../src/lib/api';
 import { makeGateway, supabaseGateway } from '../src/auth/gateway';
 
@@ -20,6 +19,7 @@ function fakeClient(session: Session | null, failure: { message: string } | null
       },
       signInWithPassword: async () =>
         failure ? { data: { session: null }, error: failure } : { data: { session }, error: null },
+      signInWithOAuth: async () => ({ data: { provider: 'google', url: 'https://accounts.google.com/' }, error: failure }),
       signUp: async () =>
         failure ? { data: { session: null }, error: failure } : { data: { session }, error: null },
       signOut: async () => ({ error: null }),
@@ -74,8 +74,19 @@ describe('supabaseGateway', () => {
 });
 
 describe('makeGateway', () => {
-  it('is null without a client, which is how a project-less build stays browsable', () => {
+  it('is null without a client, which is how a project-less build stays browsable', async () => {
     expect(makeGateway(null)).toBeNull();
-    expect(getSupabase()).toBeNull();
+
+    // The module caches its client, so the empty-project path needs a fresh read of an
+    // explicitly emptied environment rather than whatever this machine's .env carries.
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
+    vi.resetModules();
+    try {
+      const { getSupabase } = await import('../src/lib/supabase');
+      expect(getSupabase()).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

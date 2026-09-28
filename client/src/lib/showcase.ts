@@ -5,8 +5,8 @@ import type { GlyphName } from '../components/art/glyphs';
  *
  * Phase 6 owns `/api/products`; until it exists this is the only list on the site that is not
  * read from the server, and it is written straight from `db/seed/0002_lagos_products.sql` —
- * same names, same kobo, same week quantities — so the rail shows what the API will show and
- * deleting this file is a swap rather than a rewrite.
+ * same names, same minor-unit prices, same week quantities — so the rail shows what the API
+ * will show and deleting this file is a swap rather than a rewrite.
  */
 export interface ShowcaseProduct {
   key: string;
@@ -14,14 +14,14 @@ export interface ShowcaseProduct {
   stall: string;
   category: string;
   unit: string;
-  price_kobo: number;
+  price_minor: number;
   quantity: number;
   rating_avg: number;
   rating_count: number;
   market: string;
   days: string;
   window: string;
-  photo: string;
+  photo: string | null;
   /**
    * Which slice of this photograph the landing band keeps. The band is much wider than any of
    * these pictures, so `object-cover` discards most of their height and each one has to say for
@@ -29,6 +29,8 @@ export interface ShowcaseProduct {
    */
   focus: string;
   glyph: GlyphName;
+  /** Creator/source credit required by openly licensed product photography. */
+  photoCredit?: { author: string; href: string };
 }
 
 export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
@@ -38,16 +40,21 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     stall: 'Adeyemi Farms',
     category: 'vegetables',
     unit: 'bunch',
-    price_kobo: 80000,
+    price_minor: 80000,
     quantity: 60,
     rating_avg: 4.7,
     rating_count: 22,
     market: 'Mile 12',
     days: 'Tue, Thu, Sat',
     window: '8am–12pm',
-    photo: '/img/products/ugu.jpg',
+    // Ugu leaves sold at a Nigerian market (Wikimedia Commons, CC BY-SA 4.0).
+    photo: '/img/products/ugu-market.jpg',
     focus: 'object-bottom',
     glyph: 'leaf',
+    photoCredit: {
+      author: 'Dorcas Atule · Wikimedia Commons · CC BY-SA 4.0',
+      href: 'https://commons.wikimedia.org/wiki/File:Ugu_leaf_at_monday_market_01.jpg',
+    },
   },
   {
     key: 'tatashe-crate',
@@ -55,14 +62,15 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     stall: 'Eze Fresh Produce',
     category: 'vegetables',
     unit: 'crate',
-    price_kobo: 650000,
+    price_minor: 650000,
     quantity: 12,
     rating_avg: 4.4,
     rating_count: 26,
     market: 'Oshodi',
     days: 'Sat, Sun',
     window: '9am–1pm',
-    photo: '/img/products/tatashe.jpg',
+    // The mixed produce photo clearly includes red and green bell peppers.
+    photo: '/img/products/ugu.jpg',
     focus: 'object-center',
     glyph: 'pepper',
   },
@@ -72,14 +80,15 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     stall: 'Adeyemi Farms',
     category: 'vegetables',
     unit: 'crate',
-    price_kobo: 450000,
+    price_minor: 450000,
     quantity: 24,
     rating_avg: 4.6,
     rating_count: 31,
     market: 'Mile 12',
     days: 'Tue, Thu, Sat',
     window: '8am–12pm',
-    photo: '/img/products/eggs.jpg',
+    // This image shows yams in sacks; eggs.jpg was an unrelated product photo.
+    photo: '/img/products/tatashe.jpg',
     focus: 'object-top',
     glyph: 'tuber',
   },
@@ -89,16 +98,21 @@ export const FRESH_THIS_WEEK: ShowcaseProduct[] = [
     stall: 'Eze Fresh Produce',
     category: 'vegetables',
     unit: 'crate',
-    price_kobo: 900000,
+    price_minor: 900000,
     quantity: 9,
     rating_avg: 4.1,
     rating_count: 20,
     market: 'Oshodi',
     days: 'Sat, Sun',
     window: '9am–1pm',
-    photo: '/img/products/paddy.jpg',
+    // Nigerian tomatoes photographed at a market (Wikimedia Commons, CC BY-SA 4.0).
+    photo: '/img/products/nigerian-tomatoes.jpg',
     focus: 'object-center',
     glyph: 'tomato',
+    photoCredit: {
+      author: 'Blossom Ozurumba · Wikimedia Commons · CC BY-SA 4.0',
+      href: 'https://commons.wikimedia.org/wiki/File:Nigerian_Tomato.jpg',
+    },
   },
 ];
 

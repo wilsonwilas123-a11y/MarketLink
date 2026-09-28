@@ -278,7 +278,7 @@ describe('the farmer routes do not trust the token alone', () => {
 
   it('refuses a token the identity provider does not recognise', async () => {
     const pool = fakePool([farmerRole, stallRow()]);
-    const app = createApp({ pool, auth: fakeAuth(null) });
+    const app = createApp(testDeps({ pool, auth: fakeAuth(null) }));
     const res = await request(app).get('/api/farmers/me').set(auth);
 
     expect(res.status).toBe(401);

@@ -31,6 +31,12 @@ export type GlyphName =
   | 'carrot'
   | 'tuber'
   | 'mango'
+  | 'banana'
+  | 'pineapple'
+  | 'avocado'
+  | 'coconut'
+  | 'orange'
+  | 'eggplant'
   | 'corn'
   | 'onion'
   | 'egg'
@@ -43,6 +49,8 @@ export type GlyphName =
   | 'star'
   | 'search'
   | 'pin'
+  | 'shield'
+  | 'tag'
   | 'clock'
   | 'arrow'
   | 'send'
@@ -127,6 +135,45 @@ const paths: Record<GlyphName, ReactNode> = {
       <path {...stroke} d="M16.6 6.4c.6-1.4 2.2-1.8 2.2-1.8s.2 1.8-1.2 2.6" />
     </>
   ),
+  banana: (
+    <>
+      <path {...stroke} d="M4 14.2c4.2 3.3 10.6 1.8 16.2-8l1.1 2.3c-4.5 9.6-11 13.1-18.2 9.1-1.2-.7-1.3-2.2.9-3.4Z" />
+      <path {...stroke} d="m19.9 6.2 1.7-.6M3.5 17.1l-1.2.6" />
+    </>
+  ),
+  pineapple: (
+    <>
+      <path {...stroke} d="m12 8 3.2-4.5M12 8 9 3.5M12 8V3" />
+      <path {...stroke} d="M8.2 8.2c-2.1 2.7-2.3 8.4.2 11.4h7.2c2.5-3 2.3-8.7.2-11.4Z" />
+      <path {...stroke} d="m8 11 8 2m-8 2 8 2m-6-7-.6 7m3-7 .6 7" />
+    </>
+  ),
+  avocado: (
+    <>
+      <path {...stroke} d="M12 3.8c3.2 0 7 7.1 7 11.1a7 7 0 0 1-14 0c0-4 3.8-11.1 7-11.1Z" />
+      <circle {...stroke} cx="12" cy="15" r="2.6" />
+    </>
+  ),
+  coconut: (
+    <>
+      <path {...stroke} d="M12 4.3c4.7 0 8 3.6 8 8.1a8 8 0 0 1-16 0c0-4.5 3.3-8.1 8-8.1Z" />
+      <path {...stroke} d="M8.2 8.4c1.4-.9 2.6-1.2 3.8-1.2m3.5 12.1 2.3 1.2" />
+      <circle {...stroke} cx="9" cy="12" r=".7" />
+      <circle {...stroke} cx="15" cy="12" r=".7" />
+    </>
+  ),
+  orange: (
+    <>
+      <circle {...stroke} cx="12" cy="13" r="7" />
+      <path {...stroke} d="M12 6V4m0 2c1.8-2.2 4.4-1.8 4.4-1.8S15.8 7 12 7" />
+    </>
+  ),
+  eggplant: (
+    <>
+      <path {...stroke} d="M9 7.2c2.7-2.2 7.2-1.8 9.2 1.2 2.2 3.2.7 8.1-2.6 10.1-3.7 2.3-8.8 1.6-10.4-1.5-1.6-3 .1-7.3 3.8-9.8Z" />
+      <path {...stroke} d="m8.7 7.8-3.9-2m3.9 2-1.1-3m1.1 3 2.7-2.4" />
+    </>
+  ),
   corn: (
     <>
       <path {...stroke} d="M12 3.8c2.8 0 4.8 3.4 4.8 7.6S14.8 20 12 20s-4.8-4.4-4.8-8.6S9.2 3.8 12 3.8Z" />
@@ -203,6 +250,18 @@ const paths: Record<GlyphName, ReactNode> = {
       <path {...stroke} d="M12 8.5a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6Z" />
     </>
   ),
+  shield: (
+    <>
+      <path {...stroke} d="M12 3.5 5 6v6.2c0 3.9 2.9 7.2 7 8.3 4.1-1.1 7-4.4 7-8.3V6Z" />
+      <path {...stroke} d="m9 12 2.2 2.2L15.2 10" />
+    </>
+  ),
+  tag: (
+    <>
+      <path {...stroke} d="M11 3.5H20.5V13l-8.3 8.3a1.6 1.6 0 0 1-2.3 0L3.5 14.6a1.6 1.6 0 0 1 0-2.3Z" />
+      <path {...stroke} d="M16.4 6.5a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" />
+    </>
+  ),
   clock: (
     <>
       <path {...stroke} d="M12 4a8 8 0 1 1 0 16 8 8 0 0 1 0-16Z" />
@@ -250,8 +309,8 @@ export function Glyph({
 /** Produce art per category slug, so a tile without a photo still says what is in it. */
 const BY_CATEGORY: Record<string, GlyphName[]> = {
   vegetables: ['leaf', 'tomato', 'pepper', 'carrot', 'onion'],
-  fruits: ['mango', 'apple', 'corn'],
-  dairy: ['milk', 'egg'],
+  fruits: ['mango', 'apple'],
+  dairy: ['milk'],
   bakery: ['bread', 'grain'],
   herbs: ['sprout', 'leaf'],
   fish: ['fish'],

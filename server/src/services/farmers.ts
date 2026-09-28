@@ -24,12 +24,12 @@ import type {
  * same reason the market columns are.
  */
 const FARMER_COLUMNS = `id, stall_name, contact_person, description, logo_url, cover_url,
-  lat::float8 as lat, lng::float8 as lng,
+  lat::float8 as lat, lng::float8 as lng, currency,
   rating_avg::float8 as rating_avg, rating_count, operating_days`;
 
 /** A stall's own view of itself, where `status` does appear. */
 const STALL_COLUMNS = `${FARMER_COLUMNS},
-  pickup_window_start, pickup_window_end, order_cutoff_minutes, status`;
+  pickup_window_start, pickup_window_end, order_cutoff_minutes, status, currency`;
 
 /**
  * Approved stalls, narrowed by market, product category, or a search term.
@@ -90,9 +90,8 @@ export async function listFarmers(pool: Pool, query: FarmerListQuery): Promise<P
  * would confirm the stall exists and is merely disfavoured, which is the approval queue's
  * business, not the public's.
  *
- * Products are this ISO week only. A listing with no stock row for the current week reads as
- * sold out rather than as unlimited, because a quantity nobody checked is not a quantity you
- * can order.
+ * Products are this ISO week. When a new week has no stock row yet, its recurring template is
+ * the starting quantity; checkout materializes that row before reserving stock.
  */
 export async function farmerDetail(pool: Pool, id: string): Promise<FarmerDetail> {
   const farmer = await pool.query(
@@ -115,11 +114,11 @@ export async function farmerDetail(pool: Pool, id: string): Promise<FarmerDetail
       [id],
     ),
     pool.query(
-      `select p.id, p.name, p.unit, p.price_kobo::float8 as price_kobo, p.image_urls,
+      `select p.id, p.name, p.unit, p.price_minor::float8 as price_minor, p.image_urls,
               p.is_organic,
               jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug) as category,
-              ws.quantity_available::int as quantity_available,
-              coalesce(ws.is_sold_out, false) as is_sold_out
+              coalesce(ws.quantity_available, p.template_qty)::int as quantity_available,
+              coalesce(ws.is_sold_out, p.template_qty = 0) as is_sold_out
          from products p
          join categories c on c.id = p.category_id
          left join weekly_stock ws on ws.product_id = p.id and ws.week = iso_week()
@@ -128,7 +127,7 @@ export async function farmerDetail(pool: Pool, id: string): Promise<FarmerDetail
       [id],
     ),
     pool.query(
-      `select r.id, r.rating, r.title, r.body, pr.full_name as customer_name, r.created_at
+      `select r.id, r.rating, r.title, r.body, r.farmer_reply, pr.full_name as customer_name, r.created_at
          from reviews r
          join profiles pr on pr.id = r.customer_id
         where r.farmer_id = $1 and r.status = 'visible'
@@ -228,4 +227,57 @@ export async function myStallMarkets(pool: Pool, profileId: string): Promise<Far
   );
 
   return rows as FarmerMarket[];
+}
+
+/** Replace a farmer's own market roster, checking the stall's currency and both sets of days. */
+export async function saveMyStallMarkets(
+  pool: Pool,
+  profileId: string,
+  input: { markets: { market_id: string; stall_ref: string | null; days: string[] }[] },
+): Promise<FarmerMarket[]> {
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    const { rows: owners } = await client.query(
+      'select id,currency,operating_days from farmers where profile_id=$1 for update', [profileId]);
+    const owner = owners[0] as { id: string; currency: string; operating_days: string[] } | undefined;
+    if (!owner) throw new ApiError('not_found', 'This account has no stall.');
+
+    const ids = input.markets.map((market) => market.market_id);
+    const { rows: available } = ids.length
+      ? await client.query('select id,currency,operating_days from markets where id=any($1::uuid[]) and is_active', [ids])
+      : { rows: [] as { id: string; currency: string; operating_days: string[] }[] };
+    if (available.length !== ids.length) throw new ApiError('not_found', 'A selected market is no longer available.');
+    const byId = new Map(available.map((market) => [market.id, market]));
+    for (const assignment of input.markets) {
+      const market = byId.get(assignment.market_id)!;
+      if (market.currency !== owner.currency) throw new ApiError('validation_failed', 'Your stall and each pickup market must use the same currency.');
+      if (assignment.days.some((day) => !owner.operating_days.includes(day) || !market.operating_days.includes(day))) {
+        throw new ApiError('validation_failed', 'Trading days must fit both your stall schedule and the market schedule.');
+      }
+    }
+
+    if (ids.length) {
+      await client.query('delete from market_farmers where farmer_id=$1 and not (market_id=any($2::uuid[]))', [owner.id, ids]);
+    } else {
+      await client.query('delete from market_farmers where farmer_id=$1', [owner.id]);
+    }
+    for (const assignment of input.markets) {
+      await client.query(
+        `insert into market_farmers(market_id,farmer_id,stall_ref,days) values($1,$2,$3,$4)
+         on conflict(market_id,farmer_id) do update set stall_ref=excluded.stall_ref,days=excluded.days`,
+        [assignment.market_id, owner.id, assignment.stall_ref, assignment.days]);
+    }
+    const { rows } = await client.query(
+      `select m.id,m.name,m.address,m.city,mf.stall_ref,mf.days
+         from market_farmers mf join markets m on m.id=mf.market_id
+        where mf.farmer_id=$1 and m.is_active order by m.name`, [owner.id]);
+    await client.query('commit');
+    return rows as FarmerMarket[];
+  } catch (error) {
+    await client.query('rollback').catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
 }

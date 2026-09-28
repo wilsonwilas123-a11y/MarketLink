@@ -5,16 +5,17 @@ import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../auth/AuthProvider';
 import { ApiError } from '../../lib/api';
 import { homeFor, safeReturnTo } from '../../auth/paths';
-import { AuthFrame, AuthUnavailable, FormAlert } from './AuthFrame';
+import { AuthDivider, AuthFrame, AuthUnavailable, FormAlert, GoogleButton } from './AuthFrame';
 import { PasswordField } from './PasswordField';
 
 export default function SignIn() {
-  const { signIn, status, profile, configured } = useAuth();
+  const { signIn, signInWithGoogle, status, profile, configured } = useAuth();
   const [params] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   if (status === 'ready') {
     return (
@@ -53,6 +54,17 @@ export default function SignIn() {
     }
   }
 
+  async function onGoogle() {
+    setGoogleBusy(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Google sign-in could not start. Please try again.');
+      setGoogleBusy(false);
+    }
+  }
+
   return (
     <AuthFrame
       title="Sign in"
@@ -66,8 +78,10 @@ export default function SignIn() {
         </>
       }
     >
+      {error ? <FormAlert>{error}</FormAlert> : null}
+      <GoogleButton onClick={() => void onGoogle()} loading={googleBusy} />
+      <AuthDivider />
       <form onSubmit={onSubmit} className="space-y-4">
-        {error ? <FormAlert>{error}</FormAlert> : null}
 
         <Input
           label="Email"
@@ -81,7 +95,7 @@ export default function SignIn() {
 
         <PasswordField value={password} onChange={setPassword} />
 
-        <Button type="submit" loading={busy} className="w-full">
+        <Button type="submit" loading={busy} loadingIndicator="spinner" className="w-full">
           {busy ? 'Signing in' : 'Sign in'}
         </Button>
 

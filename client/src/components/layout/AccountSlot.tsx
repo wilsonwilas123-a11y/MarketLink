@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar } from '../ui/Avatar';
 import { useAuth } from '../../auth/AuthProvider';
 import { COMPLETE_PROFILE_PATH, homeFor } from '../../auth/paths';
+import { localAvatarEventName, readLocalAvatar } from '../../lib/localAvatar';
 
 /**
  * The account corner of the nav.
@@ -12,6 +14,24 @@ import { COMPLETE_PROFILE_PATH, homeFor } from '../../auth/paths';
  */
 export function AccountSlot() {
   const { status, profile, refresh } = useAuth();
+  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profile) {
+      setLocalAvatar(null);
+      return;
+    }
+    const profileId = profile.id;
+    const update = () => setLocalAvatar(readLocalAvatar(profileId));
+    update();
+    const eventName = localAvatarEventName();
+    window.addEventListener(eventName, update);
+    window.addEventListener('storage', update);
+    return () => {
+      window.removeEventListener(eventName, update);
+      window.removeEventListener('storage', update);
+    };
+  }, [profile?.id]);
 
   if (status === 'loading') return null;
 
@@ -21,7 +41,7 @@ export function AccountSlot() {
         to={homeFor(profile.role)}
         className="flex items-center gap-2 rounded-full border border-line bg-elevated py-1 pl-1 pr-3 text-sm text-primary transition hover:border-accent/50"
       >
-        <Avatar src={profile.avatar_url} size={26} />
+        <Avatar src={localAvatar ?? profile.avatar_url} size={26} />
         <span className="max-w-[9rem] truncate">{profile.full_name.split(' ')[0]}</span>
       </Link>
     );
@@ -31,7 +51,7 @@ export function AccountSlot() {
     return (
       <Link
         to={COMPLETE_PROFILE_PATH}
-        className="inline-flex h-8 items-center rounded-full bg-warn px-3 text-sm font-medium text-ink"
+        className="inline-flex h-8 items-center rounded-full border border-warn/30 bg-warn/10 px-3 text-sm font-semibold text-warn"
       >
         Finish your profile
       </Link>
@@ -62,7 +82,7 @@ export function AccountSlot() {
       </Link>
       <Link
         to="/signup"
-        className="inline-flex h-8 items-center rounded-full bg-accent px-3 text-sm font-semibold text-ink"
+        className="inline-flex h-8 items-center rounded-full bg-accent px-3 text-sm font-semibold text-on-block"
       >
         Join
       </Link>

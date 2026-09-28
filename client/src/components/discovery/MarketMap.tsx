@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { clock } from '../../lib/discovery';
-import type { Market, NearbyMarket } from '../../lib/types';
+import type { Market, NearbyMarket, PlaceCandidate } from '../../lib/types';
 import { formatDistance } from '../../utils/distance';
 
 /**
@@ -34,7 +34,7 @@ const TILES = {
 export type BaseLayer = keyof typeof TILES;
 
 /**
- * What the list needs from an imperative map: point at a market.
+ * What the list needs from an imperative map: point at a row, market or mapped place.
  *
  * Only `focus` is exposed. Panning, zooming and tile state belong to the map, and lifting any
  * of them into React would mean two owners of the same viewport.
@@ -45,6 +45,13 @@ export interface MarketMapHandle {
 
 export interface MarketMapProps {
   markets: (Market | NearbyMarket)[];
+  /**
+   * Places the gazetteer answers with that have no row here.
+   *
+   * Drawn as hollow rings, never as pins: a visitor who cannot tell a tracked market from a
+   * name on a map will phone around for opening hours that this app is promising.
+   */
+  places?: PlaceCandidate[];
   /** Where the distances were measured from, when there is one worth drawing. */
   origin?: { lat: number; lng: number } | null;
   selectedId?: string | null;
@@ -103,28 +110,85 @@ function popupContent(market: Market | NearbyMarket, onOpen?: (id: string) => vo
   return box;
 }
 
+/**
+ * The same popup for a place nobody has approved yet.
+ *
+ * No hours and no "Open market" button, because there is no row to read either from — the
+ * popup says so rather than leaving the ring to look like a pin that failed to load.
+ */
+function placePopupContent(place: PlaceCandidate): HTMLElement {
+  const box = document.createElement('div');
+  box.className = 'ml-popup';
+
+  const name = document.createElement('p');
+  name.className = 'ml-popup-title';
+  name.textContent = place.name;
+  box.append(name);
+
+  // Most mapped gates carry a name and nothing else, and an empty line is a gap, not an answer.
+  const whereText = [place.address, [place.city, place.state].filter(Boolean).join(', ')]
+    .filter(Boolean)
+    .join(' · ');
+  if (whereText !== '') {
+    const where = document.createElement('p');
+    where.className = 'ml-popup-meta';
+    where.textContent = whereText;
+    box.append(where);
+  }
+
+  const note = document.createElement('p');
+  note.className = 'ml-popup-meta';
+  note.textContent = 'On the map, not on MarketLink yet';
+  box.append(note);
+
+  return box;
+}
+
 export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function MarketMap(
-  { markets, origin = null, selectedId = null, onSelect, onOpen },
+  { markets, places = [], origin = null, selectedId = null, onSelect, onOpen },
   ref,
 ) {
   const host = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<L.Map | null>(null);
   const [base, setBase] = useState<BaseLayer>('map');
+  /**
+   * Pins and rings, under the id the list already has for them.
+   *
+   * A market answers to its row id and a mapped place to its node ref, and the two never collide,
+   * so one lookup serves both when a list card asks the map to focus that place.
+   */
   const markers = useRef<L.LayerGroup | null>(null);
-  const byId = useRef(new Map<string, L.Marker>());
+  const byId = useRef(new Map<string, L.Marker | L.CircleMarker>());
   const fitted = useRef('');
   const tile = useRef<L.TileLayer | null>(null);
+  /**
+   * The row the list last pointed at.
+   *
+   * Choosing something re-renders and the redraw below clears and rebuilds every layer. Keep the
+   * focus request and apply it again once the replacement marker exists.
+   */
+  const pointed = useRef<string | null>(null);
   // Read from inside Leaflet callbacks, which are attached once and would otherwise close over
   // the props from the first render.
   const openRef = useRef(onOpen);
   openRef.current = onOpen;
 
+  function show(id: string) {
+    const marker = byId.current.get(id);
+    if (!marker) {
+      pointed.current = null;
+      return;
+    }
+    if (!map) return;
+    // List hover should bring the place into view at street level without opening a popup.
+    // Preserve closer zoom levels if the visitor has already zoomed further in.
+    map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 15), { duration: 0.6 });
+  }
+
   useImperativeHandle(ref, () => ({
     focus(id) {
-      const marker = byId.current.get(id);
-      if (!marker || !map) return;
-      map.panTo(marker.getLatLng());
-      marker.openPopup();
+      pointed.current = id;
+      show(id);
     },
   }));
 
@@ -200,10 +264,31 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
       }).addTo(group);
     }
 
+    for (const place of places) {
+      const ring = L.circleMarker([place.lat, place.lng], {
+        // The ring that was pointed at fills, so the pan has somewhere to land. Same accent as a
+        // selected pin, different shape: an approved market and a mapped name stay distinguishable
+        // when both are lit.
+        className: `ml-pin-osm${place.ref === selectedId ? ' ml-pin-osm-active' : ''}`,
+        radius: place.ref === selectedId ? 11 : 8,
+        weight: 1.5,
+        fillOpacity: 0,
+      })
+        .bindPopup(() => placePopupContent(place), { closeButton: true })
+        .addTo(group);
+      byId.current.set(place.ref, ring);
+    }
+
     // Fitting follows the *result set*, not the redraw. Selecting a market repaints the same
-    // pins with one highlighted, and refitting then would undo the pan that just showed it.
-    const signature = markets.map((m) => m.id).join(',');
+    // pins with one highlighted, and refitting then would undo the pan that just showed it —
+    // so the guard is a signature of what is on the map, and a new search term changes it.
+    const signature = [...markets.map((m) => m.id), ...places.map((p) => p.ref)].join(',');
     const points = markets.map((m) => [m.lat, m.lng] as [number, number]);
+    // A ring only moves the viewport when there is nothing of ours to look at: typing a town
+    // that has no approved market still has to land on the gates the gazetteer named, or they
+    // sit off-screen and the search looks broken. With our own rows present they win, or a
+    // visitor inside ten kilometres of Lagos would have the map pull back to Ghana for one ring.
+    if (markets.length === 0) points.push(...places.map((p) => [p.lat, p.lng] as [number, number]));
     if (origin) points.push([origin.lat, origin.lng] as [number, number]);
 
     if (signature !== fitted.current) {
@@ -214,7 +299,15 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
         map.setView(points[0], 14, { animate: false });
       }
     }
-  }, [map, markets, origin, onSelect, selectedId]);
+
+    // Once, and only as the answer to that request: replaying it on every redraw would drag the
+    // viewport back to a row the visitor has since panned away from.
+    if (pointed.current) {
+      const id = pointed.current;
+      pointed.current = null;
+      show(id);
+    }
+  }, [map, markets, places, origin, onSelect, selectedId]);
 
   return (
     <div className="relative h-full w-full">

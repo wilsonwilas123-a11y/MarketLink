@@ -1,16 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Thumb } from '../art/Thumb';
-import type { Market, NearbyMarket } from '../../lib/types';
+import type { Market, NearbyMarket, PlaceCandidate } from '../../lib/types';
 import { formatDistance } from '../../utils/distance';
 import { OpenState, TradingDays } from './pieces';
+import { FavoriteToggle } from '../FavoriteToggle';
+import { mapboxSatellitePreview } from '../../lib/mapboxImagery';
 
 /**
  * One market, as a row on the board.
  *
- * The whole row is a link, laid over the content with an absolutely positioned anchor rather
- * than by wrapping the row in an `<a>`: that keeps the address and the trading line as real text
- * nodes for a screen reader, with one named destination. Anything inside it that is itself a
- * control has to be positioned, or that overlay paints over it and takes the click.
+ * `linkToMarket` is disabled on the discovery list, where the row only moves the map on hover.
+ * Other places, such as the home-page market preview, keep their detail-page link.
  *
  * `prominent` is how the landing page gives its nearest market weight without inventing a second
  * component: the same row, set larger.
@@ -19,36 +19,47 @@ export function MarketCard({
   market,
   selected = false,
   prominent = false,
+  linkToMarket = true,
   onFocus,
 }: {
   market: Market | NearbyMarket;
   selected?: boolean;
   prominent?: boolean;
-  /** Present on the map screen, where pointing at a pin is a different act than opening it. */
+  linkToMarket?: boolean;
+  /** Move the adjacent map when this row is hovered or keyboard-focused. */
   onFocus?: () => void;
 }) {
   const distance = 'distance_km' in market ? market.distance_km : null;
+  const satellitePreview = market.image_url ? null : mapboxSatellitePreview(market.lng, market.lat);
 
   return (
     <article
       aria-current={selected || undefined}
-      className={`group relative border-t border-line transition-colors ${
+      tabIndex={onFocus ? 0 : undefined}
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') onFocus?.();
+      }}
+      onFocus={onFocus}
+      className={`motion-card group relative border-t border-line transition-colors ${
         selected ? 'bg-accent-soft/50' : 'hover:bg-elevated/45'
       }`}
     >
       <div
         className={`flex items-start gap-4 sm:gap-5 ${prominent ? 'py-5 sm:py-6' : 'py-4'}`}
       >
-        <Thumb
-          src={market.image_url}
-          seed={market.id}
-          glyph="farm"
-          label={market.name}
-          glyphSize={prominent ? 48 : 36}
-          className={`shrink-0 rounded-[2px] ${
-            prominent ? 'h-32 w-32 sm:h-36 sm:w-36' : 'h-24 w-24 sm:h-28 sm:w-28'
-          }`}
-        />
+        <div className="shrink-0">
+          <Thumb
+            src={market.image_url ?? satellitePreview}
+            seed={market.id}
+            glyph="farm"
+            label={satellitePreview && !market.image_url ? `Satellite view of ${market.name}` : market.name}
+            glyphSize={prominent ? 48 : 36}
+            className={`rounded-[2px] ${
+              prominent ? 'h-32 w-32 sm:h-36 sm:w-36' : 'h-24 w-24 sm:h-28 sm:w-28'
+            }`}
+          />
+          {satellitePreview ? <p className="mt-1 max-w-36 truncate text-[10px] text-muted">Satellite view · Mapbox</p> : null}
+        </div>
 
         <div className="min-w-0 flex-1">
           <h3
@@ -58,9 +69,11 @@ export function MarketCard({
                 : 'text-base font-semibold sm:text-[1.0625rem]'
             }`}
           >
-            <Link to={`/markets/${market.id}`} className="after:absolute after:inset-0">
-              {market.name}
-            </Link>
+            {linkToMarket ? (
+              <Link to={`/markets/${market.id}`} className="after:absolute after:inset-0">
+                {market.name}
+              </Link>
+            ) : market.name}
           </h3>
 
           <p className="mt-1 truncate text-sm text-muted">
@@ -75,7 +88,8 @@ export function MarketCard({
           />
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-1">
+        <div className="relative z-10 flex shrink-0 flex-col items-end gap-1">
+          <FavoriteToggle type="market" id={market.id} />
           {distance !== null ? (
             <span
               className={`num text-lg font-semibold leading-none text-primary ${
@@ -88,16 +102,81 @@ export function MarketCard({
 
           <OpenState open={market.is_open_now} />
 
-          {onFocus ? (
-            <button
-              type="button"
-              onClick={onFocus}
-              className="relative mt-1 text-xs text-muted underline decoration-line underline-offset-2 transition-colors hover:text-primary hover:decoration-accent"
-            >
-              Show on map
-            </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/** Where a mapped place says it is, when it says anything at all. */
+function placeLine(place: PlaceCandidate): string {
+  return place.address || [place.city, place.state, place.country].filter(Boolean).join(', ');
+}
+
+/**
+ * A marketplace the map knows and this database does not, set in the same row as ours.
+ *
+ * Same plate, same title scale, same right-hand column — the difference is what the row declines
+ * to claim. OpenStreetMap itself carries no photos, no opening hours and no address tags for most
+ * of these nodes, so the trading line is still replaced by the reason there isn't one. The photo
+ * slot can show a confidently name-matched Wikimedia Commons photo, then a clearly labeled
+ * regional market photo. A missing photo stays an honest map-pin placeholder.
+ *
+ * No link over the row either: there is no page here to open, and a market name that answers a
+ * click with a 404 is worse than one that answers nothing.
+ */
+export function PlaceCard({
+  place,
+  onFocus,
+}: {
+  place: PlaceCandidate;
+  /** Present on the map screen, where a ring is the only thing this place has. */
+  onFocus?: () => void;
+}) {
+  const where = placeLine(place);
+  return (
+    <article
+      className="border-t border-line"
+      tabIndex={onFocus ? 0 : undefined}
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') onFocus?.();
+      }}
+      onFocus={onFocus}
+    >
+      <div className="flex items-start gap-4 py-4 sm:gap-5">
+        <div className="w-24 shrink-0 sm:w-28">
+          <Thumb
+            src={place.image_url}
+            seed={place.ref}
+            glyph="pin"
+            label={place.image_kind === 'regional'
+              ? `${place.image_region ?? 'Regional'} market photo; ${place.name} is marked nearby`
+              : place.name}
+            glyphSize={36}
+            className="h-24 w-24 rounded-[2px] sm:h-28 sm:w-28"
+          />
+          {place.image_url && place.image_credit && place.image_link ? (
+            <a href={place.image_link} target="_blank" rel="noreferrer" className="mt-1 block text-[10px] leading-tight text-muted underline underline-offset-2">
+              <span className="block">
+                {place.image_kind === 'regional'
+                  ? `Regional ${place.image_region ?? ''} market photo`
+                  : 'Market photo'}
+              </span>
+              <span className="mt-0.5 block truncate">{place.image_credit}</span>
+            </a>
           ) : null}
         </div>
+
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display text-base font-semibold leading-tight sm:text-[1.0625rem]">
+            {place.name}
+          </h3>
+
+          {where !== '' ? <p className="mt-1 truncate text-sm text-muted">{where}</p> : null}
+
+          <p className="mt-1.5 text-sm text-muted">On the map, not on MarketLink yet</p>
+        </div>
+
       </div>
     </article>
   );

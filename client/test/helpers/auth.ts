@@ -96,6 +96,9 @@ export function fakeGateway(initial: string | null = null): FakeGateway {
       gateway.calls.push(`signIn:${email}`);
       gateway.token = 'a-token';
     },
+    signInWithGoogle: async () => {
+      gateway.calls.push('signInWithGoogle');
+    },
     signUp: async (email) => {
       gateway.calls.push(`signUp:${email}`);
       gateway.token = 'a-token';

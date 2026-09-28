@@ -13,6 +13,7 @@ export interface AuthGateway {
   /** Calls `listener` whenever Supabase changes the session. Returns an unsubscribe. */
   onChange: (listener: (token: string | null) => void) => () => void;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   /** `false` means Supabase emailed a confirmation link instead of issuing a session. */
   signUp: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
@@ -47,6 +48,14 @@ export function supabaseGateway(client: SupabaseClient): AuthGateway {
       if (error) throw authError(error.message);
     },
 
+    signInWithGoogle: async () => {
+      const { error } = await client.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/signin` },
+      });
+      if (error) throw authError(error.message);
+    },
+
     signUp: async (email, password) => {
       const { data, error } = await client.auth.signUp({ email, password });
       if (error) throw authError(error.message);
@@ -54,7 +63,10 @@ export function supabaseGateway(client: SupabaseClient): AuthGateway {
     },
 
     signOut: async () => {
-      const { error } = await client.auth.signOut();
+      // A website's Sign out button should clear this browser session. Global sign-out
+      // calls the auth service to revoke every device and can report a network error even
+      // after the local session has already been removed.
+      const { error } = await client.auth.signOut({ scope: 'local' });
       if (error) throw authError(error.message);
     },
   };

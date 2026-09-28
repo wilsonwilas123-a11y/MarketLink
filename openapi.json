@@ -35,6 +35,10 @@
     {
       "name": "Farmers",
       "description": "Public stall profiles, and the owner's own view."
+    },
+    {
+      "name": "Places",
+      "description": "Place lookup against OpenStreetMap, for pinning something new."
     }
   ],
   "components": {
@@ -47,6 +51,56 @@
       }
     },
     "schemas": {
+      "FarmerMarketAssignments": {
+        "type": "object",
+        "properties": {
+          "markets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "market_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "stall_ref": {
+                  "type": "string",
+                  "nullable": true,
+                  "maxLength": 40
+                },
+                "days": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "mon",
+                      "tue",
+                      "wed",
+                      "thu",
+                      "fri",
+                      "sat",
+                      "sun"
+                    ]
+                  },
+                  "minItems": 1,
+                  "maxItems": 7
+                }
+              },
+              "required": [
+                "market_id",
+                "stall_ref",
+                "days"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 30
+          }
+        },
+        "required": [
+          "markets"
+        ],
+        "additionalProperties": false
+      },
       "Error": {
         "type": "object",
         "properties": {
@@ -277,6 +331,7 @@
           },
           "address": {
             "type": "string",
+            "minLength": 1,
             "maxLength": 240
           },
           "role": {
@@ -285,13 +340,41 @@
               "customer",
               "farmer"
             ]
+          },
+          "stall_name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "country": {
+            "type": "string",
+            "enum": [
+              "Nigeria",
+              "Ghana",
+              "Kenya",
+              "South Africa",
+              "Senegal",
+              "Côte d'Ivoire",
+              "Cameroon",
+              "Uganda",
+              "Tanzania",
+              "Rwanda",
+              "Egypt",
+              "Morocco",
+              "Ethiopia",
+              "Botswana",
+              "Zambia",
+              "Mozambique"
+            ]
           }
         },
         "required": [
           "full_name",
           "phone",
+          "address",
           "role"
-        ]
+        ],
+        "additionalProperties": false
       },
       "UpdateMe": {
         "type": "object",
@@ -361,6 +444,11 @@
           "state": {
             "type": "string"
           },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
           "lat": {
             "type": "number"
           },
@@ -394,6 +482,7 @@
           "address",
           "city",
           "state",
+          "currency",
           "lat",
           "lng",
           "operating_days",
@@ -421,6 +510,11 @@
           },
           "state": {
             "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
           },
           "lat": {
             "type": "number"
@@ -460,6 +554,7 @@
           "address",
           "city",
           "state",
+          "currency",
           "lat",
           "lng",
           "operating_days",
@@ -488,6 +583,11 @@
           },
           "state": {
             "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
           },
           "lat": {
             "type": "number"
@@ -575,6 +675,7 @@
           "address",
           "city",
           "state",
+          "currency",
           "lat",
           "lng",
           "operating_days",
@@ -626,6 +727,11 @@
           "rating_count": {
             "type": "integer"
           },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
           "operating_days": {
             "type": "array",
             "items": {
@@ -644,6 +750,7 @@
           "lng",
           "rating_avg",
           "rating_count",
+          "currency",
           "operating_days"
         ]
       },
@@ -686,6 +793,11 @@
           },
           "rating_count": {
             "type": "integer"
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
           },
           "operating_days": {
             "type": "array",
@@ -758,7 +870,7 @@
                 "unit": {
                   "type": "string"
                 },
-                "price_kobo": {
+                "price_minor": {
                   "type": "integer"
                 },
                 "image_urls": {
@@ -802,7 +914,7 @@
                 "id",
                 "name",
                 "unit",
-                "price_kobo",
+                "price_minor",
                 "image_urls",
                 "is_organic",
                 "category",
@@ -830,6 +942,10 @@
                   "nullable": true
                 },
                 "body": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "farmer_reply": {
                   "type": "string",
                   "nullable": true
                 },
@@ -862,6 +978,7 @@
           "lng",
           "rating_avg",
           "rating_count",
+          "currency",
           "operating_days",
           "pickup_window_start",
           "pickup_window_end",
@@ -930,6 +1047,11 @@
               "suspended"
             ]
           },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
           "rating_avg": {
             "type": "number"
           },
@@ -951,6 +1073,7 @@
           "pickup_window_end",
           "order_cutoff_minutes",
           "status",
+          "currency",
           "rating_avg",
           "rating_count"
         ]
@@ -1042,6 +1165,89 @@
         ],
         "additionalProperties": false
       },
+      "PlaceCandidateList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "lat": {
+              "type": "number"
+            },
+            "lng": {
+              "type": "number"
+            },
+            "address": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string",
+              "nullable": true
+            },
+            "state": {
+              "type": "string",
+              "nullable": true
+            },
+            "country": {
+              "type": "string",
+              "nullable": true
+            },
+            "kind": {
+              "type": "string",
+              "description": "The OpenStreetMap tag pair, such as `amenity/marketplace`."
+            },
+            "image_url": {
+              "type": "string",
+              "nullable": true,
+              "description": "A thumbnail from a relevant Wikimedia Commons file, either matched to this market or a labeled regional fallback; null when neither is available."
+            },
+            "image_credit": {
+              "type": "string",
+              "nullable": true,
+              "description": "Visible credit for the photo source."
+            },
+            "image_link": {
+              "type": "string",
+              "nullable": true,
+              "format": "uri",
+              "description": "Source page linked beside the photo."
+            },
+            "image_kind": {
+              "type": "string",
+              "nullable": true,
+              "enum": [
+                "exact",
+                "regional"
+              ]
+            },
+            "image_region": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "required": [
+            "ref",
+            "name",
+            "lat",
+            "lng",
+            "address",
+            "city",
+            "state",
+            "country",
+            "kind",
+            "image_url",
+            "image_credit",
+            "image_link",
+            "image_kind",
+            "image_region"
+          ]
+        }
+      },
       "MarketList": {
         "type": "object",
         "properties": {
@@ -1065,6 +1271,11 @@
                 },
                 "state": {
                   "type": "string"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
                 },
                 "lat": {
                   "type": "number"
@@ -1099,6 +1310,7 @@
                 "address",
                 "city",
                 "state",
+                "currency",
                 "lat",
                 "lng",
                 "operating_days",
@@ -1161,6 +1373,11 @@
                 "state": {
                   "type": "string"
                 },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
                 "lat": {
                   "type": "number"
                 },
@@ -1199,6 +1416,7 @@
                 "address",
                 "city",
                 "state",
+                "currency",
                 "lat",
                 "lng",
                 "operating_days",
@@ -1283,6 +1501,11 @@
                 "rating_count": {
                   "type": "integer"
                 },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
                 "operating_days": {
                   "type": "array",
                   "items": {
@@ -1301,6 +1524,7 @@
                 "lng",
                 "rating_avg",
                 "rating_count",
+                "currency",
                 "operating_days"
               ]
             }
@@ -1332,6 +1556,1214 @@
           "data",
           "meta"
         ]
+      },
+      "ProductList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "price_minor": {
+                  "type": "integer"
+                },
+                "image_urls": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "is_organic": {
+                  "type": "boolean"
+                },
+                "category": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "slug"
+                  ]
+                },
+                "quantity_available": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "is_sold_out": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "farmer": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "stall_name": {
+                      "type": "string"
+                    },
+                    "rating_avg": {
+                      "type": "number"
+                    },
+                    "rating_count": {
+                      "type": "integer"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 3
+                    },
+                    "operating_days": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "pickup_window_start": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pickup_window_end": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "order_cutoff_minutes": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "stall_name",
+                    "rating_avg",
+                    "rating_count",
+                    "currency",
+                    "operating_days",
+                    "pickup_window_start",
+                    "pickup_window_end",
+                    "order_cutoff_minutes"
+                  ]
+                },
+                "markets": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "days": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "opens_at": {
+                        "type": "string"
+                      },
+                      "closes_at": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "city",
+                      "days",
+                      "opens_at",
+                      "closes_at"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "unit",
+                "price_minor",
+                "image_urls",
+                "is_organic",
+                "category",
+                "quantity_available",
+                "is_sold_out",
+                "description",
+                "farmer",
+                "markets"
+              ]
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "total",
+              "page",
+              "limit"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "CreateOrder": {
+        "type": "object",
+        "properties": {
+          "market_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pickup_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "pickup_slot_start": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "pickup_slot_end": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "product_id",
+                "quantity"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 30
+          }
+        },
+        "required": [
+          "market_id",
+          "pickup_date",
+          "pickup_slot_start",
+          "pickup_slot_end",
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "placed",
+              "accepted",
+              "preparing",
+              "ready_for_pickup",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "subtotal_minor": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "delivery_fee_minor": {
+            "type": "number",
+            "enum": [
+              0
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "pickup_date": {
+            "type": "string"
+          },
+          "pickup_slot_start": {
+            "type": "string"
+          },
+          "pickup_slot_end": {
+            "type": "string"
+          },
+          "cutoff_at": {
+            "type": "string"
+          },
+          "placed_at": {
+            "type": "string"
+          },
+          "accepted_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "ready_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "completed_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "cancelled_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "farmer": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "stall_name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "stall_name"
+            ]
+          },
+          "market": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "lat": {
+                "type": "number",
+                "nullable": true,
+                "minimum": -90,
+                "exclusiveMinimum": true,
+                "maximum": 90,
+                "exclusiveMaximum": true,
+                "description": "Decimal degrees. Strictly inside ±90 because the bounding-box maths for \"nearby\" divides by cos(lat), which is zero at the poles."
+              },
+              "lng": {
+                "type": "number",
+                "nullable": true,
+                "minimum": -180,
+                "maximum": 180
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "address",
+              "city",
+              "lat",
+              "lng"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "price_minor": {
+                  "type": "integer"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
+                },
+                "reviewed": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "product_id",
+                "name",
+                "unit",
+                "price_minor",
+                "quantity",
+                "reviewed"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "status",
+          "subtotal_minor",
+          "delivery_fee_minor",
+          "currency",
+          "pickup_date",
+          "pickup_slot_start",
+          "pickup_slot_end",
+          "cutoff_at",
+          "placed_at",
+          "accepted_at",
+          "ready_at",
+          "completed_at",
+          "cancelled_at",
+          "farmer",
+          "market",
+          "items"
+        ]
+      },
+      "OrderList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "reference": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "placed",
+                    "accepted",
+                    "preparing",
+                    "ready_for_pickup",
+                    "completed",
+                    "cancelled"
+                  ]
+                },
+                "subtotal_minor": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "delivery_fee_minor": {
+                  "type": "number",
+                  "enum": [
+                    0
+                  ]
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
+                "pickup_date": {
+                  "type": "string"
+                },
+                "pickup_slot_start": {
+                  "type": "string"
+                },
+                "pickup_slot_end": {
+                  "type": "string"
+                },
+                "cutoff_at": {
+                  "type": "string"
+                },
+                "placed_at": {
+                  "type": "string"
+                },
+                "accepted_at": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "ready_at": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "completed_at": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "cancelled_at": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "farmer": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "stall_name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "stall_name"
+                  ]
+                },
+                "market": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "lat": {
+                      "type": "number",
+                      "nullable": true,
+                      "minimum": -90,
+                      "exclusiveMinimum": true,
+                      "maximum": 90,
+                      "exclusiveMaximum": true,
+                      "description": "Decimal degrees. Strictly inside ±90 because the bounding-box maths for \"nearby\" divides by cos(lat), which is zero at the poles."
+                    },
+                    "lng": {
+                      "type": "number",
+                      "nullable": true,
+                      "minimum": -180,
+                      "maximum": 180
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "address",
+                    "city",
+                    "lat",
+                    "lng"
+                  ]
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "product_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "price_minor": {
+                        "type": "integer"
+                      },
+                      "quantity": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                      },
+                      "reviewed": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "product_id",
+                      "name",
+                      "unit",
+                      "price_minor",
+                      "quantity",
+                      "reviewed"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "reference",
+                "status",
+                "subtotal_minor",
+                "delivery_fee_minor",
+                "currency",
+                "pickup_date",
+                "pickup_slot_start",
+                "pickup_slot_end",
+                "cutoff_at",
+                "placed_at",
+                "accepted_at",
+                "ready_at",
+                "completed_at",
+                "cancelled_at",
+                "farmer",
+                "market",
+                "items"
+              ]
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "total",
+              "page",
+              "limit"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ProductCard": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "price_minor": {
+            "type": "integer"
+          },
+          "image_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_organic": {
+            "type": "boolean"
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "slug"
+            ]
+          },
+          "quantity_available": {
+            "type": "integer",
+            "nullable": true
+          },
+          "is_sold_out": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "farmer": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "stall_name": {
+                "type": "string"
+              },
+              "rating_avg": {
+                "type": "number"
+              },
+              "rating_count": {
+                "type": "integer"
+              },
+              "currency": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 3
+              },
+              "operating_days": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "pickup_window_start": {
+                "type": "string",
+                "nullable": true
+              },
+              "pickup_window_end": {
+                "type": "string",
+                "nullable": true
+              },
+              "order_cutoff_minutes": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "stall_name",
+              "rating_avg",
+              "rating_count",
+              "currency",
+              "operating_days",
+              "pickup_window_start",
+              "pickup_window_end",
+              "order_cutoff_minutes"
+            ]
+          },
+          "markets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "days": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "opens_at": {
+                  "type": "string"
+                },
+                "closes_at": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "city",
+                "days",
+                "opens_at",
+                "closes_at"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "unit",
+          "price_minor",
+          "image_urls",
+          "is_organic",
+          "category",
+          "quantity_available",
+          "is_sold_out",
+          "description",
+          "farmer",
+          "markets"
+        ]
+      },
+      "FarmerProductInput": {
+        "type": "object",
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 1000
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "basket",
+              "bunch",
+              "pack",
+              "crate",
+              "l",
+              "kg"
+            ]
+          },
+          "price_minor": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991
+          },
+          "image_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 2048,
+              "format": "uri"
+            },
+            "maxItems": 5,
+            "default": []
+          },
+          "is_organic": {
+            "type": "boolean",
+            "default": false
+          },
+          "template_qty": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "quantity_available": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "is_sold_out": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "category_id",
+          "name",
+          "unit",
+          "price_minor",
+          "quantity_available"
+        ],
+        "additionalProperties": false
+      },
+      "FarmerProduct": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category_name": {
+            "type": "string"
+          },
+          "category_slug": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "price_minor": {
+            "type": "integer"
+          },
+          "image_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_organic": {
+            "type": "boolean"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "template_qty": {
+            "type": "integer"
+          },
+          "quantity_available": {
+            "type": "integer"
+          },
+          "is_sold_out": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "category_id",
+          "category_name",
+          "category_slug",
+          "unit",
+          "price_minor",
+          "image_urls",
+          "is_organic",
+          "is_active",
+          "template_qty",
+          "quantity_available",
+          "is_sold_out"
+        ]
+      },
+      "FarmerProductList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "category_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "category_name": {
+              "type": "string"
+            },
+            "category_slug": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "price_minor": {
+              "type": "integer"
+            },
+            "image_urls": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "is_organic": {
+              "type": "boolean"
+            },
+            "is_active": {
+              "type": "boolean"
+            },
+            "template_qty": {
+              "type": "integer"
+            },
+            "quantity_available": {
+              "type": "integer"
+            },
+            "is_sold_out": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "description",
+            "category_id",
+            "category_name",
+            "category_slug",
+            "unit",
+            "price_minor",
+            "image_urls",
+            "is_organic",
+            "is_active",
+            "template_qty",
+            "quantity_available",
+            "is_sold_out"
+          ]
+        }
+      },
+      "ProductCategoryList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string"
+            },
+            "slug": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "slug"
+          ]
+        }
+      },
+      "Favorite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "target_type": {
+            "type": "string",
+            "enum": [
+              "farmer",
+              "product",
+              "market"
+            ]
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "href": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "target_type",
+          "target_id",
+          "name",
+          "photo_url",
+          "href",
+          "created_at"
+        ]
+      },
+      "FavoriteList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "target_type": {
+              "type": "string",
+              "enum": [
+                "farmer",
+                "product",
+                "market"
+              ]
+            },
+            "target_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string"
+            },
+            "photo_url": {
+              "type": "string",
+              "nullable": true
+            },
+            "href": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "target_type",
+            "target_id",
+            "name",
+            "photo_url",
+            "href",
+            "created_at"
+          ]
+        }
+      },
+      "FavoriteTarget": {
+        "type": "object",
+        "properties": {
+          "target_type": {
+            "type": "string",
+            "enum": [
+              "farmer",
+              "product",
+              "market"
+            ]
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "target_type",
+          "target_id"
+        ],
+        "additionalProperties": false
+      },
+      "ProductImageUploadResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "NotificationList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            },
+            "link": {
+              "type": "string",
+              "nullable": true
+            },
+            "read_at": {
+              "type": "string",
+              "nullable": true
+            },
+            "created_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "kind",
+            "title",
+            "body",
+            "link",
+            "read_at",
+            "created_at"
+          ]
+        }
       },
       "FarmerMarketList": {
         "type": "array",
@@ -1625,6 +3057,164 @@
         }
       }
     },
+    "/farmers/me/markets": {
+      "put": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "Set the markets where the caller trades",
+        "description": "The stall owner can choose active markets in the same currency and only days both the stall and market operate.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FarmerMarketAssignments"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated stall markets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerMarketList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Market assignments or trading days are invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Farmer accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "Which markets the caller’s stall attends",
+        "description": "Each entry carries the pitch reference and the days this stall is there, which is what tells a farmer packing a van whether it is A12 on Tuesday or F01 on Saturday.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The stall's markets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerMarketList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not a farmer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The account is a farmer but has no stall row.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/farmers/me/insights": {
+      "get": {
+        "tags": [
+          "Farmers"
+        ],
+        "summary": "Read sales and weekly stock insights",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All-time order totals, completed pickup value and best sellers."
+          },
+          "401": {
+            "description": "No valid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not a farmer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The farmer stall does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/farmers/{id}": {
       "get": {
         "tags": [
@@ -1883,25 +3473,58 @@
         }
       }
     },
-    "/farmers/me/markets": {
+    "/geo/search": {
       "get": {
         "tags": [
-          "Farmers"
+          "Places"
         ],
-        "summary": "Which markets the caller’s stall attends",
-        "description": "Each entry carries the pitch reference and the days this stall is there, which is what tells a farmer packing a van whether it is A12 on Tuesday or F01 on Saturday.",
+        "summary": "Find a place by name, for dropping a pin on it",
+        "description": "Backed by the OpenStreetMap gazetteer, so it knows places this database has never heard of — which is the point when the row being added is the first of its kind. Results come back in the order the gazetteer ranked them, and are candidates rather than an answer: the caller picks one, and what gets stored is the picker’s choice, not this list. Nothing is written here, and nothing is cached beyond the upstream’s own headers.",
         "security": [
           {
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 80
+            },
+            "required": true,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 5
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "The stall's markets.",
+            "description": "Candidate pins, best match first.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FarmerMarketList"
+                  "$ref": "#/components/schemas/PlaceCandidateList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query is shorter than three characters or longer than eighty.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1916,8 +3539,8 @@
               }
             }
           },
-          "403": {
-            "description": "The account is not a farmer.",
+          "429": {
+            "description": "The gazetteer is throttling this server. Retry shortly.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1926,8 +3549,157 @@
               }
             }
           },
-          "404": {
-            "description": "The account is a farmer but has no stall row.",
+          "500": {
+            "description": "The gazetteer did not answer, or answered with something unrecognisable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/places/markets": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Markets the map knows about, listed or not",
+        "description": "Places tagged `amenity=marketplace` in OpenStreetMap. A term that does not already name a market is asked of the gazetteer with the word `market` appended, because a bare town name ranks the town and its streets rather than its gates. These are not MarketLink vendors and have no stall roster behind them; the point is that the continent is bigger than what has been approved here. Attribution is owed to OpenStreetMap contributors wherever these are shown, under ODbL.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 80
+            },
+            "required": true,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 5
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marketplaces the map knows, best match first. Empty is a real answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceCandidateList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query is shorter than three characters or longer than eighty.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The gazetteer is throttling this server. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The gazetteer did not answer, or answered with something unrecognisable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/places/markets/box": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Markets the map knows about, inside one corner of the map",
+        "description": "Places tagged `amenity=marketplace` in OpenStreetMap within `bbox`, which is at most 0.6° across — roughly the area a visitor can see at one zoom. Nodes the map has not named are left out, since an unlabelled dot is not a choice a visitor can make, and the order carries no ranking. If Overpass mirrors fail, Photon searches the same box for named marketplace nodes so discovery can continue. A relevant, licensed Commons photo is matched to the market name first, with a clearly labeled city or country photo as a fallback. The image fields are null when neither match is available. Not MarketLink vendors: no stall roster, no trading days, no page. Attribution is owed to OpenStreetMap contributors wherever these are shown, under ODbL.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^-?\\d{1,3}(?:\\.\\d{1,6})?(?:\\s*,\\s*-?\\d{1,3}(?:\\.\\d{1,6})?){3}$"
+            },
+            "required": true,
+            "name": "bbox",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 6
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Named OSM marketplaces in the box, from Overpass or a Photon fallback. May be empty if no named markets are mapped.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceCandidateList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The bbox is malformed, inverted, off the planet, or wider than 0.6°.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The map data service is throttling this server. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The map data service did not answer, or answered with something unrecognisable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2224,6 +3996,2173 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Read an active product listing",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product, current stock, farmer and pickup markets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCard"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`id` is not a uuid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No active product on an approved stall has this id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "List product categories",
+        "responses": {
+          "200": {
+            "description": "Categories available for listings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCategoryList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/farmers/me/products": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "List the caller’s products and this week’s stock",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listings owned by the farmer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerProductList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Farmer accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Create a listing and set this week’s stock",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FarmerProductInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created product.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerProduct"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Listing or inventory fields are invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/farmers/me/products/{id}": {
+      "delete": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Archive one of the caller’s product listings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Listing archived."
+          },
+          "404": {
+            "description": "The listing is not owned by the caller.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Edit a listing and update this week’s stock",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FarmerProductInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated product.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerProduct"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The listing is not owned by the caller.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Browse active products from approved farmers",
+        "description": "Returns live listings and this week’s stock. Filters can narrow by name, category, market, market day, farmer and price; unavailable products remain visible unless `in_stock_only=true`.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 24
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "required": false,
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "market_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "farmer_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "day",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 3
+            },
+            "required": false,
+            "name": "currency",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0
+            },
+            "required": false,
+            "name": "min_price_minor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0
+            },
+            "required": false,
+            "name": "max_price_minor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": "false"
+            },
+            "required": false,
+            "name": "in_stock_only",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "popular",
+                "price_low",
+                "price_high",
+                "newest"
+              ],
+              "default": "popular"
+            },
+            "required": false,
+            "name": "sort",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of matching products.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A filter is malformed or the minimum price exceeds the maximum.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Place a pay-at-pickup order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrder"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order placed and stock reserved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Pickup, market, or item data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stock or pickup cutoff is no longer available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "List the caller’s orders",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 24
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "placed",
+                "accepted",
+                "preparing",
+                "ready_for_pickup",
+                "completed",
+                "cancelled"
+              ]
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "today"
+              ]
+            },
+            "required": false,
+            "name": "scope",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orders for this customer or farmer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}/reviews": {
+      "post": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Review a product after completed pickup",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "rating": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "title": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 120
+                  },
+                  "body": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "product_id",
+                  "rating"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Review recorded and ratings refreshed."
+          },
+          "400": {
+            "description": "Only products in a completed order can be reviewed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This product has already been reviewed for that order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/reference/{reference}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Read an order by reference",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "required": true,
+            "name": "reference",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order visible to its customer or assigned farmer."
+          },
+          "404": {
+            "description": "Order not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Cancel before the pickup cutoff",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order cancelled and reserved stock restored."
+          },
+          "409": {
+            "description": "The order cannot be cancelled now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}/items": {
+      "patch": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Modify order items before pickup cutoff",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "product_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 100
+                        }
+                      },
+                      "required": [
+                        "product_id",
+                        "quantity"
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 30
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Items updated and reserved stock adjusted atomically."
+          },
+          "409": {
+            "description": "The pickup cutoff has passed or stock changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}/status": {
+      "patch": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Advance a farmer pickup order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "accepted",
+                      "preparing",
+                      "ready_for_pickup",
+                      "completed",
+                      "cancelled"
+                    ]
+                  }
+                },
+                "required": [
+                  "status"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order status changed."
+          },
+          "409": {
+            "description": "Invalid order status transition.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/overview": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Read dashboard metrics and pending work",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/markets": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List markets for administration",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create a market",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/markets/{id}": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Edit a market",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/markets/{id}/farmers": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Read a market stall roster",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Assign a farmer to a market",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/markets/{id}/farmers/{farmerId}": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Remove a farmer from a market",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/farmers": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List farmers available for market assignment",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/accounts": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Search customer and farmer accounts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/accounts/{id}/active": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Activate or deactivate an account",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/announcements": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Send an announcement to active accounts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/categories": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List product categories",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create a product category",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/categories/{id}": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Edit a product category",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/reports": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Generate order and product activity reports",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/reviews": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List reviews for moderation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/reviews/{id}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Hide or restore a review",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/farmers/{id}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Approve or suspend a farmer stall",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/products/{id}": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Hide or restore a product listing",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation completed."
+          },
+          "201": {
+            "description": "Resource created."
+          },
+          "400": {
+            "description": "Request data is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/favorites": {
+      "get": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "List the customer’s saved markets, farmers, and products",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved targets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavoriteList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Save a market, farmer, or product",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteTarget"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved target.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Favorite"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Target is not available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/favorites/{type}/{id}": {
+      "delete": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Remove a saved target",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "farmer",
+                "product",
+                "market"
+              ]
+            },
+            "required": true,
+            "name": "type",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Favorite removed."
+          },
+          "401": {
+            "description": "Sign in first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uploads/products": {
+      "post": {
+        "tags": [
+          "Uploads"
+        ],
+        "summary": "Upload a product photo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Public image URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductImageUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported file type or the image exceeds 5 MB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Farmer accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uploads/stall": {
+      "post": {
+        "tags": [
+          "Uploads"
+        ],
+        "summary": "Upload a stall photo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Public image URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductImageUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported file type or the image exceeds 5 MB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Farmer accounts only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Read signed-in user notifications",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent notifications, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark one notification as read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification marked read."
+          },
+          "404": {
+            "description": "Notification not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark all notifications as read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Read count returned."
           }
         }
       }

@@ -29,7 +29,10 @@ export interface ApiOptions {
 export interface ApiClient {
   get: <T>(path: string) => Promise<T>;
   post: <T>(path: string, body?: unknown) => Promise<T>;
+  put: <T>(path: string, body?: unknown) => Promise<T>;
   patch: <T>(path: string, body?: unknown) => Promise<T>;
+  delete: <T>(path: string) => Promise<T>;
+  upload: <T>(path: string, file: File) => Promise<T>;
 }
 
 /**
@@ -53,9 +56,9 @@ async function send(
       headers: {
         accept: 'application/json',
         ...(token ? { authorization: `Bearer ${token}` } : {}),
-        ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+        ...(body === undefined || (typeof FormData !== 'undefined' && body instanceof FormData) ? {} : { 'content-type': 'application/json' }),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : (typeof FormData !== 'undefined' && body instanceof FormData ? body : JSON.stringify(body)),
     });
   } catch {
     // The server is unreachable. Not an ApiError from the envelope table: nothing answered.
@@ -117,6 +120,12 @@ export function createApi({ baseUrl = '/api', getToken, fetchImpl }: ApiOptions)
   return {
     get: (path) => call('GET', path) as Promise<never>,
     post: (path, body) => call('POST', path, body) as Promise<never>,
+    put: (path, body) => call('PUT', path, body) as Promise<never>,
     patch: (path, body) => call('PATCH', path, body) as Promise<never>,
+    delete: (path) => call('DELETE', path) as Promise<never>,
+    upload: (path, file) => {
+      const form = new FormData(); form.append('image', file);
+      return call('POST', path, form) as Promise<never>;
+    },
   };
 }

@@ -1,13 +1,22 @@
-import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { MarketCard } from '../components/discovery/MarketCard';
+import { MarketCard, PlaceCard } from '../components/discovery/MarketCard';
 import { StateNote } from '../components/discovery/StateNote';
 import type { MarketMapHandle } from '../components/discovery/MarketMap';
 import { Button } from '../components/ui/Button';
 import { Chip } from '../components/ui/Chip';
 import { Input } from '../components/ui/Input';
-import { LAGOS, WEEK, useMarketList, useNearbyMarkets, type MarketFilters } from '../lib/discovery';
-import type { Market, NearbyMarket, Weekday } from '../lib/types';
+import {
+  LAGOS,
+  WEEK,
+  marketBox,
+  useMarketList,
+  useMarketPlaces,
+  useMarketsInBox,
+  useNearbyMarkets,
+  type MarketFilters,
+} from '../lib/discovery';
+import type { Market, NearbyMarket, PlaceCandidate, Weekday } from '../lib/types';
 import { Reveal } from '../motion/reveal';
 
 /**
@@ -36,6 +45,21 @@ function asNumber(value: string | null): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+/**
+ * Whether the map's place is one of ours under another name.
+ *
+ * An OSM node called `Bodija Market` and a row called `Bodija` are the same gate, and listing
+ * both reads as a market we have not got round to approving. Names are stripped to lowercase
+ * alphanumerics with the word `market` dropped, which is the whole of the matching: two
+ * genuinely different gates that reduce to the same string are rare enough that showing the
+ * duplicate is the cheaper mistake.
+ */
+function listedAlready(place: PlaceCandidate, markets: (Market | NearbyMarket)[]): boolean {
+  const key = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/market$/, '');
+  const mine = key(place.name);
+  return markets.some((m) => key(m.name) === mine);
+}
+
 export default function Markets() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
@@ -44,6 +68,7 @@ export default function Markets() {
   /** Which half of the small-screen pair is showing: a view preference, not shareable state. */
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
   const [where, setWhere] = useState<string | null>(null);
+  const [visiblePlaceCount, setVisiblePlaceCount] = useState(16);
 
   const q = params.get('q') ?? '';
   const city = params.get('city') ?? '';
@@ -76,6 +101,24 @@ export default function Markets() {
 
   const active = nearby ? near : list;
   const markets: (Market | NearbyMarket)[] = active.data?.data ?? [];
+
+  // The gazetteer is asked with whatever word the visitor typed, in either box: `Lagos` in the
+  // city field is the same question as `Lagos` in the search field. Before there is a word to
+  // ask with, the question is asked by area instead — the corner of the map being looked at —
+  // because a gazetteer ranks a city and answers with the wrong six nodes.
+  const typed = [q, city].filter(Boolean).join(' ').trim();
+  const byName = typed.length >= 3;
+  const centre = nearby ? { lat: lat ?? LAGOS.lat, lng: lng ?? LAGOS.lng } : LAGOS;
+  const searched = useMarketPlaces(typed);
+  const boxed = useMarketsInBox(marketBox(centre, nearby ? radius : undefined), !byName);
+  const places = byName ? searched : boxed;
+  const allUnlisted = useMemo(
+    () => (places.data ?? []).filter((p) => !listedAlready(p, markets)),
+    [places.data, markets],
+  );
+  const unlisted = useMemo(() => allUnlisted.slice(0, visiblePlaceCount), [allUnlisted, visiblePlaceCount]);
+
+  useEffect(() => setVisiblePlaceCount(16), [q, city, lat, lng, radius]);
 
   function patch(next: Record<string, string | undefined>) {
     const merged = new URLSearchParams(params);
@@ -162,6 +205,9 @@ export default function Markets() {
             onChange={(e) => setCityDraft(e.target.value)}
             placeholder="Lagos"
           />
+          <Button type="submit" size="sm" className="sm:col-span-2 sm:justify-self-start">
+            Search markets
+          </Button>
         </form>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3">
@@ -279,12 +325,43 @@ export default function Markets() {
                   <MarketCard
                     key={market.id}
                     market={market}
+                    linkToMarket={false}
                     selected={selected === market.id}
                     onFocus={() => focus(market.id)}
                   />
                 ))}
               </Reveal>
             )}
+
+            {unlisted.length > 0 ? (
+              <section aria-label="Additional mapped market places" className="mt-10">
+                <div>
+                  {unlisted.map((place) => (
+                    <PlaceCard key={place.ref} place={place} onFocus={() => focus(place.ref)} />
+                  ))}
+                </div>
+
+                {visiblePlaceCount < allUnlisted.length ? (
+                  <div className="mt-4 flex items-center gap-3">
+                    <Button variant="ghost" size="sm" onClick={() => setVisiblePlaceCount((count) => count + 16)}>
+                      Load more places
+                    </Button>
+                    <span className="text-xs text-muted">Showing {unlisted.length} of {allUnlisted.length}</span>
+                  </div>
+                ) : null}
+
+                <p className="mt-3 text-xs leading-relaxed text-muted">
+                  Names and positions from{' '}
+                  <a
+                    href="https://www.openstreetmap.org/copyright"
+                    className="underline underline-offset-2 hover:text-primary"
+                  >
+                    OpenStreetMap contributors
+                  </a>
+                  , available under the Open Data Commons ODbL licence.
+                </p>
+              </section>
+            ) : null}
           </div>
 
           <div
@@ -302,7 +379,8 @@ export default function Markets() {
               <MarketMap
                 ref={mapRef}
                 markets={markets}
-                origin={nearby ? { lat: lat ?? LAGOS.lat, lng: lng ?? LAGOS.lng } : null}
+                places={unlisted}
+                origin={nearby ? centre : null}
                 selectedId={selected}
                 onSelect={setSelected}
                 onOpen={(id) => navigate(`/markets/${id}`)}

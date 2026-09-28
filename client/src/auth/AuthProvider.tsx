@@ -33,6 +33,7 @@ export interface AuthValue {
   message: string | null;
   api: ApiClient;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (input: SignUpInput) => Promise<{ needsConfirmation: boolean }>;
   completeBootstrap: (input: BootstrapInput) => Promise<void>;
   signOut: () => Promise<void>;
@@ -162,6 +163,10 @@ export function AuthProvider({
     [refresh, requireGateway],
   );
 
+  const signInWithGoogle = useCallback(async () => {
+    await requireGateway().signInWithGoogle();
+  }, [requireGateway]);
+
   const bootstrap = useCallback(
     async (input: BootstrapInput) => {
       await api.post<Profile>('/auth/bootstrap', input);
@@ -186,11 +191,22 @@ export function AuthProvider({
   );
 
   const signOut = useCallback(async () => {
-    await requireGateway().signOut();
+    const auth = requireGateway();
+    try {
+      await auth.signOut();
+    } catch (err) {
+      // Supabase can remove the browser session and still return a server-side revocation
+      // error. Treat that as logged out; only restore auth state if a local token remains.
+      if (await auth.currentToken().catch(() => null)) {
+        await refresh();
+        setMessage(messageFrom(err));
+        return;
+      }
+    }
     clear();
     setMessage(null);
     setStatus('signed_out');
-  }, [clear, requireGateway]);
+  }, [clear, refresh, requireGateway]);
 
   const value = useMemo<AuthValue>(
     () => ({
@@ -201,12 +217,13 @@ export function AuthProvider({
       message,
       api,
       signIn,
+      signInWithGoogle,
       signUp,
       completeBootstrap: bootstrap,
       signOut,
       refresh,
     }),
-    [api, bootstrap, farmer, gateway, message, profile, refresh, signIn, signOut, status],
+    [api, bootstrap, farmer, gateway, message, profile, refresh, signIn, signInWithGoogle, signOut, status],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

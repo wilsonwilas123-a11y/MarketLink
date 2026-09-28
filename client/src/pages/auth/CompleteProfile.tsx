@@ -43,7 +43,9 @@ export default function CompleteProfile() {
         ...details.values,
         full_name: details.values.full_name.trim(),
         phone: details.values.phone.trim(),
-        address: details.values.address.trim() || undefined,
+        address: details.values.address.trim(),
+        country: details.values.role === 'farmer' ? details.values.country : undefined,
+        stall_name: details.values.role === 'farmer' ? details.values.stall_name.trim() : undefined,
       });
     } catch (err) {
       setError(

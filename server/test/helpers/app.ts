@@ -1,6 +1,8 @@
 import type { Pool } from 'pg';
 import type { AppDeps } from '../../src/app.js';
 import type { AuthSubject, AuthVerifier } from '../../src/lib/auth.js';
+import type { PlaceCandidate } from '../../src/api/schemas.js';
+import type { MarketBox, Geocoder } from '../../src/services/geocode.js';
 
 export interface FakePool extends Pool {
   calls: Array<{ text: string; values: unknown[] }>;
@@ -58,6 +60,39 @@ export const profileRow = {
   updated_at: '2026-09-24T09:00:00.000Z',
 };
 
+/** A geocoder that never dials out: canned candidates, and a record of what was asked. */
+export function fakeGeocode(candidates: PlaceCandidate[] = [], failure?: unknown): Geocoder & {
+  calls: Array<{ query: string; limit: number }>;
+  marketCalls: Array<{ query: string; limit: number }>;
+  boxCalls: Array<{ box: MarketBox; limit: number }>;
+} {
+  const calls: Array<{ query: string; limit: number }> = [];
+  const marketCalls: Array<{ query: string; limit: number }> = [];
+  const boxCalls: Array<{ box: MarketBox; limit: number }> = [];
+  return {
+    calls,
+    marketCalls,
+    boxCalls,
+    async search(query, limit) {
+      calls.push({ query, limit });
+      if (failure) throw failure;
+      return candidates;
+    },
+    // The stub hands back what it was given either way: the tag filter belongs to the real
+    // geocoder, and a route test that asserted it here would be testing the stub.
+    async markets(query, limit) {
+      marketCalls.push({ query, limit });
+      if (failure) throw failure;
+      return candidates;
+    },
+    async inBox(box, limit) {
+      boxCalls.push({ box, limit });
+      if (failure) throw failure;
+      return candidates;
+    },
+  };
+}
+
 export function testDeps(overrides: Partial<AppDeps> = {}): AppDeps {
-  return { pool: fakePool([profileRow]), auth: fakeAuth(demoSubject), ...overrides };
+  return { pool: fakePool([profileRow]), auth: fakeAuth(demoSubject), geocode: fakeGeocode(), ...overrides };
 }

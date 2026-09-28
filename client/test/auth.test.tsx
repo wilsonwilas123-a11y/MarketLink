@@ -38,6 +38,7 @@ const farmDetails: BootstrapInput & { email: string; password: string } = {
   full_name: 'Tunde Bakare',
   phone: '+2348031112222',
   role: 'farmer',
+  country: 'Nigeria',
 };
 
 describe('AuthProvider restore on load', () => {

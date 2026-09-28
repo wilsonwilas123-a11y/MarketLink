@@ -6,6 +6,12 @@ import type { BootstrapInput, FarmerLink, Me, Profile, UpdateMeInput } from '../
 const PROFILE_COLUMNS = `id, role, full_name, phone, address, avatar_url, is_active,
                          created_at, updated_at`;
 
+const FARMER_CURRENCY: Record<string, string> = {
+  Nigeria: 'NGN', Ghana: 'GHS', Kenya: 'KES', 'South Africa': 'ZAR', Senegal: 'XOF',
+  "Côte d'Ivoire": 'XOF', Cameroon: 'XAF', Uganda: 'UGX', Tanzania: 'TZS', Rwanda: 'RWF',
+  Egypt: 'EGP', Morocco: 'MAD', Ethiopia: 'ETB', Botswana: 'BWP', Zambia: 'ZMW', Mozambique: 'MZN',
+};
+
 /**
  * Creates the profile that Supabase Auth does not know about.
  *
@@ -19,38 +25,51 @@ const PROFILE_COLUMNS = `id, role, full_name, phone, address, avatar_url, is_act
  * the applicant so the row is intelligible in that queue; they rename it from their
  * dashboard.
  *
- * The two writes are not one transaction. If the stall insert is lost to a dropped
- * connection the profile survives without one, and the client's retry lands the stall —
- * `on conflict do nothing` makes that safe — which is why no rollback is needed here.
+ * The profile and farmer rows are written in one transaction. A retry after a network
+ * interruption therefore sees either both rows or neither, never a half-created account.
  */
 export async function bootstrapProfile(
   pool: Pool,
   subject: AuthSubject,
   input: BootstrapInput,
 ): Promise<Profile> {
-  const { rows } = await pool.query(
-    `insert into profiles (id, role, full_name, phone, address)
-     values ($1, $2, $3, $4, $5)
-     on conflict (id) do update
-        set full_name = excluded.full_name,
-            phone     = excluded.phone,
-            address   = coalesce(excluded.address, profiles.address)
-     returning ${PROFILE_COLUMNS}`,
-    [subject.id, input.role, input.full_name, input.phone, input.address ?? null],
-  );
-
-  const profile = rows[0] as Profile;
-
-  if (input.role === 'farmer') {
-    await pool.query(
-      `insert into farmers (profile_id, stall_name, contact_person, status)
-       values ($1, $2, $2, 'pending')
-       on conflict (profile_id) do nothing`,
-      [subject.id, input.full_name],
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    const { rows } = await client.query(
+      `insert into profiles (id, role, full_name, phone, address)
+       values ($1, $2, $3, $4, $5)
+       on conflict (id) do update
+          set full_name = excluded.full_name,
+              phone     = excluded.phone,
+              address   = coalesce(excluded.address, profiles.address)
+       returning ${PROFILE_COLUMNS}`,
+      [subject.id, input.role, input.full_name, input.phone, input.address ?? null],
     );
-  }
 
-  return profile;
+    const profile = rows[0] as Profile;
+
+    // Keep the role in Postgres authoritative. A retry must not create a farmer row for
+    // an account whose existing profile was created as a customer.
+    if (profile.role === 'farmer' && input.role === 'farmer') {
+      const country = input.country!;
+      const currency = FARMER_CURRENCY[country];
+      await client.query(
+        `insert into farmers (profile_id, stall_name, contact_person, status, country, currency)
+         values ($1, $2, $3, 'pending', $4, $5)
+         on conflict (profile_id) do nothing`,
+        [subject.id, input.stall_name ?? input.full_name, input.full_name, country, currency],
+      );
+    }
+
+    await client.query('commit');
+    return profile;
+  } catch (err) {
+    await client.query('rollback').catch(() => undefined);
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 /** The caller's profile plus the stall they own, if any. */

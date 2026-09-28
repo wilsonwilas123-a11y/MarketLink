@@ -21,6 +21,7 @@ import { HAVERSINE_KM, boundingBox, isOpenNow } from './geo.js';
  * precision, so nothing measurable is lost.
  */
 const MARKET_COLUMNS = `id, name, address, city, state,
+  currency,
   lat::float8 as lat, lng::float8 as lng,
   operating_days, opens_at, closes_at, image_url`;
 
@@ -118,7 +119,7 @@ export async function nearbyMarkets(
         where ${clauses.join(' and ')}
      ),
      inside as (
-       select id, name, address, city, state, lat, lng,
+       select id, name, address, city, state, currency, lat, lng,
               operating_days, opens_at, closes_at, image_url, is_open_now,
               round(exact_km::numeric, 2)::float8 as distance_km
          from boxed

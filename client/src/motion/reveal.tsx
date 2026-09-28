@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode, type Ref } from 'react';
 import gsap from 'gsap';
+import { prefersReducedMotion } from './preferences';
+export { prefersReducedMotion, REDUCE_QUERY } from './preferences';
 
 /**
  * The motion layer.
@@ -12,20 +14,6 @@ import gsap from 'gsap';
  * Everything here moves content that is already in the DOM at its final position, and only
  * `transform` and `opacity`. A tween therefore cannot cause the reflow it is drawing over.
  */
-
-export const REDUCE_QUERY = '(prefers-reduced-motion: reduce)';
-
-/**
- * Whether to hold still.
- *
- * A missing `matchMedia` answers yes rather than no: an environment that cannot report the
- * preference — a server render, a test runner — has no display that needs the animation, and
- * the cost of guessing wrong is only that something appears without a fade.
- */
-export function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return true;
-  return window.matchMedia(REDUCE_QUERY).matches;
-}
 
 export interface RevealProps {
   children: ReactNode;
@@ -42,11 +30,11 @@ export interface RevealProps {
 }
 
 /**
- * Lifts its direct children in, one after another.
+ * Lifts its direct children in, one after another, as the row scrolls into view.
  *
- * Targets `children` rather than the wrapper so a card list reveals as a list. `clearProps`
- * hands the transform back to CSS when the tween ends, which is what keeps a later hover
- * transform from fighting an entrance that has already finished.
+ * Targets `children` rather than the wrapper so a card list reveals as a list. ScrollTrigger
+ * leaves off-screen content in its natural state until it is near view; context cleanup makes
+ * filter changes and React Strict Mode safe. `clearProps` hands transforms back to CSS when done.
  */
 export function Reveal({
   children,
@@ -63,18 +51,31 @@ export function Reveal({
     const el = host.current;
     if (!el || prefersReducedMotion()) return;
 
-    const tween = gsap.from(el.children, {
-      y,
-      opacity: 0,
-      duration,
-      stagger,
-      ease: 'power3.out',
-      clearProps: 'transform,opacity',
+    let context: gsap.Context | undefined;
+    let disposed = false;
+    void import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+      if (disposed) return;
+      gsap.registerPlugin(ScrollTrigger);
+      context = gsap.context(() => {
+        gsap.fromTo(el.children,
+          { y, autoAlpha: 0 },
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration,
+            stagger,
+            ease: 'power3.out',
+            clearProps: 'transform,opacity,visibility',
+            immediateRender: false,
+            scrollTrigger: { trigger: el, start: 'top 92%', once: true },
+          },
+        );
+      }, el);
     });
 
-    // Jump to the end before dropping it, so an interrupted entrance leaves children visible.
     return () => {
-      tween.progress(1).kill();
+      disposed = true;
+      context?.revert();
     };
   }, [revealKey, y, stagger, duration]);
 

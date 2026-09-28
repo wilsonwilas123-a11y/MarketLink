@@ -1,17 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=Karla:wght@400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 @import 'tailwindcss';
 
 /*
-  The page is a market notice board, not a dashboard.
-
-  One black sheet, white type for nearly everything, and one hand-painted sign blue kept back for
-  the single fact a shopper acts on — that a market is open right now. Depth comes from type size
-  and from whitespace rather than from surfaces stacked on surfaces, so there is no elevated tier
-  pretending to glow, no accent on a control that is only chrome, and no coloured tint behind the
-  black.
-
-  Contrast, checked against the base: white 19.4:1, warm grey 8.2:1, sign blue 9.6:1, ochre 9.9:1,
-  and black on a solid white block 19.4:1. All clear WCAG AA — and AAA at body size.
+  A warm, paper-white market canvas with deep produce-green actions. Local market photography and
+  real product details supply the color; hierarchy comes from measured type, clear space, and quiet
+  borders instead of dashboard chrome.
 */
 /*
   No colour here may be named `base`, `sm`, `lg` or any other type-scale word: a `--color-base`
@@ -20,52 +13,58 @@
   output, so check the built sheet before trusting one.
 */
 @theme {
-  /* The sheet. */
-  --color-sheet: #050505;
-  --color-surface: #0e0e0e;
-  --color-elevated: #171717;
-  --color-line: #2b2b2b;
+  /* Soft paper and clean white panels keep the product and market photos in focus. */
+  --color-sheet: #f5f7f3;
+  --color-surface: #ffffff;
+  --color-elevated: #edf2ec;
+  --color-line: #dbe4da;
 
   /* What is written on it. */
-  --color-primary: #ffffff;
-  --color-muted: #a8a49c;
+  --color-primary: #15271d;
+  --color-muted: #65756b;
+  /* Body copy sits a step above muted: a paragraph is meant to be read, not glanced at. */
+  --color-body: #46574c;
 
   /* The one loud colour, and the wash left behind by it. */
-  --color-accent: #8ab6e0;
-  --color-accent-soft: #16283a;
+  --color-accent: #216a49;
+  --color-accent-soft: #e5f2e9;
   /* The same hue at full weight, for the rare block of it. */
-  --color-accent-lift: #b9d5f0;
-  --color-warn: #e0b341;
-  --color-danger: #f08a8a;
+  --color-accent-lift: #c2e7cf;
+  --color-warn: #9a651b;
+  --color-danger: #b53e48;
 
   /* White type — on a solid block, or over a photograph. */
   --color-paper: #ffffff;
-  /* The black of the sheet, used where a plate has to sit on an image instead of on the page. */
-  --color-ink: #050505;
-  /* A control that is a block of colour rather than an outline: white, with black punched in. */
-  --color-block: #ffffff;
-  --color-on-block: #050505;
+  /* The deep green of the sheet, used where a plate has to sit on an image instead of on the page. */
+  --color-ink: #173325;
+  /* A control that is a block of colour rather than an outline: the accent, with the sheet punched in. */
+  --color-block: #216a49;
+  --color-on-block: #ffffff;
+  /* Kept dark for white copy on the farm photograph in the homepage hero. */
+  --color-veil: #06180f;
 
-  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-  --font-body: 'Karla', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* The black sheet's own photo plate. It cannot live in `@theme`: a token no utility references is
+/* A deep botanical plate for entries that have no matching photo. It cannot live in `@theme`: a token no utility references is
    pruned from the built sheet, and only `.ml-plate` and `.ml-plate-mark` read these. */
 :root {
-  --plate-hi: #1c1c1c;
-  --plate-mid: #121212;
-  --plate-lo: #0b0b0b;
-  --plate-mark: color-mix(in oklab, #ffffff 45%, transparent);
+  --plate-hi: #397a5c;
+  --plate-mid: #245a45;
+  --plate-lo: #153729;
+  --plate-mark: color-mix(in oklab, #ffffff 58%, transparent);
 }
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
     background-color: var(--color-sheet);
+    background-image: radial-gradient(ellipse at 50% -28%, rgb(66 119 79 / 0.09), transparent 62%);
+    background-attachment: fixed;
     color: var(--color-primary);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
@@ -78,10 +77,7 @@
   h4 {
     font-family: var(--font-display);
     font-weight: 600;
-    /* Fraunces is a variable optical face: let the size choose the setting rather than
-       flattening every heading to the same one. */
-    font-optical-sizing: auto;
-    letter-spacing: -0.018em;
+    letter-spacing: -0.035em;
   }
 
   :focus-visible {
@@ -91,8 +87,60 @@
 
   ::selection {
     background: var(--color-accent);
-    color: var(--color-ink);
+    color: var(--color-on-block);
   }
+
+  .motion-card {
+    transition: border-color 180ms ease;
+  }
+  .motion-card:focus-within {
+    border-color: color-mix(in oklab, var(--color-accent) 38%, var(--color-line));
+  }
+}
+
+.auth-orbit {
+  position: absolute;
+  z-index: 0;
+  width: clamp(220px, 34vw, 540px);
+  aspect-ratio: 1;
+  border: 1px solid rgb(33 106 73 / .08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.auth-orbit::before,
+.auth-orbit::after {
+  position: absolute;
+  inset: 9%;
+  border: 1px solid rgb(33 106 73 / .07);
+  border-radius: inherit;
+  content: '';
+}
+.auth-orbit::after { inset: 19%; }
+.auth-orbit-one { top: -13rem; right: -9rem; }
+.auth-orbit-two { bottom: -22rem; left: -14rem; transform: rotate(-24deg); }
+.auth-story { isolation: isolate; }
+.auth-float-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 38px;
+  padding: 0 .9rem;
+  border: 1px solid rgb(255 255 255 / .24);
+  border-radius: 999px;
+  background: rgb(9 28 19 / .4);
+  color: white;
+  font-size: .75rem;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
+  animation: auth-chip-rise 4.5s ease-in-out infinite;
+}
+.auth-float-chip::before { width: 6px; height: 6px; border-radius: 50%; background: #c2e7cf; content: ''; }
+.auth-float-chip-delay { animation-delay: -1.4s; }
+.auth-float-chip-late { animation-delay: -2.8s; }
+@keyframes auth-chip-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .auth-float-chip { animation: none; }
+  .motion-card { transition: none; }
 }
 
 @utility num {
@@ -104,6 +152,7 @@
    hero's corner badge, a few labels — would otherwise render in the body font. */
 .font-display {
   font-family: var(--font-display);
+  font-weight: 700;
 }
 
 /*
@@ -142,14 +191,8 @@
   font-family: var(--font-body);
 }
 
-/*
-  The OpenStreetMap tiles are a cartographer's pastel set and would sit on this page like a
-  screenshot from another app. Inverting the pane and pulling the hue back is the usual way to get
-  a dark map that is still the same map. Satellite is imagery of the actual place, so it is left
-  exactly as it arrives.
-*/
 .ml-map-toned .leaflet-tile-pane {
-  filter: invert(0.92) hue-rotate(180deg) saturate(0.5) brightness(0.95);
+  filter: none;
 }
 
 .ml-pin {
@@ -181,11 +224,33 @@
   border-color: var(--color-sheet);
 }
 
+/*
+  A marketplace the map knows and this database does not. Hollow, and in the grey a paragraph is
+  not written in: a filled green pin says "open now, stalls listed, hours we hold", and nothing
+  that has not been approved should borrow that shape.
+*/
+.ml-pin-osm {
+  stroke: var(--color-body) !important;
+  stroke-width: 1.5px !important;
+  fill: none !important;
+  fill-opacity: 0 !important;
+}
+
+/* Pointed at from the list. It fills but never becomes a pin: the shape is still a ring, so a
+   mapped place that has just been shown does not read as an approved market that has. */
+.ml-pin-osm-active {
+  stroke: var(--color-accent) !important;
+  stroke-width: 3px !important;
+  fill: var(--color-accent) !important;
+  fill-opacity: 0.28 !important;
+  filter: drop-shadow(0 0 4px var(--color-accent));
+}
+
 .leaflet-bar,
 .leaflet-control-attribution {
   border: 1px solid var(--color-line) !important;
   background: var(--color-surface) !important;
-  color: var(--color-muted) !important;
+  color: var(--color-primary) !important;
 }
 
 /* Leaflet draws the zoom control as a rounded rectangle; the rest of the page's controls are
@@ -224,7 +289,7 @@
   color: var(--color-primary) !important;
   border: 1px solid var(--color-line);
   border-radius: 4px !important;
-  box-shadow: 0 12px 28px rgb(0 0 0 / 0.55) !important;
+  box-shadow: 0 12px 28px rgb(20 38 26 / 0.18) !important;
 }
 
 .leaflet-popup-content {

@@ -7,11 +7,13 @@ export interface Details {
   phone: string;
   address: string;
   role: RequestableRole;
+  stall_name: string;
+  country: string;
 }
 
 export type DetailsErrors = Partial<Record<keyof Details, string>>;
 
-export const emptyDetails: Details = { full_name: '', phone: '', address: '', role: 'customer' };
+export const emptyDetails: Details = { full_name: '', phone: '', address: '', role: 'customer', stall_name: '', country: 'Nigeria' };
 
 /**
  * The same bounds as `BootstrapSchema` on the server, copied rather than imported because the
@@ -28,8 +30,15 @@ export function validateDetails(values: Details): DetailsErrors {
   if (phone.length < 7) errors.phone = 'Enter a number we can call, like 08031112222.';
   else if (phone.length > 20) errors.phone = 'That number is longer than 20 digits.';
 
-  if (values.address.trim().length > 240)
+  if (values.role === 'farmer' && values.stall_name.trim().length < 2)
+    errors.stall_name = 'Enter your stall or farm business name.';
+  else if (values.stall_name.trim().length > 80) errors.stall_name = 'Use 80 characters or fewer.';
+
+  if (!values.address.trim()) errors.address = 'Enter your address or the area where you shop.';
+  else if (values.address.trim().length > 240)
     errors.address = 'A market, ward or LGA is enough here.';
+  if (values.role === 'farmer' && !values.country)
+    errors.country = 'Choose the country where your farm or stall operates.';
 
   return errors;
 }
@@ -98,6 +107,11 @@ const roleChoices: { value: RequestableRole; label: string; note: string }[] = [
   },
 ];
 
+const farmerCountries = [
+  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Senegal', "Côte d'Ivoire", 'Cameroon',
+  'Uganda', 'Tanzania', 'Rwanda', 'Egypt', 'Morocco', 'Ethiopia', 'Botswana', 'Zambia', 'Mozambique',
+];
+
 export function DetailsFields({
   values,
   errors,
@@ -160,13 +174,26 @@ export function DetailsFields({
       />
 
       <Input
-        label="Where you are (optional)"
+        label={values.role === 'farmer' ? 'Farm or stall address' : 'Home or pickup area'}
         value={values.address}
-        placeholder="Bodija, Ibadan"
+        placeholder={values.role === 'farmer' ? 'Street, market, ward or LGA' : 'Street, neighbourhood or LGA'}
+        autoComplete="street-address"
+        required
         onChange={(e) => setField('address', e.target.value)}
         onBlur={() => touch('address')}
         error={errors.address}
       />
+      {values.role === 'farmer' ? (
+        <>
+          <label className="block text-sm text-body" htmlFor="farmer-country">Country
+            <select id="farmer-country" value={values.country} onChange={(e) => setField('country', e.target.value)} onBlur={() => touch('country')} aria-invalid={Boolean(errors.country)} className="mt-1.5 h-12 w-full rounded-xl border border-line bg-white px-4 text-primary outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10 aria-[invalid=true]:border-danger">
+              {farmerCountries.map((country) => <option key={country} value={country}>{country}</option>)}
+            </select>
+            {errors.country ? <span className="mt-1 block text-xs text-danger">{errors.country}</span> : null}
+          </label>
+          <Input label="Stall or farm business name" autoComplete="organization" value={values.stall_name} onChange={(e) => setField('stall_name', e.target.value)} onBlur={() => touch('stall_name')} error={errors.stall_name} required maxLength={80} placeholder="e.g. Green Valley Farm" />
+        </>
+      ) : null}
     </div>
   );
 }

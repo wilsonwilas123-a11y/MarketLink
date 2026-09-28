@@ -4,7 +4,9 @@
 begin;
 select plan(9);
 
-select is((select count(*) from markets), 4::bigint, 'seed loads 4 markets');
+-- Three, not the four the seed once carried: the corrections section of 0001_lagos_core
+-- retires Lekki Phase 1 and Balogun rather than leaving them rostered to nobody.
+select is((select count(*) from markets), 3::bigint, 'seed loads 3 markets');
 select is((select count(*) from categories), 5::bigint, 'seed loads 5 categories');
 select is((select count(*) from farmers), 9::bigint, 'seed loads 9 farmer stalls');
 select is((select count(*) from farmers where status = 'approved'), 8::bigint,

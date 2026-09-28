@@ -1,23 +1,52 @@
+import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { RequireAuth } from './auth/RequireAuth';
-import CompleteProfile from './pages/auth/CompleteProfile';
-import SignIn from './pages/auth/SignIn';
-import SignUp from './pages/auth/SignUp';
-import Account from './pages/Account';
-import FarmerDashboard from './pages/FarmerDashboard';
-import Home from './pages/Home';
-import MarketDetail from './pages/MarketDetail';
-import Markets from './pages/Markets';
-import { About, Contact, Farmers, Orders, Products } from './pages/stubs';
-import NotFound from './pages/NotFound';
+
+const CompleteProfile = lazy(() => import('./pages/auth/CompleteProfile'));
+const SignIn = lazy(() => import('./pages/auth/SignIn'));
+const SignUp = lazy(() => import('./pages/auth/SignUp'));
+const Account = lazy(() => import('./pages/Account'));
+const FarmerDashboard = lazy(() => import('./pages/FarmerDashboard'));
+const Entry = lazy(() => import('./pages/Entry'));
+const MarketDetail = lazy(() => import('./pages/MarketDetail'));
+const Markets = lazy(() => import('./pages/Markets'));
+const Products = lazy(() => import('./pages/Products'));
+const ProductDetail = lazy(() => import('./pages/Products').then((page) => ({ default: page.ProductDetail })));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const Farmers = lazy(() => import('./pages/Farmers'));
+const FarmerProfile = lazy(() => import('./pages/Farmers').then((page) => ({ default: page.FarmerProfile })));
+const Orders = lazy(() => import('./pages/Orders'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const Favorites = lazy(() => import('./pages/Favorites'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const About = lazy(() => import('./pages/stubs').then((page) => ({ default: page.About })));
+const Contact = lazy(() => import('./pages/stubs').then((page) => ({ default: page.Contact })));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 export const routes: RouteObject[] = [
-  { path: '/', element: <Home /> },
+  // A new visitor starts at sign-in. The rest of the marketplace remains browseable by URL.
+  { path: '/', element: <Entry /> },
   { path: '/markets', element: <Markets /> },
   { path: '/markets/:id', element: <MarketDetail /> },
   { path: '/products', element: <Products /> },
+  { path: '/products/:id', element: <ProductDetail /> },
+  { path: '/cart', element: <Cart /> },
+  { path: '/favorites', element: <Favorites /> },
+  { path: '/notifications', element: <Notifications /> },
+  { path: '/checkout', element: <Checkout /> },
   { path: '/farmers', element: <Farmers /> },
+  { path: '/farmers/:id', element: <FarmerProfile /> },
   { path: '/orders', element: <Orders /> },
+  { path: '/orders/:reference', element: <Orders /> },
+  {
+    path: '/admin',
+    element: (
+      <RequireAuth roles={['admin']}>
+        <AdminDashboard />
+      </RequireAuth>
+    ),
+  },
   { path: '/about', element: <About /> },
   { path: '/contact', element: <Contact /> },
 

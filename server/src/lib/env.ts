@@ -39,7 +39,26 @@ const EnvSchema = z.object({
   DATABASE_URL: url('DATABASE_URL'),
   SUPABASE_URL: url('SUPABASE_URL'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(40),
+  SUPABASE_PRODUCT_BUCKET: z.string().trim().min(1).default('product-images'),
   CLIENT_ORIGIN: url('CLIENT_ORIGIN'),
+  /**
+   * Sent to the OpenStreetMap gazetteer on every lookup.
+   *
+   * Overridable rather than fixed because the usage policy wants a way to reach whoever runs
+   * the client before it starts throttling them, and a default that identifies the project
+   * beats an anonymous Node process.
+   */
+  GEO_USER_AGENT: z.string().trim().min(10).max(120).default('MarketLinkAPI/0.1 (development)'),
+
+  /**
+   * How long one place lookup is answered from memory.
+   *
+   * `/places/markets` is public, so this is the only thing standing between a busy afternoon
+   * and someone else's rate limit. Fifteen minutes is long for a city name nobody retypes
+   * twice in a day and short enough that a market added to OpenStreetMap appears eventually.
+   */
+  GEO_CACHE_MS: z.coerce.number().int().min(0).max(3_600_000).default(900_000),
+
 });
 
 export type Env = z.infer<typeof EnvSchema>;

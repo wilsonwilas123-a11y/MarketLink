@@ -2,7 +2,7 @@
 -- current ISO week. Seun Oluwale is still pending, so their stall deliberately has
 -- nothing published — that is what the listing gate in spec 4.3 is for.
 
-insert into products (id, farmer_id, category_id, name, description, unit, price_kobo,
+insert into products (id, farmer_id, category_id, name, description, unit, price_minor,
                       image_urls, template_qty, is_organic, is_active,
                       rating_avg, rating_count)
 select
@@ -70,10 +70,10 @@ from (values
   ('butter-250',    'mariam', 'dairy', 'Farm Butter',                    'Cultured butter, 250g block.',                        'pack',  450000,  12, false, 4.35,  9),
   ('noni-juice',    'mariam', 'dairy', 'Fermented Milk (Noni)',          'Turbubo-style fermented milk with noni.',             'l',     300000,  16, false, 4.10,  6),
 
-  -- Sanni Dairy & Eggs
-  ('eggs-tray',     'yahaya', 'dairy', 'Eggs (30 Tray)',                 'A full tray of medium table eggs.',                   'pack',  480000,  28, false, 4.75, 47),
-  ('eggs-half',     'yahaya', 'dairy', 'Eggs (Half Tray)',               'Fifteen eggs for a smaller household.',               'pack',  250000,  32, false, 4.70, 25),
-  ('cream-line',    'yahaya', 'dairy', 'Milk Cream (Mamaki)',            'Skimmed cream for akara and stew.',                   'pack',  320000,  10, false, 4.60, 13)
+  -- Sanni Farms — cabbage and leafy greens out of Epe
+  ('cabbage-head',  'yahaya', 'vegetables', 'Cabbage (Whole Head)',           'One firm head, outer leaves trimmed off.',                'pack',   350000, 24, false, 4.75, 31),
+  ('cabbage-half',  'yahaya', 'vegetables', 'Cabbage (Cut Half)',             'Half a head for a small kitchen.',                        'pack',   180000, 30, false, 4.45, 17),
+  ('greens-basket', 'yahaya', 'vegetables', 'Cabbage and Greens Basket',      'Two heads with spring onion and scent leaf tied in.',     'basket', 750000, 10, true,  4.85, 12)
 ) as p (key, stall, cat_slug, name, blurb, unit, price, qty, organic, ravg, rcount)
 join categories c on c.slug = p.cat_slug
 on conflict (id) do nothing;
@@ -95,3 +95,32 @@ update weekly_stock
    set is_sold_out = true
  where week = iso_week(current_date)
    and product_id = md5('ml-product-basket-organic')::uuid;
+
+-- ---------------------------------------------------------------- corrections
+-- The insert above is `do nothing`, so a database seeded while this stall was still selling dairy
+-- keeps those rows next to the new ones. Retire them; weekly_stock cascades away with each product.
+
+delete from products
+ where id in (
+   md5('ml-product-eggs-tray')::uuid,
+   md5('ml-product-eggs-half')::uuid,
+   md5('ml-product-cream-line')::uuid
+ );
+
+-- Only assign a photo where the local asset visibly matches the listing. Leave the rest empty
+-- so the client can use its category artwork instead of showing a misleading picture.
+update products
+   set image_urls = case id
+     -- No close-up ugu image is available; the client uses its matching leaf glyph.
+     when md5('ml-product-ugu-500')::uuid then '{}'::text[]
+     -- No close-up tatashe image is bundled; never use a mixed basket as a pepper photo.
+     when md5('ml-product-tatashe-crate')::uuid then '{}'::text[]
+     when md5('ml-product-yam-tuber')::uuid then array['/img/products/tatashe.jpg']::text[]
+   end
+ where id in (
+   md5('ml-product-ugu-500')::uuid,
+   md5('ml-product-tatashe-crate')::uuid,
+   md5('ml-product-yam-tuber')::uuid
+ )
+   and (cardinality(image_urls) = 0 or id = md5('ml-product-tatashe-crate')::uuid
+        and image_urls @> array['/img/products/ugu.jpg']::text[]);

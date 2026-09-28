@@ -8,14 +8,26 @@ import { errorHandler, notFound } from './middleware/error.js';
 import {
   authRouter,
   farmersRouter,
+  geoRouter,
   healthRouter,
   marketsRouter,
   openApiRouter,
+  ordersRouter,
+  adminRouter,
+  favoritesRouter,
+  uploadsRouter,
+  notificationsRouter,
+  productsRouter,
 } from './routes/index.js';
+import type { Geocoder } from './services/geocode.js';
 
 export interface AppDeps {
   pool: Pool;
   auth: AuthVerifier;
+  /** OpenStreetMap place lookup. The only outbound call this API makes. */
+  geocode: Geocoder;
+  /** Uploads an authenticated farmer's product photo and returns its public URL. */
+  productImages?: { upload(profileId: string, fileName: string, contentType: string, bytes: Buffer): Promise<string> };
 }
 
 export interface AppOptions {
@@ -46,6 +58,13 @@ export function createApp(deps: AppDeps, options: AppOptions = {}): Express {
   app.use('/api', authRouter(deps));
   app.use('/api', marketsRouter(deps));
   app.use('/api', farmersRouter(deps));
+  app.use('/api', productsRouter(deps));
+  app.use('/api', ordersRouter(deps));
+  app.use('/api', adminRouter(deps));
+  app.use('/api', favoritesRouter(deps));
+  app.use('/api', uploadsRouter(deps));
+  app.use('/api', notificationsRouter(deps));
+  app.use('/api', geoRouter(deps));
   app.use('/api', openApiRouter());
 
   app.use(notFound);

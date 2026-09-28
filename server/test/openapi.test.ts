@@ -28,6 +28,9 @@ describe('openapi.json', () => {
       '/farmers/me',
       '/farmers/me/geo',
       '/farmers/me/markets',
+      '/geo/search',
+      '/places/markets',
+      '/places/markets/box',
       '/healthz',
       '/markets',
       '/markets/nearby',
@@ -43,6 +46,12 @@ describe('openapi.json', () => {
     });
     expect(committed.paths?.['/healthz']?.get?.security).toEqual([]);
     expect(committed.paths?.['/me']?.get?.security).toEqual([{ bearerAuth: [] }]);
+    // The gazetteer has two doors: one for a signed-in admin dropping a pin, one for the
+    // discovery screen. Only the second is open to a stranger, and the screen has two of its
+    // own — by name, and by the corner of the map being looked at.
+    expect(committed.paths?.['/geo/search']?.get?.security).toEqual([{ bearerAuth: [] }]);
+    expect(committed.paths?.['/places/markets']?.get?.security).toEqual([]);
+    expect(committed.paths?.['/places/markets/box']?.get?.security).toEqual([]);
   });
 
   it('documents every failure as the same envelope', () => {

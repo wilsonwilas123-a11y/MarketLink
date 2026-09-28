@@ -68,16 +68,17 @@ export function Stars({
   className?: string;
 }) {
   if (count === 0) {
-    return <span className={`text-sm text-muted ${className}`}>No ratings yet</span>;
+    return <span className={`text-sm text-current/60 ${className}`}>No ratings yet</span>;
   }
 
   return (
-    <span className={`inline-flex items-baseline gap-1.5 ${className}`}>
+    <span className={`inline-flex items-center gap-2 ${className}`}>
       <span aria-hidden className="text-accent">
-        <Glyph name="star" size={13} />
+        <Glyph name="star" size={15} />
       </span>
-      <span className="num text-sm font-semibold text-primary">{value.toFixed(1)}</span>
-      <span className="num text-sm text-muted">{count}</span>
+      <span className="num text-[15px] font-bold">{value.toFixed(1)}</span>
+      <span aria-hidden className="h-3.5 w-px bg-line" />
+      <span className="num text-[15px] text-muted">{count}</span>
       <span className="sr-only">
         {value.toFixed(1)} out of 5 from {count} {count === 1 ? 'review' : 'reviews'}
       </span>

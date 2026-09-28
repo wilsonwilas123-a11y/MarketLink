@@ -6,6 +6,7 @@ import { ApiError } from '../lib/api';
 import { daysPhrase, useMarket } from '../lib/discovery';
 import type { RosterFarmer } from '../lib/types';
 import { Reveal } from '../motion/reveal';
+import { FavoriteToggle } from '../components/FavoriteToggle';
 
 /**
  * One market and who trades there.
@@ -99,8 +100,10 @@ export default function MarketDetail() {
               {market.address} · {market.city}, {market.state}
             </p>
           </div>
-          <div className="flex flex-col items-start gap-1 md:items-end">
+          <div className="flex flex-col items-start gap-2 md:items-end">
+            <FavoriteToggle type="market" id={market.id} />
             <OpenState open={market.is_open_now} />
+            <a href={`https://www.google.com/maps/dir/?api=1&destination=${market.lat},${market.lng}`} target="_blank" rel="noreferrer" className="text-xs text-muted underline decoration-line underline-offset-2 hover:text-primary">Get directions</a>
           </div>
         </Reveal>
 

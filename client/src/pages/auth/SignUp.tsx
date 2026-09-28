@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../auth/AuthProvider';
 import { ApiError } from '../../lib/api';
 import { homeFor } from '../../auth/paths';
-import { AuthFrame, AuthUnavailable, FormAlert } from './AuthFrame';
+import { AuthDivider, AuthFrame, AuthUnavailable, FormAlert, GoogleButton } from './AuthFrame';
 import { DetailsFields, emptyDetails, useDetails } from './DetailsFields';
 import { PasswordField } from './PasswordField';
 
@@ -29,12 +29,13 @@ function validateCredentials({ email, password }: Credentials): CredentialErrors
 }
 
 export default function SignUp() {
-  const { signUp, status, profile, configured } = useAuth();
+  const { signUp, signInWithGoogle, status, profile, configured } = useAuth();
   const details = useDetails(emptyDetails);
   const [credentials, setCredentials] = useState<Credentials>({ email: '', password: '' });
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
 
   if (status === 'ready') return <Navigate to={profile ? homeFor(profile.role) : '/account'} replace />;
@@ -89,7 +90,9 @@ export default function SignUp() {
         ...details.values,
         full_name: details.values.full_name.trim(),
         phone: details.values.phone.trim(),
-        address: details.values.address.trim() || undefined,
+        address: details.values.address.trim(),
+        country: details.values.role === 'farmer' ? details.values.country : undefined,
+        stall_name: details.values.role === 'farmer' ? details.values.stall_name.trim() : undefined,
         ...credentials,
         email: credentials.email.trim(),
       });
@@ -106,6 +109,17 @@ export default function SignUp() {
     }
   }
 
+  async function onGoogle() {
+    setGoogleBusy(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Google sign-up could not start. Please try again.');
+      setGoogleBusy(false);
+    }
+  }
+
   return (
     <AuthFrame
       title="Create an account"
@@ -119,9 +133,10 @@ export default function SignUp() {
         </>
       }
     >
+      {error ? <FormAlert>{error}</FormAlert> : null}
+      <GoogleButton onClick={() => void onGoogle()} loading={googleBusy} />
+      <AuthDivider />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
-        {error ? <FormAlert>{error}</FormAlert> : null}
-
         <DetailsFields
           values={details.values}
           errors={details.errors}
@@ -150,7 +165,7 @@ export default function SignUp() {
           error={showCredentialError('password')}
         />
 
-        <Button type="submit" loading={busy} className="w-full">
+        <Button type="submit" loading={busy} loadingIndicator="spinner" className="w-full">
           {busy ? 'Creating your account' : 'Create account'}
         </Button>
 

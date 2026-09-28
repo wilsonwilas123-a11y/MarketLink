@@ -1,22 +1,49 @@
-import { useRoutes } from 'react-router-dom';
+import { Suspense, useEffect, useState } from 'react';
+import { useLocation, useRoutes } from 'react-router-dom';
 import { TopNav } from './components/layout/TopNav';
 import { Footer } from './components/layout/Footer';
 import { routes } from './routes';
+import { useAuth } from './auth/AuthProvider';
+import { LoadingScreen } from './motion/LoadingScreen';
+import { RouteTransition } from './motion/RouteTransition';
 
 export default function App() {
+  const location = useLocation();
+  const { status } = useAuth();
+  const [initialLoadShown, setInitialLoadShown] = useState(false);
+  const isAuthScreen = ['/signin', '/signup', '/complete-profile'].includes(location.pathname)
+    || (location.pathname === '/' && status !== 'ready');
+  const route = useRoutes(routes);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setInitialLoadShown(true), 1100);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-ink"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-on-block"
       >
         Skip to content
       </a>
-      <TopNav />
+      {!isAuthScreen ? <TopNav /> : null}
       <main id="main" className="flex-1">
-        {useRoutes(routes)}
+        <Suspense
+          fallback={initialLoadShown ? <LoadingScreen label="Opening your page…" /> : null}
+        >
+          <RouteTransition key={location.pathname} path={location.pathname} enabled={!isAuthScreen}>
+            {route}
+          </RouteTransition>
+        </Suspense>
       </main>
-      <Footer />
+      {!isAuthScreen ? <Footer /> : null}
+      {!initialLoadShown ? (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-sheet">
+          <LoadingScreen label="Opening your page…" />
+        </div>
+      ) : null}
     </div>
   );
 }

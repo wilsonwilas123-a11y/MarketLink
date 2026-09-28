@@ -33,6 +33,7 @@ export function buildOpenApiDocument() {
       { name: 'Profile', description: "The caller's own record." },
       { name: 'Markets', description: 'Public market discovery, including the distance query.' },
       { name: 'Farmers', description: "Public stall profiles, and the owner's own view." },
+      { name: 'Places', description: 'Place lookup against OpenStreetMap, for pinning something new.' },
     ],
   });
 }

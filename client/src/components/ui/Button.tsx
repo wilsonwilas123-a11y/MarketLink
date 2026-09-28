@@ -1,23 +1,23 @@
 import type { ButtonHTMLAttributes } from 'react';
+import { LoadingDots } from '../../motion/LoadingDots';
+import { animateInteraction } from '../../motion/interaction';
+import { CircularSpinner } from './CircularSpinner';
 
 type Variant = 'primary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md';
 
 /**
- * Two buttons, not a family.
- *
- * `primary` is a pill of white with the page's black punched into it — the only thing on a screen
- * allowed to be solid. `ghost` is a hairline the same colour as the type. The sign blue is kept
- * off both: it belongs to the one fact that matters, not to the chrome.
+ * A small action set keeps primary intent, quiet navigation actions and destructive actions
+ * visually distinct without adding extra styles to every page.
  */
 const variant: Record<Variant, string> = {
-  primary: 'bg-block text-on-block font-semibold hover:bg-block/85 active:translate-y-px',
-  ghost: 'border border-paper/25 bg-transparent text-primary hover:border-paper/60',
-  danger: 'border border-danger/45 bg-transparent text-danger hover:bg-danger/10',
+  primary: 'bg-block text-on-block font-bold shadow-[0_8px_24px_rgba(33,106,73,0.16)] hover:brightness-105 active:translate-y-px',
+  ghost: 'border border-line bg-elevated/55 text-primary hover:border-muted/70 hover:bg-elevated',
+  danger: 'border border-danger/35 bg-danger/5 text-danger hover:border-danger/60 hover:bg-danger/10',
 };
 
 const size: Record<Size, string> = {
-  sm: 'h-8 px-3.5 text-sm',
+  sm: 'h-9 px-3.5 text-sm',
   md: 'h-11 px-5',
 };
 
@@ -28,13 +28,14 @@ const size: Record<Size, string> = {
  * button and pointing at a URL needs these classes without the `<button>` element.
  */
 export function buttonClass(v: Variant = 'primary', s: Size = 'md', className = ''): string {
-  return `inline-flex items-center justify-center gap-2 rounded-full transition-colors disabled:pointer-events-none disabled:opacity-45 ${size[s]} ${variant[v]} ${className}`;
+  return `inline-flex items-center justify-center gap-2 rounded-xl transition-[background,color,border-color,box-shadow,transform] duration-200 disabled:pointer-events-none disabled:opacity-45 ${size[s]} ${variant[v]} ${className}`;
 }
 
 export function Button({
   variant: v = 'primary',
   size: s = 'md',
   loading = false,
+  loadingIndicator = 'dots',
   className = '',
   children,
   ...rest
@@ -42,15 +43,29 @@ export function Button({
   variant?: Variant;
   size?: Size;
   loading?: boolean;
+  loadingIndicator?: 'dots' | 'spinner';
 }) {
   return (
     <button
       {...rest}
       disabled={loading || rest.disabled}
       aria-busy={loading || undefined}
+      onPointerEnter={(event) => {
+        rest.onPointerEnter?.(event);
+        if (loading || event.pointerType !== 'mouse') return;
+        animateInteraction(event.currentTarget, 'button-enter');
+      }}
+      onPointerLeave={(event) => {
+        rest.onPointerLeave?.(event);
+        if (event.pointerType === 'mouse') animateInteraction(event.currentTarget, 'button-leave');
+      }}
       className={buttonClass(v, s, className)}
     >
-      {loading ? <span aria-hidden>…</span> : null}
+      {loading ? (
+        loadingIndicator === 'spinner'
+          ? <CircularSpinner className="mr-1" />
+          : <LoadingDots className="mr-1" dotClassName="h-1.5 w-1.5" />
+      ) : null}
       {children}
     </button>
   );
