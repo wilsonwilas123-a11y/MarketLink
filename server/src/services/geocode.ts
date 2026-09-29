@@ -30,7 +30,7 @@ function asMarketQuery(query: string): string {
 }
 
 /**
- * Rough bounding box around the whole African continent and its island nations, in Photon's
+ * Rough boundin  g box around the whole African continent and its island nations, in Photon's
  * own `minLon,minLat,maxLon,maxLat` order.
  *
  * This is sent as a hint to Photon so it does not spend its ranking on candidates the product
