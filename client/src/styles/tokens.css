@@ -96,6 +96,24 @@
   .motion-card:focus-within {
     border-color: color-mix(in oklab, var(--color-accent) 38%, var(--color-line));
   }
+
+  .search-panel-slide {
+    animation: search-panel-slide-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes search-panel-slide-in {
+    from { opacity: 0; transform: translateY(-0.4rem) scale(0.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Keep hover feedback exclusive to devices with a real hover pointer. Touch browsers can
+     otherwise leave :hover stuck after a tap, which makes market browsing feel broken. */
+  @media (hover: hover) and (pointer: fine) {
+    .market-card:not([aria-current="true"]):hover {
+      border-color: color-mix(in oklab, var(--color-accent) 28%, var(--color-line));
+      box-shadow: 0 8px 24px rgb(21 39 29 / 0.06);
+    }
+  }
 }
 
 .auth-orbit {
@@ -141,6 +159,7 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-float-chip { animation: none; }
   .motion-card { transition: none; }
+    .search-panel-slide { animation: none; }
 }
 
 @utility num {

@@ -14,6 +14,7 @@ export default function App() {
   const isAuthScreen = ['/signin', '/signup', '/complete-profile', '/admin/signin'].includes(location.pathname)
     || (location.pathname === '/' && status !== 'ready');
   const isAdminPage = location.pathname === '/admin';
+  const showMobileNavigation = !isAuthScreen && !isAdminPage;
   const route = useRoutes(routes);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={`flex min-h-screen flex-col ${showMobileNavigation ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] xl:pb-0' : ''}`}>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-on-block"

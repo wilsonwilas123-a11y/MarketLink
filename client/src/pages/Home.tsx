@@ -82,12 +82,12 @@ function Hero() {
         alt="A Nigerian farmer tending leafy greens in a field"
         width={1000}
         height={667}
-        className="absolute inset-0 -z-10 h-full w-full -scale-x-100 object-cover object-center"
+        className="absolute inset-0 -z-10 h-full w-full -scale-x-100 object-cover object-[28%_45%] sm:object-[34%_42%] md:object-[40%_40%] lg:object-[50%_38%]"
       />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-veil/90 via-veil/55 to-veil/10" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-veil/50 to-transparent" />
 
-      <div className="mx-auto flex w-full max-w-[1680px] flex-col px-6 pb-14 pt-16 md:px-10 md:pb-20 md:pt-24">
+      <div className="mx-auto flex w-full max-w-[1680px] flex-col px-5 pb-12 pt-12 sm:px-6 sm:pb-14 sm:pt-16 md:px-10 md:pb-20 md:pt-24">
         <div className="max-w-2xl lg:max-w-xl">
           <Reveal className="flex flex-col" y={12} stagger={0.07}>
             <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-paper [text-shadow:0_1px_1px_rgba(0,0,0,0.9),0_0_14px_rgba(0,0,0,0.6)]">
@@ -366,15 +366,16 @@ function FarmerCard({ farmer }: { farmer: FarmerSummary }) {
   const tradesToday = farmer.operating_days.includes(lagosToday());
 
   return (
-    <li className="w-[300px] min-w-0 shrink-0 snap-start sm:w-auto sm:shrink sm:snap-auto">
-      <article className="relative flex h-full min-h-[40rem] snap-start flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
+    <li className="w-[22rem] max-w-[calc(100vw-2.5rem)] min-w-0 shrink-0 snap-start sm:w-full sm:max-w-[22rem] sm:justify-self-center sm:shrink sm:snap-auto">
+      <article className="relative flex h-full min-h-[44rem] snap-start flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-accent/25">
         <Thumb
           src={farmerCover(farmer)}
           seed={farmer.id}
           glyph="farm"
           label={farmer.stall_name}
           glyphSize={72}
-          className="h-[260px] w-full shrink-0 border-b border-line sm:h-[280px] xl:h-[300px]"
+          className="h-[340px] w-full shrink-0 border-b border-line bg-[#e8efe9] sm:h-[380px] xl:h-[400px]"
+          imgClass="object-cover object-top"
         />
         {tradesToday ? (
           <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-sheet/90 px-3 py-1.5 text-[13px] font-semibold text-accent backdrop-blur">
@@ -613,8 +614,8 @@ export default function Home() {
         {farmers.isPending ? (
           <SkeletonRow
             count={3}
-            className="mt-6 flex gap-4 overflow-hidden max-sm:pr-6 sm:grid sm:grid-cols-3 sm:gap-6"
-            itemClass="h-[40rem] w-[300px] shrink-0 rounded-2xl border border-line bg-surface/50 sm:w-auto sm:shrink"
+            className="mt-6 flex gap-4 overflow-hidden max-sm:pr-6 sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+            itemClass="h-[40rem] w-[22rem] max-w-[calc(100vw-2.5rem)] shrink-0 rounded-2xl border border-line bg-surface/50 sm:w-full sm:max-w-[22rem] sm:justify-self-center sm:shrink"
           />
         ) : farmers.error ? (
           <div className="mt-6">
@@ -628,7 +629,7 @@ export default function Home() {
           <>
             <Reveal
               as="ul"
-              className="mt-6 flex snap-x gap-4 overflow-x-auto scroll-pl-6 pb-2 max-sm:pr-6 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-x-visible sm:pb-0 md:scroll-pl-10"
+              className="mt-6 flex snap-x gap-4 overflow-x-auto scroll-pl-6 pb-2 max-sm:pr-6 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-x-visible sm:pb-0 lg:grid-cols-3 md:scroll-pl-10"
               y={14}
               stagger={0.05}
             >

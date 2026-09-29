@@ -85,10 +85,10 @@ Amounts from the API/database use integer minor units (for example, kobo or pese
 ## Images and content
 
 - A farmer-uploaded cover or product image takes precedence over the demo image.
-- Seeded demonstration farmers have distinct, stable representative farm photos on both the farmer directory and the home page. They are illustrative stock photos, not verified portraits of the named farmers.
+- Seeded demonstration farmers use bundled local representative photos on the farmer directory and home page. Legacy Unsplash cover URLs are ignored in favor of these local files. They are illustrative photos, not verified portraits of the named farmers.
 - Product cards are shown only when a product has a working photo. A local product-specific fallback is used where appropriate elsewhere in the site.
 - Product and stall uploads use the configured public Supabase Storage bucket. Setup and limits are documented in [product image storage](product-image-storage.md).
-- Market map tiles and place search use OpenStreetMap data. Optional Unsplash image URLs are remote and need an internet connection.
+- Market map tiles and place search use OpenStreetMap data. Farmer demo covers are stored locally; uploaded covers from other allowed hosts may require an internet connection.
 
 ## Application architecture
 

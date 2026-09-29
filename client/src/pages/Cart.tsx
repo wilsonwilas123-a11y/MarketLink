@@ -185,32 +185,34 @@ export default function Cart() {
             const stock = product.quantity_available ?? 0;
             const available = stock > 0 && !product.is_sold_out;
             return (
-              <Card key={`${selection.product_id}:${selection.market_id}`} className="flex flex-wrap items-center gap-4 p-4">
+              <Card key={`${selection.product_id}:${selection.market_id}`} className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 p-3 sm:flex sm:flex-wrap sm:items-center sm:gap-4 sm:p-4">
                 <Link to={`/products/${product.id}`} className="shrink-0">
                   <Thumb src={product.image_urls[0]} fallbackSrc={localProductPhoto(product.name)} seed={product.id} category={product.category.slug} glyph={localProductGlyph(product.name)} className="h-20 w-20 rounded-xl" />
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link to={`/products/${product.id}`} className="font-semibold hover:text-accent">{product.name}</Link>
-                  <p className="mt-1 text-xs text-muted">{product.farmer.stall_name} · {market ? `${market.name}, ${market.city}` : 'Pickup market unavailable'}</p>
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted">{product.farmer.stall_name} · {market ? `${market.name}, ${market.city}` : 'Pickup market unavailable'}</p>
                   <p className={`mt-1 text-xs ${available ? 'text-accent' : 'text-danger'}`}>{available ? `${stock} available` : 'No longer in stock'}</p>
                 </div>
-                <label className="text-xs text-muted">
-                  Quantity
-                  <input
-                    type="number"
-                    min="1"
-                    max={stock || 1}
-                    value={selection.quantity}
-                    disabled={!available}
-                    onChange={(event) => updateCartItem(selection.product_id, selection.market_id, Math.max(1, Math.min(stock || 1, Number(event.target.value) || 1)))}
-                    className="mt-1 block h-9 w-20 rounded-lg border border-line bg-elevated px-2 text-center text-primary disabled:opacity-50"
-                  />
-                </label>
-                <div className="min-w-24 text-right">
-                  <p className="num font-semibold text-primary">{formatMinor(product.price_minor * selection.quantity, product.farmer.currency)}</p>
-                  <p className="text-xs text-muted">{formatMinor(product.price_minor, product.farmer.currency)} / {product.unit}</p>
+                <div className="col-span-2 grid grid-cols-[5rem_minmax(0,1fr)_auto] items-end gap-3 sm:contents">
+                  <label className="text-xs text-muted">
+                    Quantity
+                    <input
+                      type="number"
+                      min="1"
+                      max={stock || 1}
+                      value={selection.quantity}
+                      disabled={!available}
+                      onChange={(event) => updateCartItem(selection.product_id, selection.market_id, Math.max(1, Math.min(stock || 1, Number(event.target.value) || 1)))}
+                      className="mt-1 block h-9 w-20 rounded-lg border border-line bg-elevated px-2 text-center text-primary disabled:opacity-50"
+                    />
+                  </label>
+                  <div className="min-w-0 text-right">
+                    <p className="num whitespace-nowrap font-semibold text-primary">{formatMinor(product.price_minor * selection.quantity, product.farmer.currency)}</p>
+                    <p className="whitespace-nowrap text-xs text-muted">{formatMinor(product.price_minor, product.farmer.currency)} / {product.unit}</p>
+                  </div>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => removeCartItem(selection.product_id, selection.market_id)}>Remove</Button>
                 </div>
-                <Button type="button" size="sm" variant="ghost" onClick={() => removeCartItem(selection.product_id, selection.market_id)}>Remove</Button>
               </Card>
             );
           })}

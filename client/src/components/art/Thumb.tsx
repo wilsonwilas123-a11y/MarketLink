@@ -56,6 +56,9 @@ export function Thumb({
     : fallbackSrc && fallbackSrc !== src && fallbackSrc !== failedSrc && isUsable(fallbackSrc)
       ? fallbackSrc
       : null;
+  const suppliesObjectFit = imgClass.split(/\s+/).some((token) =>
+    /(?:^|:)object-(?:cover|contain|fill|none|scale-down)(?:!|$)/.test(token),
+  );
 
   return (
     <div
@@ -74,7 +77,7 @@ export function Thumb({
             if (!imageSrc.startsWith('/')) broken.add(imageSrc);
             setFailedSrc(imageSrc);
           }}
-          className={`h-full w-full object-cover ${imgClass}`}
+          className={`h-full w-full ${suppliesObjectFit ? '' : 'object-cover'} ${imgClass}`}
         />
       ) : (
         <>

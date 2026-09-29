@@ -11,9 +11,9 @@ Routes that require buyer, seller, or administrator credentials were not signed 
 
 ## Image-source and fallback review
 
-- Farmer directory/profile photos use Unsplash images for demo stalls, keep farmer-uploaded covers as the first choice, and fall back to bundled local photos when the remote source fails. These stock photos are labeled as representative imagery; they are not portraits of the named farmers.
+- Farmer directory/profile cards use bundled local photos for demo stalls. Farmer-uploaded covers from other hosts remain supported; legacy Unsplash cover URLs are ignored and replaced by local photos. Representative demo photos are not verified portraits of the named farmers.
 - The product photo resolver references 51 local image paths; all 51 files exist.
-- Farmer images are loaded from the Unsplash CDN with local fallbacks, so those remote photos need network access to display.
+- Farmer demo images are served locally and need no image CDN to display.
 - Product cards try the listing photo, then the matching local crop photo, then crop-specific fallback artwork. A dead remote photo URL therefore does not leave an empty image panel.
 - The product grid now shows only listings with an image and claims each photo once per visible result set. Repeated listings can use another distinct crop photo; if none is available, that duplicate-photo card is omitted from the grid.
 - Market discovery includes externally sourced market photos with source links in the interface. Keep the displayed attribution when presenting those cards.

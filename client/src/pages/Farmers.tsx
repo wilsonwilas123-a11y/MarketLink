@@ -19,9 +19,8 @@ import { farmerCover } from '../lib/farmerPhoto';
  * Demo cover photography for the seeded stalls, by contact name — the seeded ids are md5 uuids the
  * browser cannot reproduce.
  *
- * A farmer's own `cover_url` always wins. Demo stalls use Unsplash imagery first, with the
- * bundled local copies as an offline fallback. These are representative farm photos, not portraits
- * of the named stall owners.
+ * A farmer's own `cover_url` always wins. Demo stalls use bundled local representative farm photos
+ * so the directory works without remote image hosts; the photos are not portraits of stall owners.
  */
 const DEMO_COVERS: Record<string, string> = {
   'Bola Adeyemi': '/img/farmers/bola.jpg',
@@ -86,8 +85,8 @@ export default function Farmers() {
 
       {farmers.isError ? <Card className="mt-5 p-6 text-sm text-muted">We couldn’t load the farmer directory. Please try again.</Card> : null}
       {farmers.isPending ? (
-        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading farmers">
-          {Array.from({ length: 6 }, (_, index) => <Card key={index} className="h-80 animate-pulse bg-elevated"><span className="sr-only">Loading farmer</span></Card>)}
+        <div className="mt-4 grid justify-items-center gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" aria-label="Loading farmers">
+          {Array.from({ length: 6 }, (_, index) => <Card key={index} className="h-80 w-full max-w-[22rem] animate-pulse bg-elevated"><span className="sr-only">Loading farmer</span></Card>)}
         </div>
       ) : rows.length === 0 ? (
         <Card className="mt-5 p-10 text-center">
@@ -100,12 +99,12 @@ export default function Farmers() {
           <p>Showing {rows.length} {rows.length === 1 ? 'farmer' : 'farmers'}</p>
           <p className="hidden sm:block">{markets.data?.data.length ?? 0} pickup markets</p>
         </div>
-        <Reveal className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3" y={18} stagger={0.055}>
+        <Reveal className="mt-3 grid justify-items-center gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" y={18} stagger={0.055}>
           {rows.map((farmer) => (
-            <Card key={farmer.id} className="group relative overflow-hidden rounded-3xl border-line/90 shadow-[0_8px_28px_rgba(21,39,29,0.06)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(21,39,29,0.13)]">
+            <Card key={farmer.id} className="group relative w-full max-w-[22rem] overflow-hidden rounded-3xl border-line/90 shadow-[0_8px_28px_rgba(21,39,29,0.06)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(21,39,29,0.13)]">
               <div className="absolute right-3 top-3 z-10"><FavoriteToggle type="farmer" id={farmer.id} /></div>
               <Link to={`/farmers/${farmer.id}`} className="block">
-                <Thumb src={farmerCover(farmer)} fallbackSrc={DEMO_COVERS[farmer.contact_person] || '/img/farmers/bola.jpg'} seed={farmer.id} glyph="farm" label={farmer.cover_url ? farmer.stall_name : `${farmer.stall_name} — representative farm photo`} className="aspect-[2.05/1] w-full" glyphSize={52} imgClass="object-[center_33%] transition-transform duration-500 group-hover:scale-[1.03]" />
+                <Thumb src={farmerCover(farmer)} fallbackSrc={DEMO_COVERS[farmer.contact_person] || '/img/farmers/bola.jpg'} seed={farmer.id} glyph="farm" label={farmer.cover_url ? farmer.stall_name : `${farmer.stall_name} — representative farm photo`} className="h-[340px] w-full bg-[#e8efe9] sm:h-[400px]" glyphSize={52} imgClass="object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]" />
               </Link>
               <div className="p-4 md:p-5">
                 <Link to={`/farmers/${farmer.id}`} className="font-display text-xl font-semibold leading-snug hover:text-accent">{farmer.stall_name}</Link>
@@ -151,7 +150,7 @@ export function FarmerProfile() {
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
       <Link to="/farmers" className="text-sm text-muted hover:text-primary">← Farmers</Link>
       <Card className="mt-4 overflow-hidden">
-        <div className="relative"><Thumb src={profile.cover_url || farmerCover({ cover_url: null, contact_person: profile.contact_person, id: profile.id })} fallbackSrc={DEMO_COVERS[profile.contact_person] || '/img/farmers/bola.jpg'} seed={profile.id} glyph="farm" label={profile.cover_url ? profile.stall_name : `${profile.stall_name} — representative farm photo`} className="h-56 w-full md:h-80" glyphSize={72} imgClass="object-[center_40%]" /><div className="absolute right-4 top-4"><FavoriteToggle type="farmer" id={profile.id} /></div></div>
+        <div className="relative"><Thumb src={farmerCover(profile)} fallbackSrc={DEMO_COVERS[profile.contact_person] || '/img/farmers/bola.jpg'} seed={profile.id} glyph="farm" label={profile.cover_url ? profile.stall_name : `${profile.stall_name} — representative farm photo`} className="h-96 w-full bg-[#e8efe9] md:h-[36rem]" glyphSize={72} imgClass="object-contain" /><div className="absolute right-4 top-4"><FavoriteToggle type="farmer" id={profile.id} /></div></div>
         <div className="flex flex-wrap items-end justify-between gap-5 p-5 md:p-7">
           <div>
             <p className="text-sm text-accent">Local farm stall</p>

@@ -18,20 +18,10 @@ import { formatDistance } from '../../utils/distance';
  * matches the token palette on both tile layers.
  */
 
-const TILES = {
-  map: {
-    name: 'Map',
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  },
-  satellite: {
-    name: 'Satellite',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
-  },
+const MAP_TILES = {
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 } as const;
-
-export type BaseLayer = keyof typeof TILES;
 
 /**
  * What the list needs from an imperative map: point at a row, market or mapped place.
@@ -161,7 +151,7 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
 ) {
   const host = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<L.Map | null>(null);
-  const [base, setBase] = useState<BaseLayer>('map');
+  const [mapSizeRevision, setMapSizeRevision] = useState(0);
   /**
    * Pins and rings, under the id the list already has for them.
    *
@@ -216,7 +206,11 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
     markers.current = L.layerGroup().addTo(created);
     setMap(created);
 
-    const resize = new ResizeObserver(() => created.invalidateSize());
+    const resize = new ResizeObserver(() => {
+      if (!host.current?.clientWidth || !host.current.clientHeight) return;
+      created.invalidateSize({ pan: false });
+      setMapSizeRevision((revision) => revision + 1);
+    });
     resize.observe(host.current);
 
     return () => {
@@ -231,14 +225,14 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
   useEffect(() => {
     if (!map) return;
 
-    const layer = L.tileLayer(TILES[base].url, {
-      attribution: TILES[base].attribution,
+    const layer = L.tileLayer(MAP_TILES.url, {
+      attribution: MAP_TILES.attribution,
       maxZoom: 19,
     });
     layer.addTo(map);
     tile.current?.remove();
     tile.current = layer;
-  }, [map, base]);
+  }, [map]);
 
   useEffect(() => {
     if (!map || !markers.current) return;
@@ -305,7 +299,7 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
     if (markets.length === 0) points.push(...places.map((p) => [p.lat, p.lng] as [number, number]));
     if (origin) points.push([origin.lat, origin.lng] as [number, number]);
 
-    if (signature !== fitted.current) {
+    if (signature !== fitted.current && host.current?.clientWidth && host.current.clientHeight) {
       fitted.current = signature;
       if (points.length > 1) {
         map.fitBounds(L.latLngBounds(points).pad(0.15), { animate: false });
@@ -321,33 +315,17 @@ export const MarketMap = forwardRef<MarketMapHandle, MarketMapProps>(function Ma
       pointed.current = null;
       show(id);
     }
-  }, [map, markets, places, origin, onSelect, selectedId]);
+  }, [map, markets, places, origin, onSelect, selectedId, mapSizeRevision]);
 
   return (
     <div className="relative h-full w-full">
       <div
         ref={host}
-        className={`ml-map-frame${base === 'map' ? ' ml-map-toned' : ''}`}
+        className="ml-map-frame ml-map-toned"
         role="region"
         aria-label="Market map"
         tabIndex={-1}
       />
-
-      <div className="absolute right-3 top-3 z-[500] flex gap-1 rounded-full border border-line bg-surface p-1">
-        {(Object.keys(TILES) as BaseLayer[]).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setBase(key)}
-            aria-pressed={base === key}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              base === key ? 'bg-block text-on-block' : 'text-muted hover:bg-elevated hover:text-primary'
-            }`}
-          >
-            {TILES[key].name}
-          </button>
-        ))}
-      </div>
     </div>
   );
 });

@@ -51,7 +51,7 @@ export function AuthFrame({
           </span>
           MarketLink
         </Link>
-        <Link to="/markets" className="rounded-full px-4 py-2 text-sm font-semibold text-body transition hover:bg-white/80 hover:text-accent lg:text-white/90 lg:hover:bg-white/15 lg:hover:text-white">
+        <Link to="/markets" className="rounded-full px-4 py-2 text-sm font-semibold text-body transition hover:bg-accent-soft hover:text-accent lg:text-primary lg:hover:bg-accent-soft">
           Browse markets <span aria-hidden>↗</span>
         </Link>
       </header>

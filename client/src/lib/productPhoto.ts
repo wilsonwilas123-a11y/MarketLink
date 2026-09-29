@@ -18,6 +18,7 @@ export function localProductPhoto(name: string): string | null {
   if (/\bbitter\s+leaf\b/.test(item)) return '/img/products/bitter-leaf.png';
   if (/\buda\b/.test(item)) return '/img/products/uda.png';
   if (/\b(tulsi|tulasi|holy\s+basil)\b/.test(item)) return '/img/products/tulsi.png';
+  if (/\befo\s+al[ao]ko\b/.test(item)) return '/img/products/efo-alako.webp';
   if (/\befo\s*shoko\b/.test(item)) return '/img/products/efo-shoko.png';
   if (/\bwatermelons?\b/.test(item)) return '/img/products/watermelon.png';
   if (/\bfresh\s+milk\b/.test(item)) return '/img/products/fresh-milk.png';
@@ -37,10 +38,10 @@ export function localProductPhoto(name: string): string | null {
   if (/\brodo\b/.test(item)) return '/img/products/rodo.png';
   if (/\btatashe\b|\bbell\s*pepper\b/.test(item)) return '/img/products/tatashe-bell-pepper.png';
   if (/\bcoco\s*yam\b/.test(item)) return '/img/products/cocoyam.png';
-  if (/\bplantain\s+chips\b/.test(item)) return '/img/products/plantain-chips.png';
+  if (/\bplantain(?:\s+chips)?\b/.test(item)) return '/img/products/plantain-chips.webp';
   if (/\bcassava\s+flou?r\s+bread\b/.test(item)) return '/img/products/cassava-flour-bread.png';
   if (/\bmeat[\s-]+pie\b/.test(item)) return '/img/products/meat-pie.png';
-  if (/\bagege\s+bread\b/.test(item)) return '/img/products/agege-bread.png';
+  if (/\bagege\s+bread\b/.test(item)) return '/img/products/agege-bread.webp';
   if (/\bchin\s*chin\b/.test(item)) return '/img/products/chin-chin.png';
   if (/\b(super|soup)\s+basket\b/.test(item)) return '/img/products/super-basket.png';
   if (/\borganic\s+leaf\s+basket\b/.test(item)) return '/img/products/organic-leaf-basket.png';

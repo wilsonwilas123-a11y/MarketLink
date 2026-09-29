@@ -162,25 +162,33 @@ export default function Markets() {
 
   function focus(id: string) {
     setSelected(id);
+    // Do not animate the hidden, zero-sized Leaflet map while a phone user scrolls or focuses
+    // the list. On wide screens the map is alongside the cards and should follow the selection.
+    if (window.matchMedia('(min-width: 1024px)').matches) mapRef.current?.focus(id);
+  }
+
+  function showOnMap(id: string) {
+    setSelected(id);
     setMobileView('map');
-    mapRef.current?.focus(id);
+    // Let the hidden map become visible and recalculate its viewport before zooming to the pin.
+    window.requestAnimationFrame(() => mapRef.current?.focus(id));
   }
 
   const hasFilters = Boolean(q || city);
 
   return (
     <div className="pb-20">
-      <header className="mx-auto w-full max-w-[1720px] px-4 pt-7 sm:px-6 lg:px-7 md:pt-10">
+      <header className="mx-auto w-full max-w-[1720px] px-4 pt-5 sm:px-6 lg:px-7 md:pt-10">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Fresh produce. Local markets. Better prices.</p>
-        <h1 className="mt-2 font-display text-4xl font-bold tracking-tight md:text-5xl">Markets</h1>
-        <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted">
+        <h1 className="mt-1.5 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Markets</h1>
+        <p className="mt-2 hidden max-w-2xl text-base leading-relaxed text-muted sm:block">
           Every market MarketLink tracks, the days it runs, and the farms trading there.
           Opening state is computed against Lagos time, not your device’s.
         </p>
       </header>
 
       <section aria-label="Filters" className="mx-auto mt-6 w-full max-w-[1720px] px-4 sm:px-6 lg:px-7">
-        <form onSubmit={submitText} className="grid gap-3 rounded-3xl border border-line bg-surface p-4 shadow-[0_8px_30px_rgba(21,39,29,0.05)] sm:grid-cols-2 md:grid-cols-[minmax(0,1.2fr)_minmax(15rem,0.85fr)_auto] md:items-end md:p-5">
+        <form onSubmit={submitText} className="grid gap-2.5 rounded-2xl border border-line bg-surface p-3 shadow-[0_8px_30px_rgba(21,39,29,0.05)] sm:gap-3 sm:rounded-3xl sm:grid-cols-2 sm:p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(15rem,0.85fr)_auto] md:items-end md:p-5">
           <SearchAutocomplete label="Search" value={qDraft} onChange={setQDraft} placeholder="Market, area or landmark" kinds={['markets']} resultPath="/markets" />
           <Input
             label="City or state"
@@ -213,11 +221,8 @@ export default function Markets() {
             </span>
           ) : null}
 
-          <div className="ml-auto flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={findMe}>
-              {nearby ? 'Update my location' : 'Markets near me'}
-            </Button>
-            {hasFilters || nearby ? (
+          {hasFilters || nearby ? (
+            <div className="ml-auto flex items-center gap-3">
               <button
                 type="button"
                 onClick={clearAll}
@@ -225,8 +230,8 @@ export default function Markets() {
               >
                 Clear
               </button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
 
         {where ? (
@@ -237,7 +242,10 @@ export default function Markets() {
       </section>
 
       <section className="mx-auto mt-5 w-full max-w-[1720px] px-4 sm:px-6 lg:px-7">
-        <div className="mb-3 flex items-center justify-end gap-3">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <Button variant="ghost" size="sm" onClick={findMe} className="min-w-0">
+            {nearby ? 'Update my location' : 'Markets near me'}
+          </Button>
           <div className="flex overflow-hidden rounded-full border border-line lg:hidden">
             {(['list', 'map'] as const).map((v) => (
               <button
@@ -245,18 +253,18 @@ export default function Markets() {
                 type="button"
                 onClick={() => setMobileView(v)}
                 aria-pressed={mobileView === v}
-                className={`px-3 py-1.5 text-xs font-medium capitalize ${
+                className={`min-h-10 px-4 text-xs font-semibold capitalize ${
                   mobileView === v ? 'bg-accent-soft text-accent' : 'text-muted'
                 }`}
               >
-                {v}
+                {v === 'list' ? 'Markets' : 'Map'}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(340px,40%)]">
-          <div className={mobileView === 'map' ? 'hidden lg:block' : ''}>
+        <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(340px,40%)]">
+          <div className={`min-w-0 ${mobileView === 'map' ? 'hidden lg:block' : ''}`}>
             {active.error ? (
               <StateNote
                 label="Markets did not load"
@@ -274,7 +282,7 @@ export default function Markets() {
               />
             ) : (
               <Reveal
-                className="flex flex-col gap-3"
+                className="flex w-full min-w-0 flex-col gap-3"
                 y={10}
                 stagger={0.035}
                 revealKey={`${q}|${city}|${nearby ? `${lat},${lng},${radius}` : ''}`}
@@ -286,16 +294,17 @@ export default function Markets() {
                     linkToMarket={false}
                     selected={selected === market.id}
                     onFocus={() => focus(market.id)}
+                    onShowMap={() => showOnMap(market.id)}
                   />
                 ))}
               </Reveal>
             )}
 
             {unlisted.length > 0 ? (
-              <section aria-label="Additional mapped market places" className="mt-10">
+              <section aria-label="Additional mapped market places" className="mt-4">
                 <div className="grid gap-3">
                   {unlisted.map((place) => (
-                    <PlaceCard key={place.ref} place={place} onFocus={() => focus(place.ref)} />
+                    <PlaceCard key={place.ref} place={place} onFocus={() => focus(place.ref)} onShowMap={() => showOnMap(place.ref)} />
                   ))}
                 </div>
 
@@ -318,12 +327,18 @@ export default function Markets() {
                   </a>
                   , available under the Open Data Commons ODbL licence.
                 </p>
+                {Array.from(new Map(allUnlisted.filter((place) => place.image_credit && place.image_link).map((place) => [place.image_link!, { credit: place.image_credit!, link: place.image_link! }])).values()).length ? (
+                  <p className="mt-2 text-[10px] leading-relaxed text-muted">
+                    Photo credits:{' '}
+                    {Array.from(new Map(allUnlisted.filter((place) => place.image_credit && place.image_link).map((place) => [place.image_link!, { credit: place.image_credit!, link: place.image_link! }])).values()).map((photo, index) => <span key={photo.link}>{index ? ' · ' : ''}<a href={photo.link} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-primary">{photo.credit}</a></span>)}
+                  </p>
+                ) : null}
               </section>
             ) : null}
           </div>
 
           <div
-            className={`min-h-[420px] overflow-hidden rounded-2xl border border-line lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] ${
+            className={`h-[min(48svh,360px)] min-h-[260px] overflow-hidden rounded-2xl border border-line bg-elevated lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:min-h-[420px] ${
               mobileView === 'list' ? 'hidden lg:block' : ''
             }`}
           >

@@ -68,7 +68,6 @@ export function AccountSlot() {
       >
         <Avatar src={localAvatar ?? profile.avatar_url} size={26} />
         <span className="max-w-[9rem] truncate">{profile.full_name.split(' ')[0]}</span>
-        <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m5.5 7.5 4.5 4.5 4.5-4.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </Link>
     );
   }
