@@ -21,6 +21,7 @@
     "openapi": "npm run openapi -w server"
   },
   "devDependencies": {
+    "@types/node": "^26.6.3",
     "concurrently": "^9.1.2",
     "typescript": "^5.7.2"
   }
