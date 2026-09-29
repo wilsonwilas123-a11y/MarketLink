@@ -11,14 +11,7 @@ import type {
   Weekday,
 } from './types';
 
-/**
- * Reads for the discovery screens.
- *
- * Query state lives here rather than in component local state because the filters have to
- * survive a link, a browser back, and the map and the list asking the same question at the
- * same time — and a `?nearby` URL a shopper sends to someone else has to open on the same
- * twelve markets.
- */
+
 
 /** Lagos's centre, roughly. The map opens here until the browser reports a better fix. */
 export const LAGOS = { lat: 6.5244, lng: 3.3792 };
@@ -48,10 +41,7 @@ export interface NearbyFilters extends MarketFilters {
   radiusKm?: number;
 }
 
-/**
- * `undefined` and `false` both drop out. Sending `open_now=false` would be correct but turns
- * every shareable URL into noise, and the server's default is the same as the omission.
- */
+
 export function searchParams(fields: Record<string, string | number | boolean | undefined>): string {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(fields)) {

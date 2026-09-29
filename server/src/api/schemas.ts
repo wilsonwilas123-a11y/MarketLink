@@ -1,17 +1,10 @@
 import { registry, z } from './registry.js';
 
-/**
- * The only three roles that exist. Declared here so both the validator and the OpenAPI
- * document read from one definition.
- */
+
 export const RoleSchema = z.enum(['customer', 'farmer', 'admin']);
 export type Role = z.infer<typeof RoleSchema>;
 
-/**
- * `admin` is deliberately absent: bootstrap is reachable by any signed-up account, so a
- * role the client can ask for is a role the client can grant itself. Admins are promoted
- * in the database instead.
- */
+
 const RequestableRoleSchema = z.enum(['customer', 'farmer']);
 export const MarketCountrySchema = z.enum([
   'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Senegal', "Côte d'Ivoire", 'Cameroon',
@@ -58,11 +51,7 @@ export const ProfileSchema = z.object({
 });
 export type Profile = z.infer<typeof ProfileSchema>;
 
-/**
- * The listing gate (spec 4.3). One definition because both the link on `/me` and the
- * farmer's own stall record report it, and a client that saw two lists of three values
- * would have to guess whether they were the same three.
- */
+
 export const FarmerStatusSchema = z.enum(['pending', 'approved', 'suspended']);
 export type FarmerStatus = z.infer<typeof FarmerStatusSchema>;
 
@@ -89,11 +78,7 @@ const DayQuerySchema = z.string().trim().toLowerCase().pipe(DaySchema);
 
 const UuidSchema = z.string().uuid();
 
-/**
- * `numeric(9, 6)` arrives from the driver as a string, so every coordinate is read back as
- * a number here. The bounds are the map's, not the validator's: a pin outside them cannot
- * be shown on it.
- */
+
 const LatitudeSchema = z.coerce.number().gt(-90).lt(90).openapi({
   description: 'Decimal degrees. Strictly inside ±90 because the bounding-box maths for ' +
     '"nearby" divides by cos(lat), which is zero at the poles.',
@@ -115,10 +100,7 @@ const MetaSchema = z.object({
   limit: z.number().int().min(1),
 });
 
-/**
- * The one list shape (spec 6). `meta.total` counts rows the filter matched, not rows on the
- * page, which is the only way a client can tell "you have seen all four" from "keep paging".
- */
+
 function paged(name: string, item: z.ZodTypeAny) {
   return component(name, z.object({ data: z.array(item), meta: MetaSchema }));
 }
@@ -653,6 +635,22 @@ export const ProductCategoryListRef = component('ProductCategoryList', z.array(P
 export const FavoriteRef = component('Favorite', FavoriteSchema);
 export const FavoriteListRef = component('FavoriteList', z.array(FavoriteSchema));
 export const FavoriteTargetRef = component('FavoriteTarget', FavoriteTargetSchema);
+export const ChatMessageSchema = z.object({
+  role: z.enum(['user', 'model']),
+  text: z.string().trim().min(1).max(1500),
+}).strict();
+export const ChatRequestSchema = z.object({
+  messages: z.array(ChatMessageSchema).min(1).max(9),
+}).strict().superRefine(({ messages }, context) => {
+  if (messages.at(-1)?.role !== 'user') {
+    context.addIssue({ code: 'custom', path: ['messages'], message: 'The last chat message must be from the user.' });
+  }
+  if (messages.reduce((total, message) => total + message.text.length, 0) > 9000) {
+    context.addIssue({ code: 'custom', path: ['messages'], message: 'Keep the recent conversation under 9,000 characters.' });
+  }
+});
+export const ChatRequestRef = component('ChatRequest', ChatRequestSchema);
+export const ChatReplyRef = component('ChatReply', z.object({ reply: z.string().min(1) }));
 export const ProductImageUploadResponseRef = component('ProductImageUploadResponse', z.object({ url: z.string().url() }));
 export const NotificationListRef = component('NotificationList', z.array(NotificationSchema));
 /** Not paged: a stall attends a handful of markets, and the dashboard shows all of them. */

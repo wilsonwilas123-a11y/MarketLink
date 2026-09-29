@@ -22,6 +22,32 @@ function nextValidDate(days: string[]) {
   return '';
 }
 function endOfTradingWeek() { const today = new Date(); today.setDate(today.getDate() + 6 - ((today.getDay() + 6) % 7)); return localDate(today); }
+function validPickupDates(days: string[]) {
+  const codes = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const mondayOffset = (new Date().getDay() + 6) % 7;
+  return Array.from({ length: 7 - mondayOffset }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() + index);
+    return days.includes(codes[date.getDay()]!) ? localDate(date) : null;
+  }).filter((date): date is string => date !== null);
+}
+function pickupSlots(startValue: string | null | undefined, endValue: string | null | undefined) {
+  const startText = (startValue ?? '09:00').slice(0, 5);
+  const endText = (endValue ?? '10:00').slice(0, 5);
+  const toMinutes = (value: string) => {
+    const [hours, minutes] = value.split(':').map(Number);
+    return (hours ?? 9) * 60 + (minutes ?? 0);
+  };
+  const from = toMinutes(startText);
+  const until = toMinutes(endText);
+  if (until <= from) return [];
+  const slots: { start: string; end: string }[] = [];
+  for (let time = from; time < until; time += 30) {
+    const next = Math.min(time + 30, until);
+    slots.push({ start: `${pad(Math.floor(time / 60))}:${pad(time % 60)}`, end: `${pad(Math.floor(next / 60))}:${pad(next % 60)}` });
+  }
+  return slots;
+}
 
 function CheckoutContent() {
   const { api } = useAuth();
@@ -50,7 +76,9 @@ function CheckoutContent() {
       for (const group of groups) if (!next[group.key]) {
         const p = group.products[0]!;
         const market = p.markets.find((m) => m.id === group.marketId);
-        next[group.key] = { date: nextValidDate([...p.farmer.operating_days].filter((d) => market?.days.includes(d))), start: (p.farmer.pickup_window_start ?? market?.opens_at ?? '09:00').slice(0, 5), end: (p.farmer.pickup_window_end ?? market?.closes_at ?? '10:00').slice(0, 5) };
+        const slots = pickupSlots(p.farmer.pickup_window_start ?? market?.opens_at, p.farmer.pickup_window_end ?? market?.closes_at);
+        const firstSlot = slots[0] ?? { start: '09:00', end: '09:30' };
+        next[group.key] = { date: nextValidDate([...p.farmer.operating_days].filter((d) => market?.days.includes(d))), ...firstSlot };
       }
       return next;
     });
@@ -65,8 +93,12 @@ function CheckoutContent() {
         if (!timing) continue;
         const allowedDays = [...group.products[0]!.farmer.operating_days].filter((day) => group.products[0]!.markets.find((m) => m.id === group.marketId)?.days.includes(day));
         const dateDay = timing.date ? ['sun','mon','tue','wed','thu','fri','sat'][new Date(`${timing.date}T12:00:00`).getDay()] : undefined;
-        if (!timing.date || !allowedDays.includes(dateDay ?? '') || timing.date < localDate(new Date()) || timing.date > endOfTradingWeek()) {
-          setMessage('Choose an available pickup date during the current trading week for this farmer and market.'); setBusy(false); return;
+        const first = group.products[0]!;
+        const market = first.markets.find((entry) => entry.id === group.marketId);
+        const validSlots = pickupSlots(first.farmer.pickup_window_start ?? market?.opens_at, first.farmer.pickup_window_end ?? market?.closes_at);
+        const validTime = validSlots.some((slot) => slot.start === timing.start && slot.end === timing.end);
+        if (!timing.date || !allowedDays.includes(dateDay ?? '') || timing.date < localDate(new Date()) || timing.date > endOfTradingWeek() || !validTime) {
+          setMessage('Choose an available pickup date and time during the current trading week for this farmer and market.'); setBusy(false); return;
         }
         const order = await api.post<Order>('/orders', {
           market_id: group.marketId, pickup_date: timing.date, pickup_slot_start: timing.start, pickup_slot_end: timing.end,
@@ -90,10 +122,19 @@ function CheckoutContent() {
       const first = g.products[0]!; const market = first.markets.find((m) => m.id === g.marketId); const time = schedule[g.key];
       const total = g.products.reduce((sum, p, i) => sum + p.price_minor * g.selections[i]!.quantity, 0);
       return <Card key={g.key} className="p-5"><div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs uppercase tracking-wide text-accent">Pickup location</p><h2 className="mt-1 font-semibold">{market?.name ?? 'Market unavailable'}</h2><p className="text-sm text-muted">{market?.city} · {first.farmer.stall_name}</p></div><p className="num font-semibold">{formatMinor(total, first.farmer.currency)}</p></div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <label className="text-xs text-muted">Pickup date<input type="date" min={localDate(new Date())} max={endOfTradingWeek()} value={time?.date ?? ''} onChange={(e) => setSchedule((s) => ({ ...s, [g.key]: { ...time!, date: e.target.value } }))} className="mt-1 block h-10 w-full rounded-lg border border-line bg-elevated px-3 text-primary" />{time && !time.date ? <span className="mt-1 block text-danger">No available pickup day remains this week.</span> : null}</label>
-          <label className="text-xs text-muted">From<input type="time" value={time?.start ?? ''} onChange={(e) => setSchedule((s) => ({ ...s, [g.key]: { ...time!, start: e.target.value } }))} className="mt-1 block h-10 w-full rounded-lg border border-line bg-elevated px-3 text-primary" /></label>
-          <label className="text-xs text-muted">Until<input type="time" value={time?.end ?? ''} onChange={(e) => setSchedule((s) => ({ ...s, [g.key]: { ...time!, end: e.target.value } }))} className="mt-1 block h-10 w-full rounded-lg border border-line bg-elevated px-3 text-primary" /></label>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="text-xs text-muted">Pickup date
+            <select value={time?.date ?? ''} onChange={(e) => setSchedule((s) => ({ ...s, [g.key]: { ...time!, date: e.target.value } }))} className="mt-1 block h-10 w-full rounded-lg border border-line bg-elevated px-3 text-primary">
+              {validPickupDates([...first.farmer.operating_days].filter((day) => market?.days.includes(day))).map((date) => <option key={date} value={date}>{new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</option>)}
+            </select>
+            {time && !time.date ? <span className="mt-1 block text-danger">No available pickup day remains this week.</span> : null}
+          </label>
+          <label className="text-xs text-muted">Pickup time
+            <select value={time ? `${time.start}|${time.end}` : ''} onChange={(e) => { const [start, end] = e.target.value.split('|'); if (start && end) setSchedule((s) => ({ ...s, [g.key]: { ...time!, start, end } })); }} className="mt-1 block h-10 w-full rounded-lg border border-line bg-elevated px-3 text-primary">
+              {pickupSlots(first.farmer.pickup_window_start ?? market?.opens_at, first.farmer.pickup_window_end ?? market?.closes_at).map((slot) => <option key={slot.start} value={`${slot.start}|${slot.end}`}>{slot.start}–{slot.end}</option>)}
+            </select>
+            <span className="mt-1 block">Select a 30-minute slot within the listed pickup window.</span>
+          </label>
         </div><ul className="mt-4 space-y-1 text-sm text-muted">{g.products.map((p, i) => <li key={p.id}>{g.selections[i]!.quantity} × {p.name}</li>)}</ul>
       </Card>;
     })}</div>

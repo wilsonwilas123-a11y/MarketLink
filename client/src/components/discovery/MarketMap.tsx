@@ -5,42 +5,21 @@ import { clock } from '../../lib/discovery';
 import type { Market, NearbyMarket, PlaceCandidate } from '../../lib/types';
 import { formatDistance } from '../../utils/distance';
 
-/**
- * The market map: OpenStreetMap tiles, our markers.
- *
- * Leaflet is driven imperatively here rather than through a React wrapper. There are about
- * forty markers on this screen, not four thousand, so the reconciliation a wrapper exists for
- * is a loop that clears and redraws — and the wrapper would be one more dependency to wait on
- * when Leaflet's own release moves.
- *
- * Markers are `divIcon`s shaped in CSS, not the PNG pin set: Leaflet's default icons resolve
- * through `imageSize`-style asset URLs that a bundler rewrites, and a pin built from a path
- * matches the token palette on both tile layers.
- */
+
 
 const MAP_TILES = {
   url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 } as const;
 
-/**
- * What the list needs from an imperative map: point at a row, market or mapped place.
- *
- * Only `focus` is exposed. Panning, zooming and tile state belong to the map, and lifting any
- * of them into React would mean two owners of the same viewport.
- */
+
 export interface MarketMapHandle {
   focus(id: string): void;
 }
 
 export interface MarketMapProps {
   markets: (Market | NearbyMarket)[];
-  /**
-   * Places the gazetteer answers with that have no row here.
-   *
-   * Drawn as hollow rings, never as pins: a visitor who cannot tell a tracked market from a
-   * name on a map will phone around for opening hours that this app is promising.
-   */
+
   places?: PlaceCandidate[];
   /** Where the distances were measured from, when there is one worth drawing. */
   origin?: { lat: number; lng: number } | null;
@@ -70,12 +49,7 @@ function placePin(active: boolean): L.DivIcon {
   });
 }
 
-/**
- * Popup content built from nodes rather than an HTML string.
- *
- * Market names come from rows an admin typed, and `setContentView` would take them as markup.
- * `textContent` cannot.
- */
+
 function popupContent(market: Market | NearbyMarket, onOpen?: (id: string) => void): HTMLElement {
   const box = document.createElement('div');
   box.className = 'ml-popup';

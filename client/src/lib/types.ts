@@ -70,15 +70,7 @@ export interface NearbyMarket extends Market {
   distance_km: number;
 }
 
-/**
- * A place OpenStreetMap tags as a marketplace, whether or not MarketLink has a row for it.
- *
- * There is no id, no opening hours and no stall list here, because those belong to a curated
- * row and this is not one. Attribution is owed to the OSM contributors wherever it is shown.
- *
- * `image_url` never comes from OpenStreetMap itself — it carries no photos — and comes from a
- * matching Wikimedia Commons market image or an explicitly labeled regional market image.
- */
+
 export interface PlaceCandidate {
   ref: string;
   name: string;
@@ -145,11 +137,7 @@ export interface ProductCategory {
   slug: string;
 }
 
-/**
- * A product as it appears on a stall page. Stock is this ISO week: no `weekly_stock` row for
- * the current week reads as `quantity_available: null, is_sold_out: false`, and the server
- * treats an unchecked quantity as unavailable rather than unlimited.
- */
+
 export interface ListedProduct {
   id: string;
   name: string;

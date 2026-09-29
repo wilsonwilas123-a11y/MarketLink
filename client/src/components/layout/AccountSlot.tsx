@@ -6,13 +6,7 @@ import { COMPLETE_PROFILE_PATH, homeFor } from '../../auth/paths';
 import { localAvatarEventName, readLocalAvatar } from '../../lib/localAvatar';
 import { ADMIN_SESSION_EVENT, getAdminEmail } from '../../auth/adminSession';
 
-/**
- * The account corner of the nav.
- *
- * The avatar alone says nothing about who you are signed in as, and a farmer with a pending
- * stall needs the one thing that tells them to stay one click away rather than hidden behind
- * an icon.
- */
+
 export function AccountSlot() {
   const { status, profile, refresh } = useAuth();
   const [localAvatar, setLocalAvatar] = useState<string | null>(null);

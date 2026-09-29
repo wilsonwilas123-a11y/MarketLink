@@ -1,19 +1,8 @@
 import { useEffect, useState } from 'react';
 import { glyphFor, Glyph, type GlyphName } from './glyphs';
 
-/**
- * A photo slot that is never empty.
- *
- * Seeded rows can have no photo and farmer uploads can expire, so each slot tries the primary
- * photo, then a matching local photo, then line art derived from the row. Broken URLs are cached
- * so repeated cards do not keep retrying them.
- */
-/**
- * Sources this page has already failed to load.
- *
- * A slot that remounts — the produce carousel re-keys its rows on every slide — would otherwise
- * retry a dead URL and flash a broken image each time it arrives.
- */
+
+
 const broken = new Set<string>();
 
 export function Thumb({

@@ -1,22 +1,9 @@
-/**
- * The distance and opening-hours SQL the discovery queries are built from, and the one piece
- * of arithmetic that is not SQL.
- *
- * Kept here rather than inlined per query because the same two expressions answer "how far"
- * and "is it trading" from both `/markets` and `/markets/nearby`, and a market that reads as
- * open on the list but shut on the map is a bug nobody can explain.
- */
+
 
 /** Mean Earth radius in km. Close enough for a market finder; not for a flight plan. */
 const EARTH_RADIUS_KM = 6371;
 
-/**
- * Lagos wall-clock now, as a `timestamp` without a zone.
- *
- * The zone is named rather than left to the server because a deployment in London would
- * otherwise report every Lagos market as shut during the eight hours that matter most, and
- * would do so identically on every screen, which makes it look like correct data.
- */
+
 export const LAGOS_NOW = "(now() at time zone 'Africa/Lagos')";
 
 /** `tue` for Tuesday, and so on, without depending on the cluster's lc_time locale. */

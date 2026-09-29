@@ -7,10 +7,7 @@ import { homeFor } from '../../auth/paths';
 import { AuthFrame, AuthUnavailable, FormAlert } from './AuthFrame';
 import { DetailsFields, emptyDetails, useDetails } from './DetailsFields';
 
-/**
- * The screen a session lands on when `/api/me` answers `profile_missing`: the sign-in worked
- * and the profile row does not exist, usually because the tab was closed mid-signup.
- */
+
 export default function CompleteProfile() {
   const { completeBootstrap, status, profile, configured } = useAuth();
   const details = useDetails(emptyDetails);

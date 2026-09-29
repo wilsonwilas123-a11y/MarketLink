@@ -4,13 +4,7 @@ import type { Role } from '../lib/types';
 import { useAuth } from './AuthProvider';
 import { COMPLETE_PROFILE_PATH, signInPath } from './paths';
 
-/**
- * Gate for the screens behind an account.
- *
- * It waits rather than guessing: while `/api/me` is still in flight the gate has no idea
- * whether the visitor is signed in, and redirecting on that assumption is how a reload of a
- * dashboard throws you out to the sign-in page.
- */
+
 export function RequireAuth({ roles, loginPath, children }: { roles?: readonly Role[]; loginPath?: string; children: ReactNode }) {
   const { status, profile } = useAuth();
   const location = useLocation();
@@ -47,10 +41,7 @@ const roleLanding: Record<Role, { label: string; to: string }> = {
   admin: { label: 'the admin queue', to: '/admin' },
 };
 
-/**
- * Says why the screen did not open instead of redirecting: a redirect on a role mismatch can
- * bounce a farmer and a customer between two dashboards forever.
- */
+
 function WrongRole({ role, adminLoginPath }: { role: Role; adminLoginPath?: string }) {
   const landing = roleLanding[role];
 

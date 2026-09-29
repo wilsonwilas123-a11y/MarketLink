@@ -3,10 +3,7 @@ import { offsetFor } from '../api/schemas.js';
 import { ApiError } from '../errors.js';
 import type { FarmerProductInput, Page, ProductCard, ProductListQuery } from '../api/schemas.js';
 
-/**
- * Public catalogue. Only active listings from approved stalls are visible; the current week's
- * row overrides the recurring template, and an unmaterialized new week starts at that template.
- */
+
 async function queryProducts(
   pool: Pool,
   query: ProductListQuery,

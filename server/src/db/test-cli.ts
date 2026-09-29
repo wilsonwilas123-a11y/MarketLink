@@ -14,12 +14,7 @@ if (!url) {
 
 const dir = join(resolve(process.cwd(), '..'), 'db', 'tests');
 
-/**
- * pgTAP assertions come back as one text column reading `ok N - title` or
- * `not ok N - title`, so a plain multi-statement query gives us everything we need
- * without depending on pg_prove being installed. Each file wraps itself in
- * BEGIN/ROLLBACK, so nothing it writes survives.
- */
+
 function parseResults(chunks: unknown[][]): { passed: number; failed: string[]; planned: number | null } {
   let passed = 0;
   let planned: number | null = null;

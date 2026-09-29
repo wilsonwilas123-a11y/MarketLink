@@ -1,10 +1,4 @@
-/**
- * The client's only door to the backend.
- *
- * Everything goes through `/api`; the client never holds a database connection and never
- * sees the service-role key. The access token is asked for per request rather than captured
- * once, because a token that outlived a refresh would start the session with a 401.
- */
+
 
 export class ApiError extends Error {
   constructor(
@@ -35,10 +29,7 @@ export interface ApiClient {
   upload: <T>(path: string, file: File) => Promise<T>;
 }
 
-/**
- * `unknown` rather than a cast: a body that is not what spec 9.1 promises is a bug worth
- * seeing as a parse failure with the status attached, not as `undefined` several layers up.
- */
+
 async function send(
   fetchImpl: typeof fetch,
   baseUrl: string,

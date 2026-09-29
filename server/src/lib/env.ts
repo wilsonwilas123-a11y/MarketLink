@@ -2,11 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { z } from 'zod';
 
-/**
- * `z.string().url()` accepts http(s) only, and three of these values are not: a
- * `postgres://` connection string, and an origin a deployer may run on any scheme. This
- * accepts anything the WHATWG URL parser understands and nothing else.
- */
+
 function url(field: string) {
   return z
     .string()
@@ -43,6 +39,9 @@ const EnvSchema = z.object({
   // Leave empty in a fresh checkout; admin sign-in stays disabled until the operator sets it.
   ADMIN_PASSWORD: z.string().default(''),
   SUPABASE_PRODUCT_BUCKET: z.string().trim().min(1).default('product-images'),
+  // Kept on the API process only. Empty leaves the chatbot UI visible but reports setup needed.
+  GEMINI_API_KEY: z.string().trim().default(''),
+  GEMINI_MODEL: z.string().trim().min(1).default('gemini-3.5-flash-lite'),
   CLIENT_ORIGIN: url('CLIENT_ORIGIN'),
   /**
    * Sent to the OpenStreetMap gazetteer on every lookup.

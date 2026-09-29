@@ -51,13 +51,7 @@ export function requireAdminSession(): RequestHandler {
   };
 }
 
-/**
- * Verifies the access token and nothing more.
- *
- * `POST /auth/bootstrap` uses this rather than `requireAuth`, because bootstrap is the
- * call that creates the profile row `requireAuth` insists on. Requiring a profile in
- * order to create a profile is the deadlock this exists to avoid.
- */
+
 export function requireSubject(verify: AuthVerifier): RequestHandler {
   return async (req, _res, next) => {
     const token = bearer(req);
@@ -79,17 +73,7 @@ export function requireSubject(verify: AuthVerifier): RequestHandler {
   };
 }
 
-/**
- * Resolves a verified caller to an active profile.
- *
- * Chains `requireSubject` rather than assuming it ran first: a route that mounted only
- * this gate would otherwise refuse everyone with "A bearer token is required" while
- * holding a perfectly good token, which reads like a client bug and is a wiring one.
- *
- * The role is read from `profiles`, not from a JWT claim, so revoking a farmer or
- * suspending an account takes effect on the next request rather than whenever the token
- * happens to be refreshed.
- */
+
 export function requireAuth(verify: AuthVerifier, pool: Pool): RequestHandler {
   const subjectGate = requireSubject(verify);
 
@@ -132,11 +116,7 @@ async function loadProfile(req: Request, pool: Pool, next: NextFunction): Promis
   }
 }
 
-/**
- * Role gate, applied after `requireAuth`. Checked separately rather than folded into it
- * so an unauthenticated request is answered with 401, not 403 — a 403 here would tell a
- * caller the route exists and that their credentials merely lack a role.
- */
+
 export function requireRole(...roles: Role[]): RequestHandler {
   return (req, _res, next) => {
     if (!req.user) {
@@ -155,11 +135,7 @@ export function requireRole(...roles: Role[]): RequestHandler {
   };
 }
 
-/**
- * Readers for what the middleware above already guaranteed. A handler that reaches these
- * without the matching middleware has a routing bug, so the message names the middleware
- * rather than describing a state a client could cause.
- */
+
 export function currentSubject(req: Request): AuthSubject {
   if (!req.subject) throw new Error('handler used without requireSubject');
   return req.subject;

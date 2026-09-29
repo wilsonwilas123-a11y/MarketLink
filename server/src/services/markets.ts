@@ -12,14 +12,7 @@ import type {
 } from '../api/schemas.js';
 import { HAVERSINE_KM, boundingBox, isOpenNow } from './geo.js';
 
-/**
- * One column list for every market read.
- *
- * `lat`/`lng` are `numeric(9, 6)`, which the driver returns as a *string* — precise but
- * useless to a map that needs numbers. Casting to `float8` in the select is what lets the
- * client plot a pin without parsing text, and six decimals is still ten-centimetre
- * precision, so nothing measurable is lost.
- */
+
 const MARKET_COLUMNS = `id, name, address, city, state,
   currency,
   lat::float8 as lat, lng::float8 as lng,
@@ -28,15 +21,7 @@ const MARKET_COLUMNS = `id, name, address, city, state,
 /** A row as the paged queries return it: the shape asked for, plus the window's tally. */
 type Counted<T> = T & { total_count: number };
 
-/**
- * Turns counted rows into the section 6 envelope.
- *
- * `count(*) over ()` rides along with the page rather than coming from a separate `count(*)`
- * query: the window sees the rows the filters matched before `limit` cuts them, which is
- * exactly what `meta.total` means, and one round trip beats two that could disagree.
- * Every row carries the same total, so the first one is as good a source as any — and an
- * empty result genuinely did match nothing.
- */
+
 function envelope<T>(rows: Counted<T>[], query: { page: number; limit: number }): Page<T> {
   return {
     data: rows.map(({ total_count, ...rest }) => rest as T),
@@ -44,9 +29,7 @@ function envelope<T>(rows: Counted<T>[], query: { page: number; limit: number })
   };
 }
 
-/**
- * A list of markets, for the discovery screen's filters.
- */
+
 export async function listMarkets(pool: Pool, query: MarketListQuery): Promise<Page<Market>> {
   const values: unknown[] = [];
   const clauses = ['is_active'];

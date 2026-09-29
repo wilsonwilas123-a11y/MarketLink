@@ -3,10 +3,7 @@ import type { RequestHandler } from 'express';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
 
-/**
- * A caller-supplied id is kept so a client's own trace lines up with ours; a bad one is
- * discarded rather than echoed back into logs or a header.
- */
+
 const FORWARDED_OK = /^[A-Za-z0-9._-]{1,64}$/;
 
 export const requestId: RequestHandler = (req, res, next) => {

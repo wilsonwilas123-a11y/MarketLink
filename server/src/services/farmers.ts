@@ -14,15 +14,7 @@ import type {
   UpdateStallInput,
 } from '../api/schemas.js';
 
-/**
- * The public shape of a stall. `status` is deliberately absent: whether a farmer is approved
- * is the reason they are or are not in this list, not a field a shopper acts on, and a
- * suspended stall reading `status: 'suspended'` anywhere public is a leak of the approval
- * queue's state.
- *
- * `lat`/`lng` are numeric, which the driver returns as text, so they are cast here for the
- * same reason the market columns are.
- */
+
 const FARMER_COLUMNS = `id, stall_name, contact_person, description, logo_url, cover_url,
   lat::float8 as lat, lng::float8 as lng, currency,
   rating_avg::float8 as rating_avg, rating_count, operating_days`;

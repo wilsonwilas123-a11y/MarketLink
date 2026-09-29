@@ -13,22 +13,7 @@ import { parseMarketBox } from '../services/geocode.js';
 import type { AppDeps } from '../app.js';
 import type { GeoSearchQuery, MarketBoxQuery } from '../api/schemas.js';
 
-/**
- * Turning a typed name into a coordinate.
- *
- * These are the only routes in the API that leave the building, which is why they are the one
- * place the upstream is named in the contract: a caller reading them should know the answer
- * comes from OpenStreetMap and not from MarketLink's own tables, and should expect it to be
- * able to fail for reasons nothing here controls.
- *
- * `/geo/search` sits behind a token even though it reads nothing private. An open endpoint onto
- * a third party's gazetteer is a way for a stranger to spend someone else's goodwill with that
- * gazetteer, and rate limiting on the upstream is not ours to configure. `/places/markets` and its
- * `/box` sibling have to be open — they answer the discovery screen, which works for someone who
- * has never signed up — and each trades that guard for the cache and a bounded question: a
- * three-character minimum and a capped `limit` for the search, a capped corner of the map for the
- * box.
- */
+
 registry.registerPath({
   method: 'get',
   path: '/geo/search',
@@ -51,18 +36,7 @@ registry.registerPath({
   },
 });
 
-/**
- * The same gazetteer, filtered to marketplaces, with no token in front of it.
- *
- * `/markets` is a public read (spec 5.4), and so is the question behind this one — a visitor
- * typing `Ibadan` has to get an answer before they have any reason to have an account. What
- * keeps it off the upstream's bill is the cache rather than a credential: a hundred searches
- * for one city leave this server once per window.
- *
- * The rows are map data, not listings. There is no `id` to open, no trading days, no photo and
- * nothing stocked — only a name, a point and the address around it — which is why they are a
- * different shape in the contract from a `Market` and a different weight on the screen.
- */
+
 registry.registerPath({
   method: 'get',
   path: '/places/markets',
@@ -88,18 +62,7 @@ registry.registerPath({
   },
 });
 
-/**
- * The same marketplaces, asked by corner of the map instead of by name.
- *
- * This is the door that answers before anyone has typed: the discovery screen opens on a view of
- * Lagos and needs something to show in it. A name cannot do that job: a bare city ranks the city,
- * and the six marketplaces `Lagos` answered with were all nodes literally named "Market".
- *
- * A second upstream answers here, because a gazetteer ranks text and cannot answer "what is in
- * this box"; that service reads the same OpenStreetMap data through a volunteer's mirror. What
- * keeps the request polite is the capped box, the capped `limit` and the cache, and what keeps it
- * honest is that the order carries no ranking — these are simply markets that are there.
- */
+
 registry.registerPath({
   method: 'get',
   path: '/places/markets/box',

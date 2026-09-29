@@ -21,6 +21,7 @@ pool.on('error', (err) => {
 const app = createApp(
   {
     pool,
+    gemini: { apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL },
     // The service-role key is read here and nowhere else, which is what makes `grep -rn
     // SERVICE_ROLE server/src` a meaningful audit.
     auth: makeSupabaseAuth(supabaseAdmin),

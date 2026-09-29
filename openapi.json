@@ -179,6 +179,27 @@
             "type": "string",
             "nullable": true
           },
+          "country": {
+            "type": "string",
+            "enum": [
+              "Nigeria",
+              "Ghana",
+              "Kenya",
+              "South Africa",
+              "Senegal",
+              "Côte d'Ivoire",
+              "Cameroon",
+              "Uganda",
+              "Tanzania",
+              "Rwanda",
+              "Egypt",
+              "Morocco",
+              "Ethiopia",
+              "Botswana",
+              "Zambia",
+              "Mozambique"
+            ]
+          },
           "avatar_url": {
             "type": "string",
             "nullable": true
@@ -199,6 +220,7 @@
           "full_name",
           "phone",
           "address",
+          "country",
           "avatar_url",
           "is_active",
           "created_at",
@@ -258,6 +280,27 @@
                 "type": "string",
                 "nullable": true
               },
+              "country": {
+                "type": "string",
+                "enum": [
+                  "Nigeria",
+                  "Ghana",
+                  "Kenya",
+                  "South Africa",
+                  "Senegal",
+                  "Côte d'Ivoire",
+                  "Cameroon",
+                  "Uganda",
+                  "Tanzania",
+                  "Rwanda",
+                  "Egypt",
+                  "Morocco",
+                  "Ethiopia",
+                  "Botswana",
+                  "Zambia",
+                  "Mozambique"
+                ]
+              },
               "avatar_url": {
                 "type": "string",
                 "nullable": true
@@ -278,6 +321,7 @@
               "full_name",
               "phone",
               "address",
+              "country",
               "avatar_url",
               "is_active",
               "created_at",
@@ -372,7 +416,8 @@
           "full_name",
           "phone",
           "address",
-          "role"
+          "role",
+          "country"
         ],
         "additionalProperties": false
       },
@@ -399,6 +444,27 @@
             "nullable": true,
             "maxLength": 2048,
             "format": "uri"
+          },
+          "country": {
+            "type": "string",
+            "enum": [
+              "Nigeria",
+              "Ghana",
+              "Kenya",
+              "South Africa",
+              "Senegal",
+              "Côte d'Ivoire",
+              "Cameroon",
+              "Uganda",
+              "Tanzania",
+              "Rwanda",
+              "Egypt",
+              "Morocco",
+              "Ethiopia",
+              "Botswana",
+              "Zambia",
+              "Mozambique"
+            ]
           }
         },
         "additionalProperties": false
@@ -1684,6 +1750,9 @@
                       "city": {
                         "type": "string"
                       },
+                      "timezone": {
+                        "type": "string"
+                      },
                       "days": {
                         "type": "array",
                         "items": {
@@ -1701,6 +1770,7 @@
                       "id",
                       "name",
                       "city",
+                      "timezone",
                       "days",
                       "opens_at",
                       "closes_at"
@@ -2326,6 +2396,9 @@
                 "city": {
                   "type": "string"
                 },
+                "timezone": {
+                  "type": "string"
+                },
                 "days": {
                   "type": "array",
                   "items": {
@@ -2343,6 +2416,7 @@
                 "id",
                 "name",
                 "city",
+                "timezone",
                 "days",
                 "opens_at",
                 "closes_at"
@@ -2711,6 +2785,54 @@
           "target_id"
         ],
         "additionalProperties": false
+      },
+      "ChatRequest": {
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "model"
+                  ]
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1500
+                }
+              },
+              "required": [
+                "role",
+                "text"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 9
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "additionalProperties": false
+      },
+      "ChatReply": {
+        "type": "object",
+        "properties": {
+          "reply": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "reply"
+        ]
       },
       "ProductImageUploadResponse": {
         "type": "object",
@@ -6163,6 +6285,68 @@
         "responses": {
           "200": {
             "description": "Read count returned."
+          }
+        }
+      }
+    },
+    "/chat": {
+      "post": {
+        "tags": [
+          "Support"
+        ],
+        "summary": "Ask the MarketLink site assistant",
+        "description": "Public, narrowly scoped MarketLink site help. User conversation text is sent to Google Gemini; no live inventory or account data is supplied.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A MarketLink site-help reply.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The conversation is too long or malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The caller has reached the assistant request limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The assistant has no Gemini key configured, or Gemini is temporarily unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }

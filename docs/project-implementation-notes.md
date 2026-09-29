@@ -1,67 +1,80 @@
 # MarketLink Project Report
 
-## Project summary
+**Document status:** implementation report and SRS compliance review
+**Reviewed:** 29 September 2026
+**Requirements source:** `docs/reference/MarketLink End-to-End Web Solutions_SRS.pdf`
 
-MarketLink is a responsive produce marketplace for connecting shoppers with African farmers and open-air markets. A customer discovers a market or farmer, chooses produce, and reserves it for a scheduled pickup. Farmers maintain stall details, weekly stock and orders. Administrators moderate the marketplace. Payment is collected in person at pickup; online payments and delivery are outside this project scope, as directed by the supplied SRS.
+## 1. Project overview
 
-The visual direction follows the supplied ten-screen reference with a light-market refresh: warm white surfaces, forest-green actions, clear availability states, map-led market discovery, product cards and separate customer/farmer/admin workspaces.
+MarketLink is a responsive marketplace that helps shoppers find farmers, markets and produce, then reserve products for scheduled pickup. Farmers manage stalls, products, weekly stock and pickup orders. Administrators manage access, approvals, listings and reports. Payment is made to the farmer at pickup; online payment and delivery are outside the documented scope.
 
-## Main workflows
+The SRS describes a problem where shoppers cannot reliably know which farmers, products and prices will be available before travelling, while farmers have limited ways to announce stock and take preorders. MarketLink addresses this with searchable listings, market schedules, stock-aware reservations and role-specific workspaces.
+
+### Goals
+
+- Let customers discover farmers, produce and pickup markets before travelling.
+- Allow customers to reserve available products and manage orders before the seller's cutoff.
+- Give farmers tools to maintain listings, stock, pickup arrangements and order status.
+- Give administrators controls for approvals, moderation, accounts, markets and reports.
+- Provide a responsive interface, map-based discovery and useful in-app notifications.
+
+### Scope and constraints
+
+The application supports customers, farmers and administrators. Customers pay in person at collection. Orders are grouped by farmer and market, and an individual order belongs to one farmer and one pickup market. There is no payment gateway, delivery dispatch or automatic refund flow. Production availability, backups, cross-browser compatibility and accessibility conformance require deployment or independent evaluation and are not claimed as proven by this source review.
+
+## 2. System design
+
+### Architecture
 
 ```mermaid
 flowchart LR
-  C[Customer] --> D[Discover markets and farmers]
-  D --> P[Browse produce and details]
-  P --> B[Cart and pickup reservation]
-  B --> O[Track, amend or cancel before cutoff]
-  O --> R[Collect and pay at pickup]
-  R --> V[Review products and farmer]
-  F[Farmer] --> L[Maintain stall, listings and weekly stock]
-  L --> O
-  O --> F
-  A[Administrator] --> M[Approve farmers and moderate listings]
-  A --> D
-```
-
-## Application architecture
-
-```mermaid
-flowchart TB
-  Browser[React client · Vite · responsive UI]
-  API[Express REST API · validation · OpenAPI]
-  Auth[Supabase Auth for buyer and seller accounts]
-  AdminAuth[Server-only admin password session]
+  Browser[React and TypeScript client]
+  API[Express REST API]
+  SupabaseAuth[Supabase Auth]
   DB[(PostgreSQL / Supabase Postgres)]
-  Storage[Supabase Storage · product and stall photos]
-  OSM[OpenStreetMap / Photon place lookup]
-  Photo[Wikipedia / Mapillary photo lookup]
-  Browser -->|Bearer token| API
-  Browser --> Auth
-  Browser -->|Admin session token| AdminAuth
-  AdminAuth --> API
+  Storage[Supabase Storage]
+  Maps[OpenStreetMap and Photon]
+  Gemini[Optional Gemini assistant]
+  Browser -->|Buyer or farmer token| API
+  Browser --> SupabaseAuth
+  Browser -->|Admin session| API
   API --> DB
   API --> Storage
-  API --> OSM
-  API --> Photo
+  API --> Maps
+  API --> Gemini
 ```
 
-The browser uses the API for marketplace data and uploads. The Supabase service-role key stays on the server. Product uploads are limited to JPEG, PNG or WebP files up to 5 MB and stored under the farmer's profile. Place discovery tries OpenStreetMap market data and falls back to Photon when an Overpass mirror times out; optional place photos are linked to their source.
+The browser is built with React, TypeScript and Vite. The Node.js/Express API validates requests and accesses PostgreSQL. Supabase provides customer/farmer authentication and image storage. Administrator authentication uses a server-verified password and signed session. The service-role key, admin password and Gemini key belong only in the server environment. Map discovery uses OpenStreetMap/Photon. The site-scoped assistant can search public active listings and current weekly stock; when Gemini is configured it can also answer general MarketLink help questions. It cannot access private accounts or orders.
 
-## Data design
+### User flow
 
-| Entity | Purpose and relationships |
+```mermaid
+flowchart TD
+  SignIn[Sign in or browse as visitor] --> Role{User role}
+  Role --> Customer[Customer: discover and search]
+  Customer --> Reserve[Select product and reserve pickup]
+  Reserve --> Track[Track, edit or cancel before cutoff]
+  Track --> Collect[Collect and pay farmer]
+  Collect --> Review[Review completed purchase]
+  Role --> Farmer[Farmer: manage stall, products and stock]
+  Farmer --> Orders[Accept and fulfil pickup orders]
+  Role --> Admin[Admin: approve, moderate and report]
+```
+
+### Data design
+
+| Entity | Responsibility |
 |---|---|
-| `profiles` | Authenticated customer/farmer identity and account status. The administrator signs in using a separate server-side password session. |
-| `markets` | Named market, city/address, coordinates, active state and operating hours. |
-| `farmers` | Stall profile, approval state, pickup hours/cutoff, currency and location; linked to a profile. |
-| `market_farmers` | Many-to-many association between stalls and markets, including trading days. |
-| `categories` | Product category master list. |
-| `products` | Farmer-owned listing, price, media, category and recurring `template_qty`. |
-| `weekly_stock` | Per-product ISO-week quantity and sold-out override; orders reserve and restore quantities. |
-| `orders`, `order_items` | Customer pickup reservation, status history and fixed-at-order item prices. One order belongs to one farmer/market pickup. |
-| `favorites` | Customer-saved market, farmer or product. Restock alerts are generated for saved products. |
-| `reviews` | One review per product per completed order, with farmer reply and moderation state. |
-| `notifications` | In-app order, announcement and restock notices. |
+| `profiles` | Customer/farmer identity and account state, associated with auth identity. |
+| `farmers` | Farmer stall profile, approval, pickup schedule and location. |
+| `markets` | Market identity, place, coordinates, operating schedule and active state. |
+| `market_farmers` | Farmer-to-market roster and trading days. |
+| `categories`, `products` | Product classification and farmer-owned listings. |
+| `weekly_stock` | Product quantities by ISO week and sold-out state. |
+| `orders`, `order_items` | Pickup reservation, status and item/price snapshots. |
+| `favorites` | Saved farmers, products and markets. |
+| `reviews` | Ratings and comments linked to completed orders/products, with moderation and farmer reply. |
+| `notifications` | In-app order, restock and announcement messages. |
 
 ```mermaid
 erDiagram
@@ -70,43 +83,58 @@ erDiagram
   FARMERS ||--o{ MARKET_FARMERS : attends
   FARMERS ||--o{ PRODUCTS : lists
   CATEGORIES ||--o{ PRODUCTS : classifies
-  PRODUCTS ||--o{ WEEKLY_STOCK : stocks_by_week
+  PRODUCTS ||--o{ WEEKLY_STOCK : stocks
   PROFILES ||--o{ ORDERS : places
-  FARMERS ||--o{ ORDERS : fulfills
+  FARMERS ||--o{ ORDERS : fulfils
   MARKETS ||--o{ ORDERS : pickup_at
   ORDERS ||--|{ ORDER_ITEMS : contains
-  PRODUCTS ||--o{ ORDER_ITEMS : reserved_as
-  PROFILES ||--o{ FAVORITES : saves
-  MARKETS ||--o{ FAVORITES : may_be_saved
-  FARMERS ||--o{ FAVORITES : may_be_saved
-  PRODUCTS ||--o{ FAVORITES : may_be_saved
+  PRODUCTS ||--o{ ORDER_ITEMS : reserved
   ORDERS ||--o{ REVIEWS : earns
-  PRODUCTS ||--o{ REVIEWS : reviewed
+  PROFILES ||--o{ FAVORITES : saves
   PROFILES ||--o{ NOTIFICATIONS : receives
 ```
 
-Schema changes are numbered SQL migrations in `db/migrations/`; demo data is in `db/seed/`. Weekly stock templates are applied lazily when a product is read or ordered in a new ISO week. Farmers can edit the recurring default separately from current-week stock.
+Database changes are versioned in `db/migrations/`; Lagos demo data is in `db/seed/`. Row-level security and guarded stock updates protect data access and prevent overselling. See [database setup and checks](../db/README.md) for migration and seed details.
 
-## Requirement coverage
+## 3. SRS requirement review
 
-| SRS area | Current implementation |
-|---|---|
-| Customer accounts and discovery | Sign-up/sign-in, profile editing, market list/map, market search and market/farmer profiles. |
-| Product discovery | Search, category/market/market-day/price/availability filters, product details and matched product photos where available, with crop-specific artwork when there is no matching photograph. |
-| Pickup ordering | Cart, scheduled pickup checkout, in-person payment, order tracking, item edits/cancellation before cutoff, order history and stock reservation. |
-| Customer engagement | Favorites, completed-order reviews, farmer replies and in-app order/restock/announcement notifications. |
-| Farmer tools | Stall profile and map pin, market schedule, product photo upload, current and recurring weekly stock, order status management, sales/order insights and review replies. |
-| Administration | Farmer approvals and account controls, market/category management, product/review moderation, announcements and reports. |
-| Maps and contact | Market map and directions, farmer pickup map pins and directions, and a Contact page that reads team details/map coordinates from the public `VITE_CONTACT_*` client settings. Those settings must be filled with team-approved public details before evaluation. |
-| Accessibility and performance | Responsive layouts, skip-to-content link, labeled controls and reduced-motion handling; route-level code splitting keeps the largest initial client chunk below 500 kB. |
-| Optional AI assistant | Not implemented; optional in the SRS and not required for core operation. |
-| Payment and fulfillment | Pickup-only flow; no online payment processing or delivery workflow. |
+Status means source-level implementation found during this review. “Partial” means a related feature exists but misses a stated detail or needs configuration. “Unverified” means source inspection/build cannot establish the live or operational requirement.
 
-## Setup and evaluation
+| SRS requirement | Status | Evidence and remaining work |
+|---|---|---|
+| Customer/farmer registration and sign-in | Meets in source | Supabase-backed flows collect role-specific profile details; farmer profiles enter approval flow. Live provider configuration must be supplied. |
+| Market and farmer discovery, operating days and maps | Meets in source | Market/farmer directory, schedules, map pins and direction links are present. Cross-device/browser behaviour needs hands-on evaluation. |
+| Search products by name/category/price/availability and market/day | Meets in source | Catalogue provides search, category, price, stock, market and market-day filters; market/day constraints are applied by the API. |
+| Product details, farmer and pickup information | Meets in source | Product details link listings to farmers and pickup markets. |
+| Stock-aware pickup preorder, cutoff, tracking and edits/cancellation | Meets in source | Checkout lets customers choose an eligible market/farmer trading date and a 30-minute pickup slot within the configured pickup window. The API validates stock and the seller's cutoff; order status, pre-cutoff changes and cancellation are supported. |
+| Order history and reorder | Meets in source | Order history and a **Buy again** action are present for completed orders; availability is checked before restoring products to the cart. |
+| Favorites, restock and market notices | Meets in source | Favorites and in-app restock/order/announcement notices exist. |
+| Post-completion ratings/reviews and farmer replies | Meets in source | Review eligibility follows completed orders; moderation and seller replies exist. Seed data does not provide a completed order for a ready-made review demonstration. |
+| Optional chatbot for MarketLink questions and current listing availability | Meets in source for public listings | Inventory questions use active approved listings and current weekly stock, including market and trading days; general help answers use the server-configured Gemini model. Private account/order data is intentionally unavailable. |
+| Farmer profile, map, product/stock CRUD and order handling | Meets in source | Farmer dashboard supports stall and market details, listing/photo edits, recurring/current stock and order lifecycle actions. |
+| Farmer sales insights and review response | Meets in source | Dashboard includes order/sales summaries and top sellers; farmers can respond to reviews. |
+| Admin login, approval, account controls, market/category CRUD and moderation | Meets in source | Protected admin workspace contains these controls and reporting views. Configured admin credentials are deployment-owned. |
+| Admin revenue/order and active-farmer reports | Partial | Dashboard reports exist; accuracy and completeness need verification against a live seeded transaction dataset. |
+| Contact/About pages and Google map | Partial | Pages exist; public Contact details/map coordinates must be configured and verified. Map discovery itself uses OpenStreetMap. |
+| Responsive, usable, accessible UI | Partial | Responsive layouts, semantic/labeled controls and reduced-motion handling are present. This is not a WCAG audit; assistive technology and device/browser checks remain. |
+| Security, performance, scalability and 24/7 availability | Partial / unverified | JWT role checks, server-only secrets, request validation, rate limits and database policies are present in code. No independent security assessment, load test, uptime evidence or operational backup evidence was supplied. |
+| Required project documentation and diagrams | Meets in this repository | This report includes problem, scope, design and data diagrams; README and linked guides cover setup. Verify author-specific submission formatting with the instructor. |
+| Demo data, role credentials and installation guidance | Partial | Seed/setup instructions and customer/farmer credentials are provided. Admin uses privately configured environment credentials; successful end-to-end demo setup still needs confirmation. |
+| Required demonstration video | Not met in repository | A walkthrough outline exists in [demo-video-script.md](demo-video-script.md); the required recording has not been supplied. |
 
-Follow the installation and environment-variable steps in [README.md](../README.md) and [db/README.md](../db/README.md). Product/stall image bucket setup is documented in [product-image-storage.md](product-image-storage.md). The Lagos demo seed includes customer and farmer accounts listed in the root README. Admin access uses `ADMIN_EMAIL` and a server-only `ADMIN_PASSWORD`; see [Private admin access](admin-access.md). The supplied [SRS](reference/MarketLink%20End-to-End%20Web%20Solutions_SRS.pdf) is included for a self-contained handoff.
+### Overall finding
 
-Useful project commands:
+The source now includes the catalogue market/day filters, selectable pickup times and live public-listing assistant called for by the remaining functional gaps in this review. Full SRS readiness still depends on exercising these flows against configured data, resolving automated test failures, configuring Contact/admin settings, and obtaining operational evidence for availability, backups, scale, security and browser compatibility. The demonstration video remains a separate SRS submission deliverable.
+
+## 4. Test and build evidence
+
+The production build completed successfully after the remaining feature changes. Before this feature update, the test suites reported **10 server failures and 128 passes (138 total)**; the client suite reported **31 failures and 49 passes (80 total)**. The suites have not been rerun after these changes. Treat automated test status as unresolved until failures are reviewed and all suites are rerun. The previous counts do not prove that each failure represents a user-visible defect, and no clean baseline comparison was available.
+
+The production build emits an optional 3D scene chunk of approximately **551.92 kB raw / 140.1 kB gzip**; it is dynamically loaded. The largest initial client JavaScript chunk is approximately **499.62 kB raw / 146.21 kB gzip**. Vite warns about the raw 3D chunk size. These bundle measurements are not a real-device speed or Core Web Vitals measurement; evaluate on target phones and networks before making performance claims.
+
+## 5. Installation, test data and access
+
+Use [README.md](../README.md) for prerequisites and local startup, [db/README.md](../db/README.md) for migrations/seeds/tests, [site-guide.md](site-guide.md) for user workflows, and [admin-access.md](admin-access.md) for administrator setup. Main commands from the repository root:
 
 ```bash
 npm install
@@ -114,13 +142,27 @@ npm run db:migrate
 npm run db:seed
 npm run dev
 npm run build
-npm run openapi
+npm test
 ```
 
-The API schema is generated at `openapi.json`. Database checks are under `db/tests/`; application tests are in workspace `test/` folders. For this implementation update, production compilation and OpenAPI generation succeeded. The production client is split by route; its largest initial JavaScript chunk is 473.10 kB before gzip. Automated tests were not run during this update.
+The database seed/test contract specifies 3 markets, 5 categories, 29 farmer stalls (28 approved and 1 pending), and 80–100 products. Seeded customer and farmer emails and their isolated-demo password are listed in the root README. The administrator has no safe checked-in password: set `ADMIN_EMAIL` and a private `ADMIN_PASSWORD` in `server/.env`; do not put that password in this report or source control. Follow `db/README.md` if the Supabase project does not permit the seed to create auth users. The complete table map, relationships and test inventory are in [database schema and tests](database-schema-and-tests.md).
 
-## Remaining evaluation deliverables
+## 6. Evaluation checklist
 
-The executable web app, source, migrations, seeds, setup instructions and generated OpenAPI contract are in the repository. A recording outline is in [demo-video-script.md](demo-video-script.md). A packaged ZIP is created as a separate release artifact; the actual demonstration video still needs to be recorded from the intended demo environment.
+- [ ] Set up Supabase, database, storage bucket and public Contact settings.
+- [ ] Set private admin credentials and verify admin access.
+- [ ] Sign in as customer and farmer; demonstrate product search including market/day filters, pickup time selection, stock changes and order completion.
+- [ ] Demonstrate review eligibility, farmer response and admin moderation using a completed sample order.
+- [ ] Resolve or document all automated test failures; run database tests with pgTAP enabled.
+- [ ] Check layouts and interactions on representative phones, tablets and laptop browsers; test keyboard and screen-reader flows.
+- [ ] Record and include the SRS-required demonstration video.
+- [ ] Confirm image licenses/attributions and replace any demo content that is not approved for publication.
+- [ ] Have the project authors review, correct and approve this report before submission.
 
-The SRS calls for a recorded demonstration video. The repository contains a [demo video script](demo-video-script.md), but the recording itself must be made separately. Contact-page details and the admin password are deployment-owned values; configure them before a live presentation. A focused visual and image-source sweep is recorded in [Pre-submission review](pre-submission-review.md).
+## 7. Authorship and AI-tool disclosure
+
+This report was prepared with AI assistance by comparing the supplied SRS with the available repository, source code and build/test output. Project authors must verify the implementation claims, add their own design/development account and decisions, and follow the course's authorship rules before submitting. Do not present this generated review as a substitute for the team's own explanation or required live demonstration.
+
+**Team-authored development account to complete:** Describe the team's actual planning, implementation decisions, challenges, changes made after testing, and individual contributions here.
+
+**Author confirmation:** Names/signatures and date to be completed by the project team.

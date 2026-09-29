@@ -2,14 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { prefersReducedMotion } from '../../motion/preferences';
 import { Button } from '../ui/Button';
 
-/**
- * Loading, empty and failed, in one shape.
- *
- * Three separate treatments is three chances for a screen to look finished while saying
- * nothing. Each case states what happened and what to do next, because "No markets found"
- * gives a shopper nothing to act on — the empty answer is only useful if it names the
- * filter that produced it.
- */
+
 export function StateNote({
   label,
   body,

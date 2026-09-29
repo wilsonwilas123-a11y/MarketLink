@@ -1,13 +1,7 @@
 import { Glyph } from '../art/glyphs';
 import { clock, daysPhrase } from '../../lib/discovery';
 
-/**
- * A market's week as a sentence.
- *
- * Seven cells ask the reader to work out which ones are lit; the market trades Saturday and
- * Sunday, which is three words. `Sat & Sun, 7am–7pm` is one line of type and answers the only
- * question a visitor brings to a market listing.
- */
+
 export function TradingDays({
   days,
   opensAt,

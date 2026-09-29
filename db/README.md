@@ -1,7 +1,7 @@
 # Database
 
 Numbered SQL in `migrations/`, Lagos demo data in `seed/`, pgTAP checks in `tests/`.
-Applied by hand — the app never migrates on boot.
+Applied by hand — the app never migrates on boot. See the [database schema and test guide](../docs/database-schema-and-tests.md) for a full table/relationship summary and the application test inventory.
 
 ## Against a local Postgres
 
@@ -60,5 +60,7 @@ or `create extension pgtap with schema extensions;` in the SQL editor.
 | file | asserts |
 |---|---|
 | `tests/0001_schema.sql` | all twelve tables exist, money columns are `bigint`, slugs are validated, `iso_week()` follows ISO rather than calendar rules, and RLS genuinely refuses reads by `anon` / `authenticated` while `service_role` still gets through |
-| `tests/0002_seed.sql` | the seed's row counts: 4 markets, 5 categories, 8 approved + 1 pending farmer, ~40 products, one `weekly_stock` row per product for the current week |
+| `tests/0002_seed.sql` | the seed's row counts: 3 markets, 5 categories, 29 farmers (28 approved + 1 pending), 29 market rosters, 80–100 products, one `weekly_stock` row per product for the current week |
 | `tests/0003_stock_guard.sql` | the checkout invariant in spec 6.1 — a guarded sell-down cannot oversell, cannot go negative, cannot take a zero-quantity line, and cannot list one product twice on an order |
+
+The three database files contain 31, 9 and 7 pgTAP assertions respectively. Run them with `npm run db:test` after applying migrations and seed data. The runner needs pgTAP enabled on the target database.

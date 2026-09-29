@@ -18,6 +18,7 @@ import {
   uploadsRouter,
   notificationsRouter,
   productsRouter,
+  chatbotRouter,
 } from './routes/index.js';
 import type { Geocoder } from './services/geocode.js';
 
@@ -28,6 +29,8 @@ export interface AppDeps {
   geocode: Geocoder;
   /** Uploads an authenticated farmer's product photo and returns its public URL. */
   productImages?: { upload(profileId: string, fileName: string, contentType: string, bytes: Buffer): Promise<string> };
+  /** Optional server-only Gemini configuration for the public MarketLink help assistant. */
+  gemini?: { apiKey: string; model: string };
 }
 
 export interface AppOptions {
@@ -35,14 +38,7 @@ export interface AppOptions {
   clientOrigin?: string;
 }
 
-/**
- * The whole server as a function of its dependencies.
- *
- * Every external touchpoint — database, identity provider — arrives here, which is what
- * lets a test mount a route against a stubbed verifier and a query-recording pool without
- * a Postgres, a Supabase project, or a network. `index.ts` is the only file that supplies
- * the real ones.
- */
+
 export function createApp(deps: AppDeps, options: AppOptions = {}): Express {
   const app = express();
 
@@ -64,6 +60,7 @@ export function createApp(deps: AppDeps, options: AppOptions = {}): Express {
   app.use('/api', favoritesRouter(deps));
   app.use('/api', uploadsRouter(deps));
   app.use('/api', notificationsRouter(deps));
+  app.use('/api', chatbotRouter(deps));
   app.use('/api', geoRouter(deps));
   app.use('/api', openApiRouter());
 

@@ -6,10 +6,7 @@ import { CircularSpinner } from './CircularSpinner';
 type Variant = 'primary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md';
 
-/**
- * A small action set keeps primary intent, quiet navigation actions and destructive actions
- * visually distinct without adding extra styles to every page.
- */
+
 const variant: Record<Variant, string> = {
   primary: 'bg-block text-on-block font-bold shadow-[0_8px_24px_rgba(33,106,73,0.16)] hover:brightness-105 active:translate-y-px',
   ghost: 'border border-line bg-elevated/55 text-primary hover:border-muted/70 hover:bg-elevated',
@@ -21,12 +18,7 @@ const size: Record<Size, string> = {
   md: 'h-11 px-5',
 };
 
-/**
- * The recipe, on its own.
- *
- * A route that navigates is a link, not a button that navigates, so anything styled like a
- * button and pointing at a URL needs these classes without the `<button>` element.
- */
+
 export function buttonClass(v: Variant = 'primary', s: Size = 'md', className = ''): string {
   return `inline-flex items-center justify-center gap-2 rounded-xl transition-[background,color,border-color,box-shadow,transform] duration-200 disabled:pointer-events-none disabled:opacity-45 ${size[s]} ${variant[v]} ${className}`;
 }

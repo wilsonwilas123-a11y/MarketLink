@@ -95,10 +95,7 @@ const states: Record<FarmerStatus, { badge: string; tone: 'warn' | 'accent' | 'd
   },
 };
 
-/**
- * The farmer's own screen. A pending stall is a state people arrive in and worry about, so it
- * is the one this phase has to get right: named, explained, and clear about what happens next.
- */
+
 export default function FarmerDashboard() {
   const { profile, farmer, signOut, api } = useAuth();
   const [editing, setEditing] = useState<FarmerListing | null>(null);

@@ -15,13 +15,7 @@ import { Reveal } from '../motion/reveal';
 import { SearchAutocomplete } from '../components/discovery/SearchAutocomplete';
 import { farmerCover } from '../lib/farmerPhoto';
 
-/**
- * Demo cover photography for the seeded stalls, by contact name — the seeded ids are md5 uuids the
- * browser cannot reproduce.
- *
- * A farmer's own `cover_url` always wins. Demo stalls use bundled local representative farm photos
- * so the directory works without remote image hosts; the photos are not portraits of stall owners.
- */
+
 const DEMO_COVERS: Record<string, string> = {
   'Bola Adeyemi': '/img/farmers/bola.jpg',
   'Chidinma Eze': '/img/farmers/chidinma.jpg',

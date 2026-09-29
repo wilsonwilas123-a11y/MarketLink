@@ -38,14 +38,7 @@ import { FarmerReplySchema } from '../api/schemas.js';
 import { listFarmerReviews, replyToReview } from '../services/reviews.js';
 import { z } from 'zod';
 
-/**
- * Two halves in one router.
- *
- * The public half (spec 5.4) answers without a token, because a shopper deciding whether to
- * trust a stall has to be able to read it before deciding whether to sign up. The `me` half
- * is the same stall from behind the counter: it shows `status`, which the public payload
- * never does, and it is the only way a farmer in `pending` learns that they are pending.
- */
+
 registry.registerPath({
   method: 'get',
   path: '/farmers',

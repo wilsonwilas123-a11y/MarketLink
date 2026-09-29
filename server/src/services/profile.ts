@@ -12,22 +12,7 @@ const FARMER_CURRENCY: Record<string, string> = {
   Egypt: 'EGP', Morocco: 'MAD', Ethiopia: 'ETB', Botswana: 'BWP', Zambia: 'ZMW', Mozambique: 'MZN',
 };
 
-/**
- * Creates the profile that Supabase Auth does not know about.
- *
- * Role comes from the caller but is constrained by the schema's two-value enum, so
- * `admin` cannot be self-granted here; promotion happens in the database. It is also
- * absent from the `on conflict` set: re-running bootstrap refreshes the contact details of
- * an existing account but cannot convert a customer into a farmer, or the other way round.
- *
- * A farmer also gets a stall in `pending`, which is what puts them in front of the admin
- * approval queue instead of straight onto the public catalogue. The stall is named after
- * the applicant so the row is intelligible in that queue; they rename it from their
- * dashboard.
- *
- * The profile and farmer rows are written in one transaction. A retry after a network
- * interruption therefore sees either both rows or neither, never a half-created account.
- */
+
 export async function bootstrapProfile(
   pool: Pool,
   subject: AuthSubject,

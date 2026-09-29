@@ -2,28 +2,7 @@ import { z } from 'zod';
 import { ApiError } from '../errors.js';
 import type { PlaceCandidate } from '../api/schemas.js';
 
-/**
- * Place lookup against OpenStreetMap, for finding a pin before a row exists.
- *
- * The site needs coordinates for two things it cannot derive from its own data: a market an
- * admin is adding, and a stall a farmer is pinning. Both are a name typed into a box, and a
- * lat/lng guessed from memory puts a marker in a lagoon. This reads the same gazetteer the
- * map tiles come from, so a pin that resolves here is a pin the map will draw in the right
- * place.
- *
- * A third caller arrived with the pan-African scope: the discovery screens, which show a
- * visitor the markets the map knows about that this database has not heard of yet. That one
- * has no token in front of it, which is why the cache in `makeCachedGeocoder` lives here
- * rather than in the route — the guarantee is about the upstream, not about one path.
- *
- * Three rules shape the module. The host is a constant rather than an argument: a route that
- * forwarded a caller-supplied URL would be an open proxy with our credentials on it, and
- * only the query text is user input. The upstream is treated as an unreliable witness
- * throughout — a fixed timeout, a reply narrowed by zod, and every failure converted to one
- * of the spec 9.1 codes, so a Komoot outage surfaces as a clean 500 with a request id rather
- * than as a hung socket or a shape the client was never told about. And a question is asked
- * once.
- */
+
 const PHOTON_ENDPOINT = 'https://photon.komoot.io/api/';
 
 /** Long enough for a cold gazetteer query; short enough that a route never outlives a proxy timeout. */
@@ -39,27 +18,13 @@ function isMarketCandidate(place: PlaceCandidate): boolean {
   return place.kind === MARKETPLACE_KIND && !NON_MARKET_NAME.test(place.name);
 }
 
-/**
- * How much more than asked for to fetch when filtering to marketplaces.
- *
- * Photon has no tag filter: `osm_value=marketplace` is accepted and then answers with nothing,
- * so a market search has to over-fetch and keep the rows whose `kind` is right. Four is what a
- * city query like `market Ibadan` needs — it returns two real markets beside an expressway, a
- * neighbourhood and an electronics shop.
- */
+
 const OVERFETCH = 4;
 
 /** The ceiling on the upstream's own `limit`, however much was asked for. */
 const MAX_UPSTREAM_LIMIT = 50;
 
-/**
- * The word that turns a place search into a market search.
- *
- * A bare town name ranks the town, its streets and its stations: `Kumasi` and `Cape Town` each
- * answered with no marketplace at all on 2026-09-26, while `Kumasi market` answered with four of
- * them. This endpoint only ever returns marketplaces, so the category belongs in the question.
- * A term that already says it is left alone rather than asked twice.
- */
+
 function asMarketQuery(query: string): string {
   return /\bmarkets?\b/i.test(query) ? query : `${query} market`;
 }

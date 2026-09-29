@@ -14,17 +14,9 @@ import type { FarmerSummary } from '../lib/types';
 import { formatKobo } from '../utils/kobo';
 import { prefersReducedMotion, Reveal } from '../motion/reveal';
 import { farmerCover } from '../lib/farmerPhoto';
+import { DeferredMarketLinkScene } from '../components/visuals/DeferredMarketLinkScene';
 
-/**
- * The landing screen.
- *
- * The brand line is farm-first and market-second: the farm is where the food comes from, the
- * market is only where it changes hands. The photograph carries that claim, so the copy sits on
- * top of it rather than beside a second column of marketing text: one idea, one image, and the
- * two calls to action a first-time visitor can actually take. Everything below the fold is live
- * data — the markets, the map, the farms — because the app's whole argument is that this week's
- * stock is knowable.
- */
+
 const MarketMap = lazy(() => import('../components/discovery/MarketMap'));
 
 /** Each category's mark carries its own tone, so the row reads as produce and not as tags. */
@@ -36,13 +28,7 @@ const CATEGORY_TONE: Record<string, string> = {
   herbs: 'text-accent',
 };
 
-/**
- * The four claims the closing band makes, each with the mark that holds it.
- *
- * Every sub-line is something the app actually does rather than a marketing adjective: the
- * farm publishes its own week, listings only appear once an admin has approved the farm,
- * and nothing is charged here so the price on the card is the farm's price.
- */
+
 const DEAL_POINTS: { title: string; body: string; glyph: GlyphName }[] = [
   { title: 'Fresh produce', body: 'Picked the week you order', glyph: 'leaf' },
   { title: 'Trusted farmers', body: 'Approved before they list', glyph: 'shield' },
@@ -50,33 +36,17 @@ const DEAL_POINTS: { title: string; body: string; glyph: GlyphName }[] = [
   { title: 'Fair prices', body: 'No middlemen, no commission', glyph: 'tag' },
 ];
 
-/**
- * The three listings the band shows, by seed key.
- *
- * They are read out of the same showcase rows the produce band above uses, so the price and
- * the stall on each line are the seeded ones and not figures lifted from a mockup.
- */
+
 const DEAL_KEYS = ['tomato-crate', 'ugu-500', 'tatashe-crate'];
 
-/**
- * The chip recipe, given a sheet to stand on.
- *
- * These chips sit on the photograph, where the recipe's pencil-grey type on nothing is
- * unreadable. They take the same dark glass the search bar uses, so the band reads as one
- * control surface with the photo behind it rather than six stickers on top.
- *
- * Every colour below carries the important marker because the recipe declares the same four
- * properties, and a class sitting later in the list does not beat a rule sitting later in the
- * stylesheet — Tailwind orders the sheet, not your JSX.
- */
+
 const CHIP_ON_PHOTO =
   'border-paper/25! bg-ink/55! text-paper! backdrop-blur hover:border-paper/50! hover:text-paper!';
 
 function Hero() {
   return (
     <section className="relative isolate overflow-hidden border-b border-line">
-      {/* This local farm photograph anchors the landing band. It is mirrored so the farmer
-          sits opposite the copy, matching the reference layout while keeping the source image. */}
+
       <img
         src="/img/farmers/yahaya.jpg"
         alt="A Nigerian farmer tending leafy greens in a field"
@@ -86,8 +56,9 @@ function Hero() {
       />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-veil/90 via-veil/55 to-veil/10" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-veil/50 to-transparent" />
+      <DeferredMarketLinkScene kind="farm" className="pointer-events-none absolute right-0 top-0 z-0 h-full w-[42%] opacity-75 max-md:block max-md:w-[58%] max-md:opacity-35" />
 
-      <div className="mx-auto flex w-full max-w-[1680px] flex-col px-5 pb-12 pt-12 sm:px-6 sm:pb-14 sm:pt-16 md:px-10 md:pb-20 md:pt-24">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1680px] flex-col px-5 pb-12 pt-12 sm:px-6 sm:pb-14 sm:pt-16 md:px-10 md:pb-20 md:pt-24">
         <div className="max-w-2xl lg:max-w-xl">
           <Reveal className="flex flex-col" y={12} stagger={0.07}>
             <p className="flex flex-wrap items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.14em] text-paper [text-shadow:0_1px_1px_rgba(0,0,0,0.9),0_0_14px_rgba(0,0,0,0.6)]">

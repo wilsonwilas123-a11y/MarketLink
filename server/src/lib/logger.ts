@@ -9,10 +9,7 @@ export function setLogMuted(value: boolean): void {
   muted = value;
 }
 
-/**
- * Line-delimited JSON with the request id promoted to the top level, so a single bad
- * request can be pulled out of a host's log stream without parsing the whole line.
- */
+
 export function log(level: Level, message: string, fields: LogFields = {}): void {
   if (muted) return;
   const { reqId, ...rest } = fields;

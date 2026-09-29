@@ -1,11 +1,6 @@
 import type { Role } from '../lib/types';
 
-/**
- * Where a signed-in account lands.
- *
- * Farmers go to their stall because a pending stall needs an explanation the moment it
- * exists; everyone else goes to their own dashboard.
- */
+
 export function homeFor(role: Role): string {
   if (role === 'farmer') return '/farmers/dashboard';
   if (role === 'admin') return '/admin';

@@ -1,16 +1,6 @@
 import type { ReactNode } from 'react';
 
-/**
- * Line art for produce and places.
- *
- * The mockups are photographic, and the seed leaves `image_url` null, so every tile this app
- * shows before a farmer uploads a photo needs to look deliberate rather than missing. Hand-drawn
- * outlines in the accent colour do that, cost nothing to ship, and stay legible on a 2G
- * connection — which is the same reason the map is tiles and not a rendered basemap.
- *
- * `icon_key` in the `categories` table names these, so a category's art is data, not a lookup
- * that can drift from the row.
- */
+
 
 const stroke = {
   fill: 'none',
@@ -46,6 +36,12 @@ export type GlyphName =
   | 'grid'
   | 'stall'
   | 'farm'
+  | 'farmer'
+  | 'people'
+  | 'home'
+  | 'package'
+  | 'list'
+  | 'settings'
   | 'star'
   | 'search'
   | 'pin'
@@ -233,6 +229,45 @@ const paths: Record<GlyphName, ReactNode> = {
       <path {...stroke} d="M2.5 20h19" />
     </>
   ),
+  farmer: (
+    <>
+      <path {...stroke} d="M4 8.8c1.8-2.3 4.5-3.5 8-3.5s6.2 1.2 8 3.5H4Z" />
+      <path {...stroke} d="M2.8 9.2h18.4M12 9.4v1.2" />
+      <circle {...stroke} cx="12" cy="14" r="3" />
+      <path {...stroke} d="M5.5 21c.7-2.9 3.1-4.5 6.5-4.5s5.8 1.6 6.5 4.5" />
+    </>
+  ),
+  people: (
+    <>
+      <circle {...stroke} cx="9" cy="8.5" r="2.3" />
+      <circle {...stroke} cx="16.5" cy="9.5" r="1.9" />
+      <path {...stroke} d="M3.8 19c.5-3.1 2.3-4.8 5.2-4.8s4.7 1.7 5.2 4.8M14 14.8c3.3-.7 5.7.9 6.2 3.8" />
+    </>
+  ),
+  home: (
+    <>
+      <path {...stroke} d="m3.5 10.8 8.5-7 8.5 7" />
+      <path {...stroke} d="M5.5 9.5V20h13V9.5M9.5 20v-6h5v6" />
+    </>
+  ),
+  package: (
+    <>
+      <path {...stroke} d="m4 7.5 8-4 8 4v9l-8 4-8-4Z" />
+      <path {...stroke} d="m4 7.5 8 4 8-4M12 11.5v9M8 5.5l8 4" />
+    </>
+  ),
+  list: (
+    <>
+      <path {...stroke} d="M9 6h11M9 12h11M9 18h11" />
+      <path {...stroke} d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" strokeWidth={2.5} />
+    </>
+  ),
+  settings: (
+    <>
+      <path {...stroke} d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
+      <path {...stroke} d="m19.2 13.8 1.2.9-1.5 2.6-1.5-.6a7.8 7.8 0 0 1-1.7 1l-.2 1.7h-3l-.3-1.7a7.8 7.8 0 0 1-1.7-1l-1.5.6-1.5-2.6 1.2-.9a7 7 0 0 1 0-2l-1.2-.9 1.5-2.6 1.5.6a7.8 7.8 0 0 1 1.7-1l.3-1.7h3l.2 1.7a7.8 7.8 0 0 1 1.7 1l1.5-.6 1.5 2.6-1.2.9a7 7 0 0 1 0 2Z" />
+    </>
+  ),
   star: (
     <path
       d="m12 3.6 2.5 5.1 5.6.8-4 4 .9 5.6-5-2.6-5 2.6.9-5.6-4-4 5.6-.8Z"
@@ -328,12 +363,7 @@ const BY_CATEGORY: Record<string, GlyphName[]> = {
 
 const FALLBACK: GlyphName[] = ['basket', 'leaf', 'tuber'];
 
-/**
- * Which art a row gets when it has no photo.
- *
- * Derived from the row's own id, so the same stall keeps the same tile across the rail, the
- * list and the map popup instead of reshuffling on every render.
- */
+
 export function glyphFor(seed: string, category?: string | null): GlyphName {
   const set = (category && BY_CATEGORY[category]) || FALLBACK;
   let h = 0;

@@ -5,15 +5,7 @@ import { formatDistance } from '../../utils/distance';
 import { TradingDays } from './pieces';
 import { mapboxSatellitePreview } from '../../lib/mapboxImagery';
 
-/**
- * One market, as a row on the board.
- *
- * `linkToMarket` is disabled on the discovery list, where the row only moves the map on hover.
- * Other places, such as the home-page market preview, keep their detail-page link.
- *
- * `prominent` is how the landing page gives its nearest market weight without inventing a second
- * component: the same row, set larger.
- */
+
 export function MarketCard({
   market,
   selected = false,

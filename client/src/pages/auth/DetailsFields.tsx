@@ -16,10 +16,7 @@ export type DetailsErrors = Partial<Record<keyof Details, string>>;
 
 export const emptyDetails: Details = { full_name: '', phone: '', address: '', role: 'customer', stall_name: '', country: 'Nigeria' };
 
-/**
- * The same bounds as `BootstrapSchema` on the server, copied rather than imported because the
- * browser cannot reach that module. The server still decides; this only saves a round trip.
- */
+
 export function validateDetails(values: Details): DetailsErrors {
   const errors: DetailsErrors = {};
   const name = values.full_name.trim();

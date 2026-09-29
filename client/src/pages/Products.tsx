@@ -6,7 +6,7 @@ import { Card } from '../components/ui/Card';
 import { Chip } from '../components/ui/Chip';
 import { Input } from '../components/ui/Input';
 import { Thumb } from '../components/art/Thumb';
-import { useProduct, useProducts } from '../lib/products';
+import { useProduct, useProducts, type ProductFilters } from '../lib/products';
 import type { ProductCard, ProductCategory } from '../lib/types';
 import { useAuth } from '../auth/AuthProvider';
 import { addToCart } from '../lib/cart';
@@ -17,6 +17,7 @@ import { currencyForCountry } from '../lib/countries';
 import { FavoriteToggle } from '../components/FavoriteToggle';
 import { Reveal } from '../motion/reveal';
 import { SearchAutocomplete } from '../components/discovery/SearchAutocomplete';
+import { useMarketList, WEEK } from '../lib/discovery';
 
 const CURRENCIES = [
   ['NGN', 'Nigerian naira'], ['GHS', 'Ghanaian cedi'], ['KES', 'Kenyan shilling'],
@@ -118,6 +119,7 @@ export default function Products() {
   const [maxDraft, setMaxDraft] = useState(params.get('max') ?? '');
   const [priceError, setPriceError] = useState('');
   const exchangeRates = useExchangeRates();
+  const marketList = useMarketList({ limit: 100 });
   useEffect(() => setSearchDraft(q), [q]);
   useEffect(() => {
     setMinDraft(params.get('min') ?? '');
@@ -130,6 +132,7 @@ export default function Products() {
     q: q || undefined,
     category: params.get('category') || undefined,
     marketId: params.get('market_id') || undefined,
+    day: (params.get('day') as ProductFilters['day']) || undefined,
     inStockOnly: params.get('in_stock_only') === 'true',
     sort: sort === 'price_low' || sort === 'price_high' ? 'popular' : sort,
     page,
@@ -245,6 +248,29 @@ export default function Products() {
                 </Chip>
               ))}
             </div>
+          </div>
+
+          <div className="border-t border-line pt-4">
+            <label htmlFor="product-market" className="text-sm font-semibold">Market</label>
+            <select
+              id="product-market"
+              value={params.get('market_id') ?? ''}
+              onChange={(event) => patch({ market_id: event.target.value || undefined })}
+              className="mt-2 h-10 w-full rounded-xl border border-line bg-elevated px-3 text-sm text-primary outline-none focus:border-accent"
+            >
+              <option value="">All markets</option>
+              {(marketList.data?.data ?? []).map((market) => <option key={market.id} value={market.id}>{market.name} · {market.city}</option>)}
+            </select>
+            <label htmlFor="product-market-day" className="mt-3 block text-sm font-semibold">Market day</label>
+            <select
+              id="product-market-day"
+              value={params.get('day') ?? ''}
+              onChange={(event) => patch({ day: event.target.value || undefined })}
+              className="mt-2 h-10 w-full rounded-xl border border-line bg-elevated px-3 text-sm text-primary outline-none focus:border-accent"
+            >
+              <option value="">Any day</option>
+              {WEEK.map((day) => <option key={day.code} value={day.code}>{day.label}</option>)}
+            </select>
           </div>
 
           <div className="border-t border-line pt-4">

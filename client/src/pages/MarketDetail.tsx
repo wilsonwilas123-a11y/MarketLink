@@ -8,14 +8,7 @@ import type { RosterFarmer } from '../lib/types';
 import { Reveal } from '../motion/reveal';
 import { FavoriteToggle } from '../components/FavoriteToggle';
 
-/**
- * One market and who trades there.
- *
- * The roster is the reason this screen exists: a shopper who has decided to go to Mile 12 on
- * Saturday decides it because of the stalls they expect to find, not because of the address.
- * Both the market's own days and each stall's narrower days are shown, because a trader who
- * only comes on Saturdays is not there on Tuesday even though the market is.
- */
+
 function RosterRow({ farmer }: { farmer: RosterFarmer }) {
   return (
     <li className="flex items-center gap-3 border-t border-line py-3 first:border-t-0">

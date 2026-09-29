@@ -1,13 +1,6 @@
 import type { GlyphName } from '../components/art/glyphs';
 
-/**
- * The landing screen's produce rail.
- *
- * Phase 6 owns `/api/products`; until it exists this is the only list on the site that is not
- * read from the server, and it is written straight from `db/seed/0002_lagos_products.sql` —
- * same names, same minor-unit prices, same week quantities — so the rail shows what the API
- * will show and deleting this file is a swap rather than a rewrite.
- */
+
 export interface ShowcaseProduct {
   key: string;
   name: string;
@@ -22,11 +15,7 @@ export interface ShowcaseProduct {
   days: string;
   window: string;
   photo: string | null;
-  /**
-   * Which slice of this photograph the landing band keeps. The band is much wider than any of
-   * these pictures, so `object-cover` discards most of their height and each one has to say for
-   * itself whether the loss should fall on the sky or on the produce.
-   */
+
   focus: string;
   glyph: GlyphName;
   /** Creator/source credit required by openly licensed product photography. */
@@ -118,13 +107,7 @@ export interface StockLine {
   label: string;
 }
 
-/**
- * Stock state, and the words that go with it.
- *
- * The threshold is the same one the farmer-facing dashboard uses in spec 6: below ten units of
- * a crate-sized listing is genuinely running short, and a badge that only fires at zero is a
- * badge nobody can act on.
- */
+
 export function stockState(quantity: number): StockLine {
   if (quantity <= 0) return { tone: 'out', label: 'Sold out' };
   if (quantity < 10) return { tone: 'low', label: 'Low stock' };

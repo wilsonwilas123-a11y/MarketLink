@@ -22,9 +22,9 @@ Buyer and farmer accounts use Supabase Auth. The administrator uses a separate s
 ## Buyer journey
 
 1. Browse the home page or open **Markets**, **Farmers** or **Products**.
-2. Search by product, stall or market. Catalogue filters can narrow products by category, market, availability and price.
+2. Search by product, stall or market. Product filters narrow by category, price, stock, market and market trading day.
 3. Open a product, choose a pickup market and add it to the cart.
-4. Review the cart and press **Place order**. The app groups items by farmer and market, selects the next valid pickup window, checks current stock and the seller's cutoff, and submits one pickup order per group.
+4. Review the cart, choose an eligible pickup date and a 30-minute time slot inside the farmer's pickup window, then press **Place order**. The app groups items by farmer and market, checks current stock and the seller's cutoff, and submits one pickup order per group.
 5. A successful submission opens **Your orders** and shows **Order placed successfully**. The selected seller receives an in-app order notice and sees the order in **Incoming orders** on the farmer dashboard.
 6. Track the order in `/orders`. Before the cutoff, the buyer may change quantities or cancel where allowed. Payment happens in person when collected.
 7. After an order is completed, the buyer can review eligible products and the farmer.
@@ -107,7 +107,7 @@ flowchart LR
   API --> Maps
 ```
 
-The client lives in `client/`; the API in `server/`; ordered database migrations and demo seed files are in `db/`; this guide and operational notes are in `docs/`. The Express API validates requests and returns a consistent JSON error envelope. `openapi.json` is the generated HTTP API contract.
+The client lives in `client/`; the API in `server/`; ordered database migrations and demo seed files are in `db/`; this guide and operational notes are in `docs/`. The [database schema and test guide](database-schema-and-tests.md) explains table relationships, integrity rules, seed data and both database/application test suites. The Express API validates requests and returns a consistent JSON error envelope. `openapi.json` is the generated HTTP API contract.
 
 ## Local setup
 
@@ -121,7 +121,7 @@ Requirements: Node.js 22 or newer, PostgreSQL (or Supabase Postgres), and a conf
 6. Start both services with `npm run dev`. The client runs at `http://localhost:5173`; the API defaults to `http://localhost:4000`.
 7. Build a production client and API with `npm run build`.
 
-The API reads `server/.env` at boot, so restart it after changing server settings. `DATABASE_URL` may point at local Postgres while Supabase handles authentication. Never place `SUPABASE_SERVICE_ROLE_KEY` in the client environment or any `VITE_` variable.
+The API reads `server/.env` at boot, so restart it after changing server settings. `DATABASE_URL` may point at local Postgres while Supabase handles authentication. Never place `SUPABASE_SERVICE_ROLE_KEY` or `GEMINI_API_KEY` in the client environment or any `VITE_` variable. Inventory questions query public active listings and current-week stock from the database. General MarketLink help uses Gemini only after the server receives `GEMINI_API_KEY`; its default model is configured by `GEMINI_MODEL` (currently `gemini-3.5-flash-lite`). User chat text is sent to Gemini for those general-help replies. The assistant cannot access private account or order data.
 
 ## Configuration reference
 
@@ -138,6 +138,8 @@ Server settings are validated in `server/src/lib/env.ts`:
 | `ADMIN_PASSWORD` | Private admin password; blank disables admin sign-in |
 | `SUPABASE_PRODUCT_BUCKET` | Image bucket (default `product-images`) |
 | `CLIENT_ORIGIN` | Allowed browser origin |
+| `GEMINI_API_KEY` | Optional server-only key; without it the assistant cannot answer requests |
+| `GEMINI_MODEL` | Gemini model name (default `gemini-3.5-flash-lite`) |
 | `GEO_USER_AGENT`, `GEO_CACHE_MS` | OpenStreetMap lookup identification and cache period |
 
 The browser also supports `VITE_MAPBOX_ACCESS_TOKEN` for optional satellite previews and `VITE_CONTACT_*` values for the public Contact page. See `.env.example` for the full list.

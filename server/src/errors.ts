@@ -1,10 +1,4 @@
-/**
- * The API's error vocabulary (spec 9.1).
- *
- * Status is derived from the code rather than passed by the caller, because
- * `stock_unavailable` with a 200 or `not_found` with a 500 is the kind of bug that
- * survives a code review and only shows up when a client branches on the wrong thing.
- */
+
 export const ERROR_STATUS = {
   validation_failed: 400,
   unauthenticated: 401,
@@ -38,10 +32,7 @@ export class ApiError extends Error {
     this.status = ERROR_STATUS[code];
   }
 
-  /**
-   * What goes on the wire, matching spec 9.1 exactly. The request id travels in the
-   * `x-request-id` header instead of the body so this shape stays as documented.
-   */
+
   toJSON() {
     return {
       error: {

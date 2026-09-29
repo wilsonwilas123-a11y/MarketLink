@@ -11,17 +11,7 @@ declare global {
   }
 }
 
-/**
- * Validates request parts against zod schemas and puts the parsed results on
- * `req.valid`.
- *
- * The schemas are the single definition of each request (spec 9.3), and parsing rather
- * than merely checking matters: it is what applies defaults, coerces `?page=2` to a
- * number, and strips fields a client had no business sending.
- *
- * Results go to a new property instead of over `req.query`, which is a getter-only
- * property in the Express version this will eventually upgrade to.
- */
+
 export function validate(parts: {
   body?: ZodTypeAny;
   query?: ZodTypeAny;

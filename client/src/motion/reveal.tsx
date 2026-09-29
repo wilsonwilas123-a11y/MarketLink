@@ -3,17 +3,7 @@ import gsap from 'gsap';
 import { prefersReducedMotion } from './preferences';
 export { prefersReducedMotion, REDUCE_QUERY } from './preferences';
 
-/**
- * The motion layer.
- *
- * GSAP rather than CSS keyframes because these screens animate *data*, not decoration: a rail
- * of markets arrives when the query resolves, so the timing has to be started from code that
- * knows when that happened, and a tween interrupted by a new filter has to be killed rather
- * than left finishing over rows that are already gone.
- *
- * Everything here moves content that is already in the DOM at its final position, and only
- * `transform` and `opacity`. A tween therefore cannot cause the reflow it is drawing over.
- */
+
 
 export interface RevealProps {
   children: ReactNode;
@@ -29,13 +19,7 @@ export interface RevealProps {
   revealKey?: string | number;
 }
 
-/**
- * Lifts its direct children in, one after another, as the row scrolls into view.
- *
- * Targets `children` rather than the wrapper so a card list reveals as a list. ScrollTrigger
- * leaves off-screen content in its natural state until it is near view; context cleanup makes
- * filter changes and React Strict Mode safe. `clearProps` hands transforms back to CSS when done.
- */
+
 export function Reveal({
   children,
   className,

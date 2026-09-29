@@ -15,14 +15,7 @@ import { listMarkets, marketDetail, nearbyMarkets } from '../services/markets.js
 import type { AppDeps } from '../app.js';
 import type { MarketListQuery, NearbyQuery } from '../api/schemas.js';
 
-/**
- * Markets are public reads (spec 5.4): the landing page and the discovery screen have to load
- * for someone who has never signed up, so none of these routes take a token.
- *
- * The query and param schemas are mounted as validators and pointed at by the contract from
- * the same constant, which is what keeps `/markets?day=sat` documented as accepting exactly
- * the seven values it actually accepts.
- */
+
 registry.registerPath({
   method: 'get',
   path: '/markets',

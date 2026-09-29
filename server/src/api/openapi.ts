@@ -1,14 +1,7 @@
 import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 import { registry } from './registry.js';
 
-/**
- * The document's identity, and the reason `openapi.json` is safe to generate rather than
- * maintain: routes and schemas register themselves next to their validators and handlers,
- * so there is no second copy of the contract that could disagree with the first.
- *
- * 3.0.3 rather than 3.1 because the validators and importers this is fed — swagger-parser
- * here, an API-readiness scan in phase 20 — are firmest on 3.0.
- */
+
 export function buildOpenApiDocument() {
   const generator = new OpenApiGeneratorV3(registry.definitions);
 

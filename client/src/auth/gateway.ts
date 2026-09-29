@@ -1,13 +1,7 @@
 import type { AuthChangeEvent, Session, SupabaseClient } from '@supabase/supabase-js';
 import { ApiError } from '../lib/api';
 
-/**
- * The slice of Supabase auth this app uses, and nothing else.
- *
- * Keeping it this narrow buys two things: the provider's only credential-shaped value is an
- * access token, so there is no session object to keep in sync with the profile, and the auth
- * tests inject a plain object rather than a mock of a 200-method client.
- */
+
 export interface AuthGateway {
   currentToken: () => Promise<string | null>;
   /** Calls `listener` whenever Supabase changes the session. Returns an unsubscribe. */

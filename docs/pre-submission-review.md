@@ -1,33 +1,24 @@
-# MarketLink pre-submission review
+# MarketLink SRS readiness review
 
-**Reviewed:** 28 September 2026  
-**Build:** `npm run build` passed for the API and client.
+**Reviewed:** 29 September 2026
+**Scope:** Repository and source review against the supplied MarketLink SRS, a production build, and previously recorded automated test results.
 
-## Screens reviewed
+## Result
 
-The running local site was opened at a narrow/mobile viewport. The sign-in and private admin sign-in screens, product catalogue and card grid, markets list, farmer directory, and About page were visually reviewed. Product cards showed their crop photos, market cards showed market photography, and the catalogue exposed the seeded products and market names. The public navigation is hidden on the private admin sign-in page; it appears again after admin sign-in.
+MarketLink implements the main customer, farmer and administrator marketplace workflows, but deployment and evaluation evidence is still needed for full SRS readiness. The catalogue now exposes market/day filters, checkout offers eligible half-hour pickup slots, and inventory questions can search current public listings. See the [project report](project-implementation-notes.md) for the requirement matrix and the [database schema and test guide](database-schema-and-tests.md) for table relationships and test coverage.
 
-Routes that require buyer, seller, or administrator credentials were not signed into during this sweep. Their route protection and code were included in the build, but the protected dashboards still need a human sign-in review before a judged presentation.
+### Items to address before evaluation
 
-## Image-source and fallback review
+1. Configure public Contact details, map coordinates, Supabase/storage, and private admin credentials in the intended demo environment.
+2. Review and rerun the failing suites. The previous run, before the latest catalogue/pickup/chatbot changes, reported server **10 failed / 128 passed of 138** and client **31 failed / 49 passed of 80**. These results are not current for the latest code.
+3. Demonstrate the protected customer, farmer and admin workflows on target devices and browsers; the source review/build does not establish those live flows.
+4. Record the demonstration video required by the SRS. The repository contains a [video outline](demo-video-script.md), not a recording.
+5. Have project authors verify the report, add their development narrative/contributions and approve its claims before submission. The report notes AI assistance as required by the source document's policy.
 
-- Farmer directory/profile cards use bundled local photos for demo stalls. Farmer-uploaded covers from other hosts remain supported; legacy Unsplash cover URLs are ignored and replaced by local photos. Representative demo photos are not verified portraits of the named farmers.
-- The product photo resolver references 51 local image paths; all 51 files exist.
-- Farmer demo images are served locally and need no image CDN to display.
-- Product cards try the listing photo, then the matching local crop photo, then crop-specific fallback artwork. A dead remote photo URL therefore does not leave an empty image panel.
-- The product grid now shows only listings with an image and claims each photo once per visible result set. Repeated listings can use another distinct crop photo; if none is available, that duplicate-photo card is omitted from the grid.
-- Market discovery includes externally sourced market photos with source links in the interface. Keep the displayed attribution when presenting those cards.
-- The three seeded Lagos markets use local Mile 12, Oshodi, and Oyingbo photos. Their directory rows now use larger landscape thumbnails in separate rounded cards, alongside the live map.
+## Build and performance evidence
 
-## Motion and responsive UI
+The API and client production build completed. The optional 3D scene is split into a deferred chunk, measured at approximately 551.92 kB raw / 140.1 kB gzip. The largest initial client chunk is approximately 499.62 kB raw / 146.21 kB gzip. Vite reports the raw scene chunk size; these build figures are not a substitute for real-device load-time or Core Web Vitals measurements.
 
-Shared reveal, card, and button motion is implemented. Reduced-motion preferences disable reveal and interaction movement. The mobile review showed the header, filters, and image-led product cards fitting the narrow viewport without side gutters or horizontal overflow in the observed pages.
+## Limits of this review
 
-## Before presenting
-
-- Set the private admin password in `server/.env` and restart the API if the admin dashboard will be demonstrated. The checked-in example is intentionally blank.
-- Configure approved public contact details in `client/.env` (`VITE_CONTACT_EMAIL`, phone/address and map coordinates) if the Contact page is part of the presentation.
-- Sign in with the planned buyer and seller demo accounts and walk through their account and dashboard pages. The local sweep did not authenticate to protected pages.
-- Record the requested product walkthrough using [the demo script](demo-video-script.md) if the submission asks for a video.
-
-No automated test suite was run as part of this visual review.
+The browser session available during the review was at the sign-in route; protected account dashboards were not authenticated and manually inspected. The recent changes were checked with a production build, but the automated test suites were not rerun after them. This review does not certify production availability, backup/restore procedures, scaling, independent security, licensed use of every image, WCAG conformance or cross-browser compatibility. Those require deployment evidence and hands-on evaluation. Test failures are reported as suite results without assuming every failure is a confirmed user-facing defect; compare against intended behavior and update tests deliberately.

@@ -12,11 +12,7 @@ import { getSupabase } from '../lib/supabase';
 import type { BootstrapInput, FarmerLink, Me, Profile } from '../lib/types';
 import { makeGateway, type AuthGateway } from './gateway';
 
-/**
- * `profile_needed` is a separate status because it needs a separate screen: the token is
- * valid, so signing the user out would strand them behind a sign-in that produces the same
- * state. `error` means the API was unreachable or surprising while restoring a session.
- */
+
 export type AuthStatus = 'loading' | 'signed_out' | 'profile_needed' | 'ready' | 'error';
 
 export interface SignUpInput extends BootstrapInput {

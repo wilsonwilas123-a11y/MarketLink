@@ -18,18 +18,7 @@ import type { Market, NearbyMarket, PlaceCandidate } from '../lib/types';
 import { Reveal } from '../motion/reveal';
 import { SearchAutocomplete } from '../components/discovery/SearchAutocomplete';
 
-/**
- * Market discovery: the list and the map, over one set of filters.
- *
- * The filters live in the URL rather than in component state. That is what makes a link to
- * Search terms live in the URL. That is what makes a market link shareable, what forces the
- * list and map to read
- * the same answer instead of each keeping its own copy of the question.
- *
- * Leaflet is loaded on demand. It is the heaviest thing on this page, a visitor who only
- * scrolls the list never needs it, and the map shows nothing useful without tiles from the
- * network anyway — so there is no first paint worth blocking for it.
- */
+
 const MarketMap = lazy(() => import('../components/discovery/MarketMap'));
 
 const RADII = [5, 10, 25, 50];
@@ -40,15 +29,7 @@ function asNumber(value: string | null): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-/**
- * Whether the map's place is one of ours under another name.
- *
- * An OSM node called `Bodija Market` and a row called `Bodija` are the same gate, and listing
- * both reads as a market we have not got round to approving. Names are stripped to lowercase
- * alphanumerics with the word `market` dropped, which is the whole of the matching: two
- * genuinely different gates that reduce to the same string are rare enough that showing the
- * duplicate is the cheaper mistake.
- */
+
 function listedAlready(place: PlaceCandidate, markets: (Market | NearbyMarket)[]): boolean {
   const key = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/market$/, '');
   const mine = key(place.name);
@@ -131,13 +112,7 @@ export default function Markets() {
     setWhere(null);
   }
 
-  /**
-   * Ask the browser for a position, then move the whole query to it.
-   *
-   * The coordinates go into the URL rather than into state so the map, the list and the
-   * distance labels all answer the same question — and so "markets near me" survives a
-   * refresh, which a fix held in a component would not.
-   */
+
   function findMe() {
     setWhere(null);
     if (!navigator.geolocation) {

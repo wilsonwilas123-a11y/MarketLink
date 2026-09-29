@@ -16,10 +16,7 @@ interface Credentials {
 
 type CredentialErrors = Partial<Record<keyof Credentials, string>>;
 
-/**
- * Deliberately lax about the address itself: Supabase is the authority on what it accepts, and
- * a stricter client rule would reject a working address. This only catches the obvious typo.
- */
+
 function validateCredentials({ email, password }: Credentials): CredentialErrors {
   const errors: CredentialErrors = {};
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()))
