@@ -5,16 +5,28 @@
 -- or another customer's orders straight through PostgREST, even though the API is the
 -- only intended door.
 --
--- The role checks below are guarded because a bare Postgres instance (local test, CI)
--- has none of Supabase's roles.
+-- Only applied when the connected user can bypass RLS (Supabase, or a superuser in
+-- local/CI). On hosts like Render the app user cannot bypass RLS, and a deny-all
+-- policy would lock the app out of its own tables, so the migration is skipped there.
 
 do $rls$
 declare
   t record;
+  can_bypass boolean;
   has_anon boolean;
   has_authenticated boolean;
   has_service_role boolean;
 begin
+  select coalesce(rolsuper or rolbypassrls, false)
+    into can_bypass
+    from pg_roles
+   where rolname = current_user;
+
+  if not can_bypass then
+    raise notice 'Skipping RLS migration: % cannot bypass RLS (no PostgREST on this host)', current_user;
+    return;
+  end if;
+
   -- Supabase ships these roles; a bare Postgres does not. Creating them locally costs
   -- nothing, is skipped on Supabase, and lets the pgTAP suite prove the deny actually
   -- bites instead of only checking that a flag is set.
