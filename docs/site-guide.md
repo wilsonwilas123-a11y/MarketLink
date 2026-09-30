@@ -131,20 +131,41 @@ Server settings are validated in `server/src/lib/env.ts`:
 
 | Variable | Purpose |
 |---|---|
-| `PORT` | API listening port (default `4000`) |
-| `NODE_ENV` | `development`, `test` or `production` |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase administrative key |
-| `ADMIN_EMAIL` | Sole admin email; defaults to `wilsontechtechy@gmail.com` |
-| `ADMIN_PASSWORD` | Private admin password; blank disables admin sign-in |
-| `SUPABASE_PRODUCT_BUCKET` | Image bucket (default `product-images`) |
-| `CLIENT_ORIGIN` | Allowed browser origin |
-| `GEMINI_API_KEY` | Optional server-only key; without it the assistant cannot answer requests |
-| `GEMINI_MODEL` | Gemini model name (default `gemini-3.5-flash-lite`) |
-| `GEO_USER_AGENT`, `GEO_CACHE_MS` | OpenStreetMap lookup identification and cache period |
+| `PORT` | API listening port; defaults to `4000` locally. Render supplies this automatically. |
+| `NODE_ENV` | Runtime mode: `development`, `test` or `production` (default `development`). |
+| `DATABASE_URL` | PostgreSQL connection URL used by the API and database scripts. |
+| `SUPABASE_URL` | Supabase project URL used by server authentication and storage. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase admin key. Never expose it to the browser. |
+| `ADMIN_EMAIL` | Admin sign-in email (default `wilsontechtechy@gmail.com`). |
+| `ADMIN_PASSWORD` | Server-only admin password. Empty disables admin sign-in. Set a strong secret before deployment. |
+| `SUPABASE_PRODUCT_BUCKET` | Supabase Storage bucket for listing photos (default `product-images`). |
+| `CLIENT_ORIGIN` | Exact browser origin allowed to call the API, e.g. `https://marketlink.example`. |
+| `GEMINI_API_KEY` | Optional, server-only Gemini key. Empty leaves generative assistant replies unavailable. |
+| `GEMINI_MODEL` | Gemini model (default `gemini-3.5-flash-lite`). |
+| `GEO_USER_AGENT` | Identifying user-agent sent to OpenStreetMap's geocoder (default `MarketLinkAPI/0.1 (development)`). |
+| `GEO_CACHE_MS` | Geocoder response cache duration in milliseconds (default `900000`; allowed `0`–`3600000`). |
 
-The browser also supports `VITE_MAPBOX_ACCESS_TOKEN` for optional satellite previews and `VITE_CONTACT_*` values for the public Contact page. See `.env.example` for the full list.
+The browser variables use Vite's `VITE_` prefix and are embedded in the public client bundle. Do not put secrets in them.
+
+| Variable | Purpose |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase project URL used by browser sign-in. |
+| `VITE_SUPABASE_ANON_KEY` | Public Supabase anonymous/publishable key; never use a service-role key here. |
+| `VITE_API_URL` | API base URL including `/api` (default `/api` in production builds; local example `http://localhost:4000/api`). |
+| `VITE_MAPBOX_ACCESS_TOKEN` | Optional public Mapbox token for satellite previews. Restrict it to the deployed site origin. |
+| `VITE_CONTACT_TEAM_NAME` | Public Contact page team label (default `MarketLink Team`). |
+| `VITE_CONTACT_EMAIL` | Optional public team contact email. |
+| `VITE_CONTACT_PHONE` | Optional public team phone number. |
+| `VITE_CONTACT_ADDRESS` | Optional public team address. |
+| `VITE_CONTACT_LAT`, `VITE_CONTACT_LNG` | Optional public map coordinates for the Contact page. |
+
+`.env.example` is the complete copyable template. Google OAuth credentials are configured in Supabase and Google Cloud, not in these app environment files. On Render, add server values to the API web service's Environment settings; add browser values to the static-site build environment before building the frontend.
+
+## Render backend availability
+
+The repository's [`render.yaml`](../render.yaml) defines a paid Render API web service with a health check at `/api/healthz`. Its compute plan is `0.5c-512mb`, so it does not spin down from inactivity. Deploy it from Render's Blueprint flow, fill in each secret marked as a dashboard value, and set `CLIENT_ORIGIN` to the exact deployed frontend origin. Build and deploy the frontend separately as a Render Static Site and configure its `VITE_*` build variables.
+
+Render Free web services go idle after 15 minutes without inbound traffic and take about a minute to spin back up. A periodic self-ping is not a reliable always-on solution; use a paid compute plan for the backend. Paid compute prevents idle spin-down, but it is not a promise of zero interruptions during deploys or platform maintenance. See [Render's free-service limits](https://render.com/docs/free) and [service compute plans](https://render.com/docs/compute-plans).
 
 ## Data and order rules
 

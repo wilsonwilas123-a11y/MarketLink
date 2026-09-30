@@ -18,6 +18,8 @@ The full application uses Node.js 22 or newer, PostgreSQL (or Supabase Postgres)
 
 The API reads `server/.env` at startup. Restart it after changing server settings. Never put the Supabase service-role key or `GEMINI_API_KEY` in `client/.env` or a `VITE_` variable. The public MarketLink helper stays disabled until you add your Gemini key to `server/.env`; `GEMINI_MODEL` can be changed there if your AI Studio project uses another model.
 
+For Render deployment and a backend that stays running instead of sleeping on idle, see the [Render deployment guide](docs/site-guide.md#render-backend-availability) and the paid-plan [`render.yaml`](render.yaml) Blueprint. All server and browser build environment variables are documented in the [configuration reference](docs/site-guide.md#configuration-reference).
+
 ### Google sign-in
 
 Google sign-in uses Supabase OAuth; Google credentials do not belong in the web app's environment file. In Google Cloud Console, create a Web OAuth client and set its authorized redirect URI to the callback URL shown in Supabase under **Authentication → Sign In / Providers → Google** (usually `https://<project-ref>.supabase.co/auth/v1/callback`). Enable Google in that Supabase provider and enter the client ID and client secret there. In **Authentication → URL Configuration**, add `http://localhost:5173/signin` to the redirect URL allow list, plus the deployed site's `/signin` URL when you deploy. The app needs the same `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` already listed above. First-time Google accounts continue to the existing profile setup screen.

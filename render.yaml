@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: marketlink-api
+    runtime: node
+    plan: 0.5c-512mb
+    buildCommand: npm ci && npm run build -w server
+    startCommand: npm run start -w server
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
