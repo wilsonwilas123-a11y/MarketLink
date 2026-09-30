@@ -29,6 +29,8 @@ Buyer and farmer accounts use Supabase Auth. The administrator uses a separate s
 6. Track the order in `/orders`. Before the cutoff, the buyer may change quantities or cancel where allowed. Payment happens in person when collected.
 7. After an order is completed, the buyer can review eligible products and the farmer.
 
+The global search remembers the six most recent submitted searches in this browser. On desktop, its filter control reveals the recent-search panel on hover. On touch devices, tap the control to open the panel and tap it again to close it; the input also opens suggestions while typing.
+
 If the cart contains multiple sellers, it creates distinct orders. If one order in a multi-seller cart succeeds before another fails, the buyer is told which references were placed; successful orders are not rolled back across sellers.
 
 ## Farmer journey

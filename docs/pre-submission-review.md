@@ -1,6 +1,6 @@
 # MarketLink SRS readiness review
 
-**Reviewed:** 29 September 2026
+**Reviewed:** 30 September 2026
 **Scope:** Repository and source review against the supplied MarketLink SRS, a production build, and previously recorded automated test results.
 
 ## Result
@@ -17,7 +17,7 @@ MarketLink implements the main customer, farmer and administrator marketplace wo
 
 ## Build and performance evidence
 
-The API and client production build completed. The optional 3D scene is split into a deferred chunk, measured at approximately 551.92 kB raw / 140.1 kB gzip. The largest initial client chunk is approximately 499.62 kB raw / 146.21 kB gzip. Vite reports the raw scene chunk size; these build figures are not a substitute for real-device load-time or Core Web Vitals measurements.
+The API and client production build completed after the implementation changes. The optional 3D scene is split into a deferred chunk, measured at approximately 551.92 kB raw / 140.10 kB gzip. The largest initial client chunk is approximately 500.06 kB raw / 146.32 kB gzip. Vite reports the raw scene chunk size; these build figures are not a substitute for real-device load-time or Core Web Vitals measurements.
 
 ## Limits of this review
 

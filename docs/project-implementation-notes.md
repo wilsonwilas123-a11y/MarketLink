@@ -1,7 +1,7 @@
 # MarketLink Project Report
 
 **Document status:** implementation report and SRS compliance review
-**Reviewed:** 29 September 2026
+**Reviewed:** 30 September 2026
 **Requirements source:** `docs/reference/MarketLink End-to-End Web Solutions_SRS.pdf`
 
 ## 1. Project overview
@@ -21,6 +21,18 @@ The SRS describes a problem where shoppers cannot reliably know which farmers, p
 ### Scope and constraints
 
 The application supports customers, farmers and administrators. Customers pay in person at collection. Orders are grouped by farmer and market, and an individual order belongs to one farmer and one pickup market. There is no payment gateway, delivery dispatch or automatic refund flow. Production availability, backups, cross-browser compatibility and accessibility conformance require deployment or independent evaluation and are not claimed as proven by this source review.
+
+### Interface snapshots
+
+These site screenshots were supplied during the visual review on 29–30 September 2026 and are kept as reference images. They show earlier working screens; they are not fresh screenshots of the latest build and do not prove the current browser flow. The mobile search-toggle reference records the interaction request that was implemented in this update.
+
+| Desktop farmer directory | Mobile header |
+|---|---|
+| ![Farmer directory desktop reference](screenshots/farmer-directory-desktop-reference.png) | ![Mobile header reference](screenshots/mobile-header-reference.png) |
+
+| Admin navigation | Mobile recent-search toggle |
+|---|---|
+| ![Admin navigation reference](screenshots/admin-navigation-reference.png) | ![Mobile recent-search toggle reference](screenshots/mobile-search-toggle-reference.png) |
 
 ## 2. System design
 
@@ -104,13 +116,13 @@ Status means source-level implementation found during this review. “Partial”
 |---|---|---|
 | Customer/farmer registration and sign-in | Meets in source | Supabase-backed flows collect role-specific profile details; farmer profiles enter approval flow. Live provider configuration must be supplied. |
 | Market and farmer discovery, operating days and maps | Meets in source | Market/farmer directory, schedules, map pins and direction links are present. Cross-device/browser behaviour needs hands-on evaluation. |
-| Search products by name/category/price/availability and market/day | Meets in source | Catalogue provides search, category, price, stock, market and market-day filters; market/day constraints are applied by the API. |
+| Search products by name/category/price/availability and market/day | Implemented; build-checked | Catalogue provides search, category, price, stock, market and market-day filters; market/day constraints are applied by the API. |
 | Product details, farmer and pickup information | Meets in source | Product details link listings to farmers and pickup markets. |
-| Stock-aware pickup preorder, cutoff, tracking and edits/cancellation | Meets in source | Checkout lets customers choose an eligible market/farmer trading date and a 30-minute pickup slot within the configured pickup window. The API validates stock and the seller's cutoff; order status, pre-cutoff changes and cancellation are supported. |
+| Stock-aware pickup preorder, cutoff, tracking and edits/cancellation | Implemented; build-checked | Checkout lets customers choose an eligible market/farmer trading date and a 30-minute pickup slot within the configured pickup window. The API validates stock and the seller's cutoff; order status, pre-cutoff changes and cancellation are supported. |
 | Order history and reorder | Meets in source | Order history and a **Buy again** action are present for completed orders; availability is checked before restoring products to the cart. |
 | Favorites, restock and market notices | Meets in source | Favorites and in-app restock/order/announcement notices exist. |
 | Post-completion ratings/reviews and farmer replies | Meets in source | Review eligibility follows completed orders; moderation and seller replies exist. Seed data does not provide a completed order for a ready-made review demonstration. |
-| Optional chatbot for MarketLink questions and current listing availability | Meets in source for public listings | Inventory questions use active approved listings and current weekly stock, including market and trading days; general help answers use the server-configured Gemini model. Private account/order data is intentionally unavailable. |
+| Optional chatbot for MarketLink questions and current listing availability | Implemented; build-checked | Inventory questions use active approved listings and current weekly stock, including market and trading days; general help answers use the server-configured Gemini model. Private account/order data is intentionally unavailable. |
 | Farmer profile, map, product/stock CRUD and order handling | Meets in source | Farmer dashboard supports stall and market details, listing/photo edits, recurring/current stock and order lifecycle actions. |
 | Farmer sales insights and review response | Meets in source | Dashboard includes order/sales summaries and top sellers; farmers can respond to reviews. |
 | Admin login, approval, account controls, market/category CRUD and moderation | Meets in source | Protected admin workspace contains these controls and reporting views. Configured admin credentials are deployment-owned. |
@@ -120,17 +132,18 @@ Status means source-level implementation found during this review. “Partial”
 | Security, performance, scalability and 24/7 availability | Partial / unverified | JWT role checks, server-only secrets, request validation, rate limits and database policies are present in code. No independent security assessment, load test, uptime evidence or operational backup evidence was supplied. |
 | Required project documentation and diagrams | Meets in this repository | This report includes problem, scope, design and data diagrams; README and linked guides cover setup. Verify author-specific submission formatting with the instructor. |
 | Demo data, role credentials and installation guidance | Partial | Seed/setup instructions and customer/farmer credentials are provided. Admin uses privately configured environment credentials; successful end-to-end demo setup still needs confirmation. |
-| Required demonstration video | Not met in repository | A walkthrough outline exists in [demo-video-script.md](demo-video-script.md); the required recording has not been supplied. |
+| Recent search history interaction | Implemented; build-checked | The filter control opens recent searches on desktop hover; on touch devices, tap opens the panel and another tap closes it. |
+| Required demonstration video | Separate submission item | A walkthrough outline exists in [demo-video-script.md](demo-video-script.md); the required recording has not been supplied or changed in this work. |
 
 ### Overall finding
 
-The source now includes the catalogue market/day filters, selectable pickup times and live public-listing assistant called for by the remaining functional gaps in this review. Full SRS readiness still depends on exercising these flows against configured data, resolving automated test failures, configuring Contact/admin settings, and obtaining operational evidence for availability, backups, scale, security and browser compatibility. The demonstration video remains a separate SRS submission deliverable.
+The source now includes the catalogue market/day filters, selectable pickup times, live public-listing assistant and touch-friendly recent-search control. The production build checks TypeScript and compiles the app, but the new flows have not been manually exercised against configured data. Full SRS readiness still depends on resolving automated test failures, configuring Contact/admin settings, and obtaining operational evidence for availability, backups, scale, security and browser compatibility. The demonstration video remains a separate SRS submission deliverable and was not part of the requested code changes.
 
 ## 4. Test and build evidence
 
 The production build completed successfully after the remaining feature changes. Before this feature update, the test suites reported **10 server failures and 128 passes (138 total)**; the client suite reported **31 failures and 49 passes (80 total)**. The suites have not been rerun after these changes. Treat automated test status as unresolved until failures are reviewed and all suites are rerun. The previous counts do not prove that each failure represents a user-visible defect, and no clean baseline comparison was available.
 
-The production build emits an optional 3D scene chunk of approximately **551.92 kB raw / 140.1 kB gzip**; it is dynamically loaded. The largest initial client JavaScript chunk is approximately **499.62 kB raw / 146.21 kB gzip**. Vite warns about the raw 3D chunk size. These bundle measurements are not a real-device speed or Core Web Vitals measurement; evaluate on target phones and networks before making performance claims.
+The production build emits an optional 3D scene chunk of approximately **551.92 kB raw / 140.10 kB gzip**; it is dynamically loaded. The largest initial client JavaScript chunk is approximately **500.06 kB raw / 146.32 kB gzip**. Vite warns about the raw 3D chunk size. These bundle measurements are not a real-device speed or Core Web Vitals measurement; evaluate on target phones and networks before making performance claims.
 
 ## 5. Installation, test data and access
 

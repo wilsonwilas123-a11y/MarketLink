@@ -6295,7 +6295,7 @@
           "Support"
         ],
         "summary": "Ask the MarketLink site assistant",
-        "description": "Public, narrowly scoped MarketLink site help. User conversation text is sent to Google Gemini; no live inventory or account data is supplied.",
+        "description": "Public, narrowly scoped MarketLink site help. Inventory questions use public active listings and current weekly stock; only site-help conversation text is sent to Google Gemini.",
         "security": [],
         "requestBody": {
           "required": true,
