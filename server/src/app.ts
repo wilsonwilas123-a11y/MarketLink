@@ -50,6 +50,11 @@ export function createApp(deps: AppDeps, options: AppOptions = {}): Express {
   app.use(cors({ origin: options.clientOrigin ?? true, credentials: true }));
   app.use(express.json({ limit: '1mb' }));
 
+  // Lightweight uptime check: no database, no auth. Point the monitor here.
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ ok: true });
+  });
+
   app.use('/api', healthRouter(deps.pool));
   app.use('/api', authRouter(deps));
   app.use('/api', marketsRouter(deps));
